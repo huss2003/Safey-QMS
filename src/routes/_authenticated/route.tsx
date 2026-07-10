@@ -18,7 +18,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 export const Route = createFileRoute("/_authenticated")({
-  ssr: false,
   component: AuthenticatedLayout,
 });
 

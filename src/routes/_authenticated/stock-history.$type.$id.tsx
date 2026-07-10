@@ -44,7 +44,7 @@ function RawHistory({ id }: { id: string }) {
     queryKey: ["stock-history", "raw", id],
     queryFn: async () => {
       const [rm, partBatches, wastages] = await Promise.all([
-        supabase.from("raw_materials").select("id, batch_number, material_type, initial_quantity_kg, remaining_quantity_kg, rate_per_kg, total_cost, purchase_date, is_blocked, vendors(name)").eq("id", id).maybeSingle(),
+        supabase.from("raw_materials").select("id, batch_number, material_type, initial_quantity_kg, remaining_quantity_kg, rate_per_kg, purchase_date, is_blocked").eq("id", id).maybeSingle(),
         supabase.from("part_batches").select("id, batch_number, part_id, quantity, actual_usage_kg, wastage_kg, wastage_reason, created_at, parts(part_name)").eq("raw_material_batch_id", id).order("created_at", { ascending: false }),
         supabase.from("wastage_logs").select("id, level, level_name, wastage_kg, actual_kg, reason, notes, created_at").eq("level", "part").order("created_at", { ascending: false }),
       ]);
@@ -79,7 +79,7 @@ function RawHistory({ id }: { id: string }) {
       <Card className="mb-4">
         <CardContent className="p-4">
           <div className="text-[12px] text-muted-foreground">Vendor</div>
-          <div className="font-medium">{m.vendors?.name ?? "—"}</div>
+          <div className="font-medium">{"—"}</div>
           <div className="text-xs text-muted-foreground mt-1">Purchased {fmtDate(m.purchase_date)}</div>
           {m.is_blocked && <Badge variant="destructive" className="mt-2">Blocked</Badge>}
         </CardContent>

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +28,7 @@ import { fmtCurrency, fmtDate, fmtKg, wastageReasonLabel } from "@/lib/inventory
 import { audit } from "@/lib/inventory/audit";
 
 export const Route = createFileRoute("/_authenticated/raw-materials")({
+  ssr: false,
   component: RawMaterialsPage,
 });
 
@@ -42,34 +43,40 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 function RawMaterialsPage() {
+  const qc = useQueryClient();
   const [filterType, setFilterType] = useState<string>("all");
   const [filterVendor, setFilterVendor] = useState<string>("all");
   const [showBlocked, setShowBlocked] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [viewing, setViewing] = useState<any | null>(null);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      qc.removeQueries({ queryKey: ["raw_materials", "client"] });
+      qc.removeQueries({ queryKey: ["vendors"] });
+    }
+  }, [qc]);
+
   const { data: vendors } = useQuery({
     queryKey: ["vendors", "for-select"],
-    // Reference data — cache 5 min, avoid refetch on every mount.
-    staleTime: 5 * 60_000,
-    queryFn: async () => (await supabase.from("vendors").select("id,name,materials_supplied").order("name")).data ?? [],
-  });
-
-  const { data: materials, isLoading } = useQuery({
-    queryKey: ["raw_materials", "list"],
-    // Transactional data, but changes rarely — keep for 30 s.
-    staleTime: 30_000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("raw_materials")
-        .select("id,batch_number,material_type,vendor_id,initial_quantity_kg,remaining_quantity_kg,rate_per_kg,total_cost,purchase_date,is_blocked,vendors(name)")
-        .order("purchase_date", { ascending: false });
-      if (error) throw error;
-      return data;
+      const res = await fetch("https://utsfiztqmfskumxacvnn.supabase.co/rest/v1/vendors?select=id,name,materials_supplied&order=name", {
+        headers: { "apikey": "sb_publishable_dl4l1Koj9Nm3Nbs8sHqvIw_QOymr_NG" },
+      });
+      return (await res.json()) ?? [];
     },
   });
 
-  const qc = useQueryClient();
+  const { data: materials, isLoading } = useQuery({
+    queryKey: ["raw_materials", "client", "list"],
+    queryFn: async () => {
+      const res = await fetch("https://utsfiztqmfskumxacvnn.supabase.co/rest/v1/raw_materials?select=id,batch_number,material_type,vendor_id,initial_quantity_kg,remaining_quantity_kg,rate_per_kg,purchase_date,is_blocked&order=purchase_date.desc", {
+        headers: { "apikey": "sb_publishable_dl4l1Koj9Nm3Nbs8sHqvIw_QOymr_NG" },
+      });
+      return (await res.json()) ?? [];
+    },
+  });
+
   const block = useMutation({
     mutationFn: async ({ id, is_blocked }: { id: string; is_blocked: boolean }) => {
       const { error } = await supabase.from("raw_materials").update({ is_blocked }).eq("id", id);
@@ -78,6 +85,8 @@ function RawMaterialsPage() {
     onSuccess: (_, v) => { toast[v.is_blocked ? "warning" : "success"](v.is_blocked ? "Batch blocked — cascade applied" : "Batch unblocked"); qc.invalidateQueries({ queryKey: ["raw_materials"] }); qc.invalidateQueries({ queryKey: ["alerts", "unread-count"] }); audit(v.is_blocked ? "block" : "unblock", "raw_material", v.id); },
     onError: (e: any) => toast.error(e.message ?? "Failed"),
   });
+
+  const vendorMap = new Map((vendors ?? []).map((v: any) => [v.id, v.name]));
 
   const filtered = (materials ?? []).filter((r: any) => {
     if (filterType !== "all" && r.material_type !== filterType) return false;
@@ -146,14 +155,14 @@ function RawMaterialsPage() {
                     <TableRow key={r.id} className="hover:bg-muted/30">
                       <TableCell className="font-medium">{r.batch_number}</TableCell>
                       <TableCell><MaterialBadge material={r.material_type} /></TableCell>
-                      <TableCell>{r.vendors?.name}</TableCell>
+                      <TableCell>{vendorMap.get(r.vendor_id)}</TableCell>
                       <TableCell>{fmtKg(r.initial_quantity_kg)}</TableCell>
                       <TableCell>
                         <div className="text-xs mb-1">{fmtKg(r.remaining_quantity_kg)}</div>
                         <div className="h-1.5 rounded-full bg-muted overflow-hidden"><div className={`h-full ${color}`} style={{ width: `${Math.max(2, pct)}%` }} /></div>
                       </TableCell>
                       <TableCell>{fmtCurrency(r.rate_per_kg)}/kg</TableCell>
-                      <TableCell>{fmtCurrency(r.total_cost)}</TableCell>
+                      <TableCell>{fmtCurrency(Number(r.initial_quantity_kg) * Number(r.rate_per_kg))}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{fmtDate(r.purchase_date)}</TableCell>
                       <TableCell>{r.is_blocked ? <Badge variant="destructive">Blocked</Badge> : <Badge variant="secondary">Active</Badge>}</TableCell>
                       <TableCell className="text-right whitespace-nowrap">
@@ -181,7 +190,7 @@ function RawMaterialsPage() {
 function AddRawMaterialDialog({ open, onOpenChange, vendors }: { open: boolean; onOpenChange: (o: boolean) => void; vendors: any[] }) {
   const qc = useQueryClient();
   const { data: existing } = useQuery({
-    queryKey: ["raw_materials", "list"],
+    queryKey: ["raw_materials", "client", "list"],
     staleTime: 5 * 60_000,
     queryFn: async () => (await supabase.from("raw_materials").select("material_type").order("purchase_date", { ascending: false })).data ?? [],
   });
@@ -308,7 +317,7 @@ function ViewRawMaterialDialog({ open, onOpenChange, material }: { open: boolean
           <Stat label="Remaining" value={fmtKg(material.remaining_quantity_kg)} />
           <Stat label="Utilization" value={`${utilization.toFixed(1)}%`} />
           <Stat label="Rate" value={`${fmtCurrency(material.rate_per_kg)}/kg`} />
-          <Stat label="Value" value={fmtCurrency(material.total_cost)} />
+          <Stat label="Value" value={fmtCurrency(Number(material.initial_quantity_kg) * Number(material.rate_per_kg))} />
           <Stat label="Age" value={`${ageDays}d`} />
         </div>
         <Progress value={pct} className="mb-4" />
