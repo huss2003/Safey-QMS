@@ -5,6 +5,7 @@ Scope: fix real bottlenecks in DB, data-fetching, rendering. Skip theatre (Light
 ## 1. Database: indexes + RPCs (single migration)
 
 **Indexes** on FKs/hot filters lacking them:
+
 - `raw_materials(vendor_id)`, `(material_type, is_blocked)`, `(purchase_date desc)`
 - `part_batches(part_id)`, `(raw_material_batch_id)`, `(created_at desc)`
 - `production_batches(product_id)`, `(production_date desc)`, `(status)`, `(created_at desc)`
@@ -15,6 +16,7 @@ Scope: fix real bottlenecks in DB, data-fetching, rendering. Skip theatre (Light
 - `product_bom(product_id)`
 
 **RPCs** (single round-trip):
+
 - `get_dashboard_kpis()` — totals for raw stock, finished goods, today's production, vendor/part/RM-batch counts, low-stock, wastage %. Replaces 6+ dashboard queries.
 - `get_traceability_forward(p_raw_material_id uuid)`, `get_traceability_backward(p_production_batch_id uuid)` — recursive CTE → JSONB chain. Replaces JS-side recursive fetches.
 - `get_reports_summary(p_from date, p_to date)` — Reports aggregates.
@@ -26,6 +28,7 @@ All `SECURITY DEFINER`, `SET search_path = public`, `STABLE`, granted `authentic
 Global in `src/router.tsx`: `staleTime: 30_000`, `gcTime: 5*60_000`, `refetchOnWindowFocus: false`, `retry: 1`.
 
 Overrides:
+
 - Reference data (vendors, parts, products, BOMs): `staleTime: 5*60_000`.
 - Alerts badge: `refetchInterval: 60_000`.
 - Paginated tables: `placeholderData: keepPreviousData`.

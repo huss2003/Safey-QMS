@@ -1,48 +1,96 @@
-import { createFileRoute, Outlet, redirect, Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  Link,
+  useRouterState,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  LayoutDashboard, Users, Package, Puzzle, Boxes, Factory, CalendarClock,
-  GitBranch, BarChart3, Bell, ShieldAlert, Settings, LogOut, Menu, Search, X, Warehouse, Archive,
+  LayoutDashboard,
+  Users,
+  Package,
+  Puzzle,
+  Boxes,
+  Factory,
+  CalendarClock,
+  GitBranch,
+  BarChart3,
+  Bell,
+  ShieldAlert,
+  Settings,
+  LogOut,
+  Menu,
+  Warehouse,
+  Archive,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useBreadcrumbs } from "@/hooks/use-breadcrumbs";
+import { useKeyboardShortcuts } from "@/lib/keyboard-shortcuts";
+import { GlobalSearch } from "@/components/search/global-search";
+import { ShortcutsModal } from "@/components/inventory/shortcuts-modal";
+import { NotificationCenter } from "@/components/inventory/notification-center";
+import { PageTransition } from "@/components/inventory/page-transition";
+import { ThemeToggle } from "@/components/inventory/theme-toggle";
+import { ChevronRight, Home } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
 
-type NavItem = { to: string; label: string; icon: React.ComponentType<{ className?: string }>; group: "ops" | "insight" | "system" };
+type NavItem = {
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  group: "ops" | "insight" | "system";
+};
 
 const NAV: NavItem[] = [
-  { to: "/",                    label: "Dashboard",          icon: LayoutDashboard, group: "ops" },
-  { to: "/vendors",             label: "Vendors",            icon: Users,           group: "ops" },
-  { to: "/raw-materials",       label: "Raw materials",      icon: Package,         group: "ops" },
-  { to: "/parts",               label: "Parts",              icon: Puzzle,          group: "ops" },
-  { to: "/products",            label: "Products",           icon: Boxes,           group: "ops" },
-  { to: "/production",          label: "Production",         icon: Factory,         group: "ops" },
-  { to: "/production-planning", label: "Production planning",icon: CalendarClock,   group: "insight" },
-  { to: "/stock",               label: "Stock",              icon: Warehouse,       group: "insight" },
-  { to: "/other-items",         label: "Other items",        icon: Archive,         group: "ops" },
-  { to: "/traceability",        label: "Traceability",       icon: GitBranch,       group: "insight" },
-  { to: "/reports",             label: "Reports",            icon: BarChart3,       group: "insight" },
-  { to: "/alerts",              label: "Alerts",             icon: Bell,            group: "insight" },
-  { to: "/batch-recall",        label: "Batch recall",       icon: ShieldAlert,     group: "system" },
-  { to: "/settings",            label: "Settings",           icon: Settings,        group: "system" },
+  { to: "/", label: "Dashboard", icon: LayoutDashboard, group: "ops" },
+  { to: "/vendors", label: "Vendors", icon: Users, group: "ops" },
+  { to: "/raw-materials", label: "Raw materials", icon: Package, group: "ops" },
+  { to: "/parts", label: "Parts", icon: Puzzle, group: "ops" },
+  { to: "/products", label: "Products", icon: Boxes, group: "ops" },
+  { to: "/production", label: "Production", icon: Factory, group: "ops" },
+  {
+    to: "/production-planning",
+    label: "Production planning",
+    icon: CalendarClock,
+    group: "insight",
+  },
+  { to: "/stock", label: "Stock", icon: Warehouse, group: "insight" },
+  { to: "/other-items", label: "Other items", icon: Archive, group: "ops" },
+  { to: "/traceability", label: "Traceability", icon: GitBranch, group: "insight" },
+  { to: "/reports", label: "Reports", icon: BarChart3, group: "insight" },
+  { to: "/alerts", label: "Alerts", icon: Bell, group: "insight" },
+  { to: "/batch-recall", label: "Batch recall", icon: ShieldAlert, group: "system" },
+  { to: "/settings", label: "Settings", icon: Settings, group: "system" },
 ];
 
 function AuthenticatedLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [online, setOnline] = useState(true);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useKeyboardShortcuts();
 
   useEffect(() => {
     const on = () => setOnline(true);
@@ -50,7 +98,10 @@ function AuthenticatedLayout() {
     setOnline(navigator.onLine);
     window.addEventListener("online", on);
     window.addEventListener("offline", off);
-    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
   }, []);
 
   return (
@@ -73,9 +124,22 @@ function AuthenticatedLayout() {
           </div>
         )}
         <main className="flex-1 w-full max-w-[1400px] mx-auto p-6">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+            >
+              <PageTransition>
+                <Outlet />
+              </PageTransition>
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
+      <ShortcutsModal />
     </div>
   );
 }
@@ -98,7 +162,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <div className="flex flex-col leading-none">
           <span className="text-[13.5px] font-semibold tracking-[-0.005em]">Safey</span>
-          <span className="text-[10.5px] text-muted-foreground tracking-[0.04em] uppercase mt-0.5">v1.0</span>
+          <span className="text-[10.5px] text-muted-foreground tracking-[0.04em] uppercase mt-0.5">
+            v1.0
+          </span>
         </div>
       </div>
 
@@ -154,7 +220,10 @@ function useUnreadAlertsCount() {
     queryKey: ["alerts", "unread-count"],
     queryFn: async () => {
       if (typeof window !== "undefined" && (window as any).__TRACE_DEMO) return 3;
-      const { count, error } = await supabase.from("alerts").select("*", { count: "exact", head: true }).eq("is_read", false);
+      const { count, error } = await supabase
+        .from("alerts")
+        .select("*", { count: "exact", head: true })
+        .eq("is_read", false);
       if (error) throw error;
       return count ?? 0;
     },
@@ -164,11 +233,35 @@ function useUnreadAlertsCount() {
   return data ?? 0;
 }
 
+function Breadcrumbs({ crumbs }: { crumbs: { label: string; href: string }[] }) {
+  return (
+    <nav className="flex items-center gap-1.5 text-[13px] min-w-0">
+      <Link to="/" className="text-muted-foreground hover:text-foreground shrink-0">
+        <Home className="h-3.5 w-3.5" />
+      </Link>
+      {crumbs.slice(1).map((c, i) => (
+        <span key={c.href} className="flex items-center gap-1.5 min-w-0">
+          <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+          {i === crumbs.slice(1).length - 1 ? (
+            <span className="font-semibold truncate">{c.label}</span>
+          ) : (
+            <Link
+              to={c.href as any}
+              className="text-muted-foreground hover:text-foreground truncate"
+            >
+              {c.label}
+            </Link>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+}
 function Header({ onMenu }: { onMenu: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const navigate = useNavigate();
-  const title = NAV.find((n) => (n.to === "/" ? path === "/" : path.startsWith(n.to)))?.label ?? "Dashboard";
+  const crumbs = useBreadcrumbs();
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -181,11 +274,15 @@ function Header({ onMenu }: { onMenu: () => void }) {
 
   return (
     <header className="h-14 border-b bg-card flex items-center gap-3 px-4 lg:px-6 sticky top-0 z-30">
-      <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={onMenu}><Menu className="h-4 w-4" /></Button>
-      <h1 className="text-[14px] font-semibold tracking-[-0.005em]">{title}</h1>
+      <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={onMenu}>
+        <Menu className="h-4 w-4" />
+      </Button>
+      <Breadcrumbs crumbs={crumbs} />
       <div className="flex-1 max-w-[480px] mx-auto">
         <GlobalSearch />
       </div>
+      <NotificationCenter />
+      <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className="flex items-center gap-2 pl-1 pr-2 h-8 rounded border border-border hover:bg-accent transition-colors">
@@ -203,90 +300,21 @@ function Header({ onMenu }: { onMenu: () => void }) {
             <div className="text-[13px] truncate font-medium">{email}</div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled className="text-[13px]">Profile</DropdownMenuItem>
-          <DropdownMenuItem disabled className="text-[13px]">Preferences</DropdownMenuItem>
+          <DropdownMenuItem disabled className="text-[13px]">
+            Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled className="text-[13px]">
+            Preferences
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={signOut} className="text-[13px] text-destructive focus:text-destructive">
+          <DropdownMenuItem
+            onClick={signOut}
+            className="text-[13px] text-destructive focus:text-destructive"
+          >
             <LogOut className="h-3.5 w-3.5" /> Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
-  );
-}
-
-function GlobalSearch() {
-  const [q, setQ] = useState("");
-  const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
-  const debouncedQ = useDebouncedValue(q, 300);
-
-  const { data } = useQuery({
-    queryKey: ["global-search", debouncedQ],
-    enabled: debouncedQ.length >= 2,
-    staleTime: 30_000,
-    queryFn: async () => {
-      if (typeof window !== "undefined" && (window as any).__TRACE_DEMO) {
-        return { vendors: [], raw_materials: [], parts: [], products: [] };
-      }
-      const [v, r, p, pr] = await Promise.all([
-        supabase.from("vendors").select("id,name").ilike("name", `%${debouncedQ}%`).limit(5),
-        supabase.from("raw_materials").select("id,batch_number,material_type").ilike("batch_number", `%${debouncedQ}%`).limit(5),
-        supabase.from("parts").select("id,part_name").ilike("part_name", `%${debouncedQ}%`).limit(5),
-        supabase.from("products").select("id,product_name,product_code").or(`product_name.ilike.%${debouncedQ}%,product_code.ilike.%${debouncedQ}%`).limit(5),
-      ]);
-      return {
-        vendors: v.data ?? [],
-        raw_materials: r.data ?? [],
-        parts: p.data ?? [],
-        products: pr.data ?? [],
-      };
-    },
-  });
-
-  const hasResults = data && (data.vendors.length + data.raw_materials.length + data.parts.length + data.products.length) > 0;
-
-  return (
-    <div className="relative">
-      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-      <Input
-        placeholder="Search vendors, batches, parts, products…"
-        value={q}
-        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        className="pl-8 h-8 text-[13px] bg-secondary border-border"
-      />
-      {q && (
-        <button onClick={() => { setQ(""); setOpen(false); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-          <X className="h-3.5 w-3.5" />
-        </button>
-      )}
-      {open && q.length >= 2 && (
-        <div className="absolute top-full mt-1 w-full bg-popover border border-border rounded shadow-md z-50 max-h-96 overflow-y-auto">
-          {!hasResults && <div className="p-3 text-[12.5px] text-muted-foreground text-center">No results for "{debouncedQ}"</div>}
-          {data && Object.entries({
-            Vendors: data.vendors.map((v) => ({ key: v.id, label: v.name, sub: "vendor", to: "/vendors" as const })),
-            "Raw materials": data.raw_materials.map((r) => ({ key: r.id, label: r.batch_number, sub: r.material_type, to: "/raw-materials" as const })),
-            Parts: data.parts.map((p) => ({ key: p.id, label: p.part_name, sub: "part", to: "/parts" as const })),
-            Products: data.products.map((p) => ({ key: p.id, label: p.product_name, sub: p.product_code, to: "/products" as const })),
-          }).map(([group, items]) => items.length > 0 && (
-            <div key={group}>
-              <div className="px-3 py-1.5 label-caps bg-muted">{group}</div>
-              {items.map((it) => (
-                <button
-                  key={it.key}
-                  onMouseDown={() => { navigate({ to: it.to }); setOpen(false); setQ(""); }}
-                  className="w-full text-left px-3 py-1.5 text-[13px] hover:bg-accent flex items-baseline gap-2"
-                >
-                  <span className="font-medium truncate">{it.label}</span>
-                  {it.sub && <span className="text-[11px] text-muted-foreground ml-auto">{it.sub}</span>}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }

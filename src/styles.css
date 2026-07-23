@@ -52,27 +52,27 @@
 /* Neutral internal-tool palette. Restrained. Functional. */
 :root {
   --radius: 4px;
-  --background: oklch(0.985 0 0);                /* #FAFAFA */
-  --foreground: oklch(0.205 0 0);               /* #1F1F1F */
-  --card: oklch(1 0 0);                         /* #FFFFFF */
+  --background: oklch(0.985 0 0); /* #FAFAFA */
+  --foreground: oklch(0.205 0 0); /* #1F1F1F */
+  --card: oklch(1 0 0); /* #FFFFFF */
   --card-foreground: oklch(0.205 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.205 0 0);
-  --primary: oklch(0.205 0 0);                  /* ink */
+  --primary: oklch(0.205 0 0); /* ink */
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.965 0 0);                /* #F4F4F5 */
+  --secondary: oklch(0.965 0 0); /* #F4F4F5 */
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.965 0 0);
-  --muted-foreground: oklch(0.5 0 0);           /* #737373 */
-  --accent: oklch(0.205 0 0);                   /* same as primary, not a color splash */
+  --muted-foreground: oklch(0.5 0 0); /* #737373 */
+  --accent: oklch(0.205 0 0); /* same as primary, not a color splash */
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.577 0.18 25);          /* standard red */
+  --destructive: oklch(0.577 0.18 25); /* standard red */
   --destructive-foreground: oklch(0.985 0 0);
-  --success: oklch(0.55 0.12 155);              /* muted green */
+  --success: oklch(0.55 0.12 155); /* muted green */
   --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.7 0.15 75);                /* muted amber */
+  --warning: oklch(0.7 0.15 75); /* muted amber */
   --warning-foreground: oklch(0.205 0 0);
-  --border: oklch(0.922 0 0);                   /* #E5E5E5 */
+  --border: oklch(0.922 0 0); /* #E5E5E5 */
   --input: oklch(0.922 0 0);
   --ring: oklch(0.205 0 0);
   --chart-1: oklch(0.205 0 0);
@@ -125,8 +125,13 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body { font-family: var(--font-sans); }
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    font-family: var(--font-sans);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -167,6 +172,38 @@
 
 @layer utilities {
   @media (prefers-reduced-motion: reduce) {
-    .row-rule { transition: none; }
+    .row-rule {
+      transition: none;
+    }
+  }
+}
+
+/* ============================================================
+   Print-friendly styles
+   ============================================================ */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .sidebar,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  [data-slot="card"] {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    break-inside: avoid;
+  }
+  table {
+    font-size: 10px !important;
+  }
+  @page {
+    margin: 1.5cm;
   }
 }

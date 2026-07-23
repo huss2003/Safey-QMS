@@ -1,9 +1,25 @@
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 
 type ByReason = { reason: string; kg: number }[];
 type ByDate = { date: string; kg: number }[];
 
-export default function WastageCharts({ byReason, byDate }: { byReason: ByReason; byDate: ByDate }) {
+export default function WastageCharts({
+  byReason,
+  byDate,
+}: {
+  byReason: ByReason;
+  byDate: ByDate;
+}) {
   return (
     <>
       <ResponsiveContainer width="100%" height={260}>
@@ -21,7 +37,13 @@ export default function WastageCharts({ byReason, byDate }: { byReason: ByReason
           <XAxis dataKey="date" />
           <YAxis />
           <Tooltip />
-          <Line type="monotone" dataKey="kg" stroke="var(--color-chart-4)" strokeWidth={2} dot={false} />
+          <Line
+            type="monotone"
+            dataKey="kg"
+            stroke="var(--color-chart-4)"
+            strokeWidth={2}
+            dot={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </>

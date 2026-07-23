@@ -53,14 +53,20 @@ export function DataTable<T extends { id: string }>({
                 <tr key={i} className="border-b border-border last:border-b-0">
                   {columns.map((c, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-3 bg-foreground/[0.04] rounded-sm animate-pulse" style={{ width: `${50 + (j * 13) % 40}%` }} />
+                      <div
+                        className="h-3 bg-foreground/[0.04] rounded-sm animate-pulse"
+                        style={{ width: `${50 + ((j * 13) % 40)}%` }}
+                      />
                     </td>
                   ))}
                 </tr>
               ))
             ) : (rows ?? []).length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-muted-foreground text-[13px]">
+                <td
+                  colSpan={columns.length}
+                  className="px-4 py-12 text-center text-muted-foreground text-[13px]"
+                >
                   {empty ?? "Nothing here yet."}
                 </td>
               </tr>
@@ -101,15 +107,27 @@ export function TableToolbar({ children }: { children: ReactNode }) {
   return <div className="flex flex-wrap items-center gap-2 mb-4">{children}</div>;
 }
 
-export function StatPill({ label, value, tone = "default" }: { label: string; value: string | number; tone?: "default" | "alert" | "ok" }) {
+export function StatPill({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string | number;
+  tone?: "default" | "alert" | "ok";
+}) {
   return (
     <div className="flex items-baseline gap-2 border border-border rounded-md px-3 h-9 bg-card">
       <span className="eyebrow">{label}</span>
-      <span className={cn(
-        "mono text-[12px]",
-        tone === "alert" && "text-accent",
-        tone === "ok" && "text-success",
-      )}>{value}</span>
+      <span
+        className={cn(
+          "mono text-[12px]",
+          tone === "alert" && "text-accent",
+          tone === "ok" && "text-success",
+        )}
+      >
+        {value}
+      </span>
     </div>
   );
 }

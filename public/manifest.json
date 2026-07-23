@@ -1,0 +1,10 @@
+{
+  "name": "Safey — QMS",
+  "short_name": "Safey",
+  "description": "Production traceability and quality management system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#1f1f1f",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

@@ -20,18 +20,18 @@ Cuts also: wastage logging per batch, FIFO part allocation, automatic stock aler
 
 ## Stack
 
-| Layer | Choice | Why |
-|---|---|---|
-| Framework | **TanStack Start** (Vite 8) | File-based routing, SSR-capable, React Query first |
-| UI | **React 19** + **Tailwind v4** | Internal-app aesthetic, neutral grays, Inter font, tabular numerics, hairline borders |
-| Components | **shadcn/ui** + Radix primitives | Accessible, unstyled, copy-paste owned |
-| Data fetching | **TanStack Query v5** | Caching, invalidation, mutations |
-| DB / Auth | **Supabase** (Postgres + RLS + Auth) | Serverless Postgres with realtime + edge functions |
-| Forms | **react-hook-form** + **zod** | Type-safe validation |
-| Charts | **recharts** (lazy-loaded in /reports) | ~90 KB gzipped, deferred until user opens reports |
-| Icons | **lucide-react** | Tree-shakable, consistent |
-| Toasts | **sonner** | Minimal, rich colors |
-| Date | **date-fns** | Tree-shakable formatting |
+| Layer         | Choice                                 | Why                                                                                   |
+| ------------- | -------------------------------------- | ------------------------------------------------------------------------------------- |
+| Framework     | **TanStack Start** (Vite 8)            | File-based routing, SSR-capable, React Query first                                    |
+| UI            | **React 19** + **Tailwind v4**         | Internal-app aesthetic, neutral grays, Inter font, tabular numerics, hairline borders |
+| Components    | **shadcn/ui** + Radix primitives       | Accessible, unstyled, copy-paste owned                                                |
+| Data fetching | **TanStack Query v5**                  | Caching, invalidation, mutations                                                      |
+| DB / Auth     | **Supabase** (Postgres + RLS + Auth)   | Serverless Postgres with realtime + edge functions                                    |
+| Forms         | **react-hook-form** + **zod**          | Type-safe validation                                                                  |
+| Charts        | **recharts** (lazy-loaded in /reports) | ~90 KB gzipped, deferred until user opens reports                                     |
+| Icons         | **lucide-react**                       | Tree-shakable, consistent                                                             |
+| Toasts        | **sonner**                             | Minimal, rich colors                                                                  |
+| Date          | **date-fns**                           | Tree-shakable formatting                                                              |
 
 ---
 
@@ -189,20 +189,20 @@ products
 
 **Tables:**
 
-| Table | Purpose | Critical columns |
-|---|---|---|
-| `vendors` | Supplier master | `materials_supplied[]` filters raw-material add form |
-| `raw_materials` | Pellets by batch | `remaining_quantity_kg`, `is_blocked` (cascade-trigger) |
-| `parts` | Part master | `current_stock`, `low_stock_threshold`, `consumption_per_unit_kg` |
-| `part_batches` | Per-batch production of a part | `quantity` (batch size), `is_blocked` |
-| `products` | Finished goods | `product_code`, `is_active` |
-| `product_bom` | Parts → product mapping | `quantity_required` (per UNIT) |
-| `production_batches` | Finished-good runs | `quantity_produced`, `status` |
-| `production_batch_parts` | Traceability edge | `part_batch_id`, `quantity_used` |
-| `wastage_logs` | All wastage events | `level` (raw/part/prod), `reason` |
-| `alerts` | Dashboard inbox | `is_read`, `severity` |
-| `production_plans` | Saved forecasts | `required_parts jsonb`, `required_raw_materials jsonb` |
-| `app_settings` | Single-row config | misc. knobs (wastage_alert_threshold etc.) |
+| Table                    | Purpose                        | Critical columns                                                  |
+| ------------------------ | ------------------------------ | ----------------------------------------------------------------- |
+| `vendors`                | Supplier master                | `materials_supplied[]` filters raw-material add form              |
+| `raw_materials`          | Pellets by batch               | `remaining_quantity_kg`, `is_blocked` (cascade-trigger)           |
+| `parts`                  | Part master                    | `current_stock`, `low_stock_threshold`, `consumption_per_unit_kg` |
+| `part_batches`           | Per-batch production of a part | `quantity` (batch size), `is_blocked`                             |
+| `products`               | Finished goods                 | `product_code`, `is_active`                                       |
+| `product_bom`            | Parts → product mapping        | `quantity_required` (per UNIT)                                    |
+| `production_batches`     | Finished-good runs             | `quantity_produced`, `status`                                     |
+| `production_batch_parts` | Traceability edge              | `part_batch_id`, `quantity_used`                                  |
+| `wastage_logs`           | All wastage events             | `level` (raw/part/prod), `reason`                                 |
+| `alerts`                 | Dashboard inbox                | `is_read`, `severity`                                             |
+| `production_plans`       | Saved forecasts                | `required_parts jsonb`, `required_raw_materials jsonb`            |
+| `app_settings`           | Single-row config              | misc. knobs (wastage_alert_threshold etc.)                        |
 
 ### Row-Level Security (RLS)
 
@@ -212,15 +212,16 @@ All tables have an `auth_all` policy: `FOR ALL TO authenticated USING (true) WIT
 
 ### Database functions (RPCs)
 
-| Function | Purpose | Used by |
-|---|---|---|
-| `get_dashboard_kpis()` | One-trip KPI fetch | `/dashboard` |
-| `get_traceability_forward(raw_material_id)` | Vendor → RM → parts → productions | `/traceability` raw view |
-| `get_traceability_backward(production_batch_id)` | Production → parts → RM → vendor | `/traceability` product view |
-| **`get_part_availability(uuid[])`** *(NEW)* | **Per-batch rollup of available stock** | **`/production-planning`, `/production-new`** |
-| **`commit_production(...)`** *(NEW)* | **Atomic production commit** | **`/production-new` step 5** |
+| Function                                         | Purpose                                 | Used by                                       |
+| ------------------------------------------------ | --------------------------------------- | --------------------------------------------- |
+| `get_dashboard_kpis()`                           | One-trip KPI fetch                      | `/dashboard`                                  |
+| `get_traceability_forward(raw_material_id)`      | Vendor → RM → parts → productions       | `/traceability` raw view                      |
+| `get_traceability_backward(production_batch_id)` | Production → parts → RM → vendor        | `/traceability` product view                  |
+| **`get_part_availability(uuid[])`** _(NEW)_      | **Per-batch rollup of available stock** | **`/production-planning`, `/production-new`** |
+| **`commit_production(...)`** _(NEW)_             | **Atomic production commit**            | **`/production-new` step 5**                  |
 
 **`commit_production` signature:**
+
 ```sql
 commit_production(
   p_product_id        UUID,
@@ -244,11 +245,13 @@ It does in one DB call: pre-flight check that every picked batch has enough rema
 ### 1. New: Stock section (`/stock` + `/stock-history/$type/$id`)
 
 **Files added:**
+
 - `src/routes/_authenticated/stock.tsx`
 - `src/routes/_authenticated/stock-history.$type.$id.tsx` (flat filename, see routing gotcha)
 - Sidebar nav entry under Insight group with `Warehouse` icon (lucide-react)
 
 **What it does:**
+
 - Single page shows current stock across raw materials, parts, AND products in one table.
 - Filter tabs: `All / Raw materials / Parts / Products`.
 - Search input — case-insensitive substring match on name + code as the user types.
@@ -261,14 +264,17 @@ It does in one DB call: pre-flight check that every picked batch has enough rema
 ### 2. Rewrite: Production & Planning per spec
 
 **Files rewritten:**
+
 - `src/routes/_authenticated/production-new.tsx` — 5-step wizard
 - `src/routes/_authenticated/production-planning.tsx` — verdict line + deep links
 
 **New RPCs** in `supabase/migrations/20260707170000_commit_production_rpc.sql`:
+
 - `get_part_availability(part_ids uuid[])` → `{part_id, part_name, available, batches: [{part_batch_id, batch_number, quantity, remaining, created_at}]}`
 - `commit_production(...)` → atomic insert + decrement + refresh
 
 **Wizard (5 gated steps):**
+
 1. **Product + Quantity** — pick active product, enter units.
 2. **Availability check** — calls `get_part_availability`, blocks step 3 if shortage. Shows verdict: "Ready to produce" or "Insufficient parts" with deep-link button per shorted part ("Produce X" → jumps back to /parts and re-checks after produce).
 3. **Pick batches** — per-batch manual input with FIFO auto-fill button (sum per part must ≥ requirement).
@@ -278,6 +284,7 @@ It does in one DB call: pre-flight check that every picked batch has enough rema
 On commit success: invalidates `production_batches`, `parts`, `products`, `stock` React Query keys; navigates to `/production`.
 
 **Planning:**
+
 - Same `get_part_availability` rollup for the "available" column (no more stale `parts.current_stock` reads).
 - Green "Ready to produce" verdict line if all parts + raw on hand.
 - Red "Not ready — shopping list" if anything shorted, with deep-link buttons to `/parts` and `/raw-materials` for each material type.
@@ -287,10 +294,10 @@ On commit success: invalidates `production_batches`, `parts`, `products`, `stock
 
 Two files were registered as nested children of pages that don't render `<Outlet />`. URL changed but parent content stayed. **Fix:** renamed to flat filenames so TanStack Router registers them as top-level routes.
 
-| Before (broken) | After (working) |
-|---|---|
+| Before (broken)                              | After (working)                              |
+| -------------------------------------------- | -------------------------------------------- |
 | `products.$id.bom.tsx` → `/products/$id/bom` | `products-bom.$id.tsx` → `/products-bom/$id` |
-| `production.new.tsx` → `/production/new` | `production-new.tsx` → `/production-new` |
+| `production.new.tsx` → `/production/new`     | `production-new.tsx` → `/production-new`     |
 
 Internal `Link to="/..."` refs updated wherever pointed.
 
@@ -303,15 +310,18 @@ Pushed to https://github.com/goalgetter53/safeyinventory-redesign.git in commit 
 ## Pre-existing performance optimizations (2026-07-07 baseline)
 
 ### Database
+
 - Added composite/missing indexes: `raw_materials(material_type, is_blocked)`, `raw_materials(purchase_date desc)`, partial index on `raw_materials(is_blocked) WHERE NOT is_blocked`, `part_batches(created_at desc)`, `production_batches(status)`, `production_batches(created_at desc)`, `wastage_logs(level, reference_id)`, `wastage_logs(created_at desc)`, `production_plans(product_id, planned_date desc)`, `production_plans(created_at desc)`.
 - Three earlier `SECURITY DEFINER STABLE` RPCs replaced multi-round-trip client patterns: `get_dashboard_kpis()`, `get_traceability_forward(uuid)`, `get_traceability_backward(uuid)`.
 
 ### React Query
+
 - Global defaults: `staleTime: 30s`, `gcTime: 5min`, `refetchOnWindowFocus: false`, `retry: 1`.
 - Reference-data queries (vendors, parts, active products): `staleTime: 5min`.
 - Alerts unread badge: 60s poll (no realtime channel).
 
 ### Client
+
 - Debounced global header search and Traceability search (300 ms) — was firing 3–4 Supabase requests per keystroke.
 - Debounced Vendor list filter.
 - Raw Materials list + wizard: explicit column projection instead of `select('*')`.
@@ -320,15 +330,15 @@ Pushed to https://github.com/goalgetter53/safeyinventory-redesign.git in commit 
 
 ## Calculation test cases
 
-| Case | Inputs | Expected |
-|---|---|---|
-| Part wastage | 2000 caps × 0.05 kg/unit, actual 102 kg | expected 100 kg, wastage 2 kg (2%) |
-| High wastage alert | wastage% > `wastage_alert_threshold` (default 10) | `high_wastage_part` alert inserted |
-| Low stock alert | raw material remaining < 50 kg after deduction | `low_stock_raw` alert inserted |
-| Production shortage (pre-RPC wizard path) | required > current_stock | transaction rolls back with clear error |
-| Production shortage (commit_production RPC) | any pick exceeds remaining | RPC raises EXCEPTION, no insert, no decrement |
-| Recall cascade | raw material `is_blocked = true` | all part_batches from it blocked; all production_batches using them → status `recalled`; summary alert inserted |
-| Concurrent commits | two wizards commit same `part_batch_id` simultaneously | one wins; other raises EXCEPTION ("has only X remaining"); DB stays consistent |
+| Case                                        | Inputs                                                 | Expected                                                                                                        |
+| ------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| Part wastage                                | 2000 caps × 0.05 kg/unit, actual 102 kg                | expected 100 kg, wastage 2 kg (2%)                                                                              |
+| High wastage alert                          | wastage% > `wastage_alert_threshold` (default 10)      | `high_wastage_part` alert inserted                                                                              |
+| Low stock alert                             | raw material remaining < 50 kg after deduction         | `low_stock_raw` alert inserted                                                                                  |
+| Production shortage (pre-RPC wizard path)   | required > current_stock                               | transaction rolls back with clear error                                                                         |
+| Production shortage (commit_production RPC) | any pick exceeds remaining                             | RPC raises EXCEPTION, no insert, no decrement                                                                   |
+| Recall cascade                              | raw material `is_blocked = true`                       | all part_batches from it blocked; all production_batches using them → status `recalled`; summary alert inserted |
+| Concurrent commits                          | two wizards commit same `part_batch_id` simultaneously | one wins; other raises EXCEPTION ("has only X remaining"); DB stays consistent                                  |
 
 ---
 

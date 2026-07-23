@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Users, Search, Pencil, Trash2, Eye, Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Vendor, RawMaterial } from "@/integrations/supabase/database.types";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { PageHeader } from "@/components/inventory/page-header";
 import { EmptyState } from "@/components/inventory/empty-state";
@@ -19,10 +20,38 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { fmtDate } from "@/lib/inventory/format";
 import { audit } from "@/lib/inventory/audit";
 
@@ -39,14 +68,18 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+type RawMatWithPartBatches = Pick<RawMaterial, "vendor_id"> & {
+  part_batches?: { part_id: string }[] | null;
+};
+
 function VendorsPage() {
   const [q, setQ] = useState("");
   const debouncedQ = useDebouncedValue(q, 300);
   const [material, setMaterial] = useState<string>("all");
   const [addOpen, setAddOpen] = useState(false);
-  const [editing, setEditing] = useState<any | null>(null);
-  const [viewing, setViewing] = useState<any | null>(null);
-  const [deleting, setDeleting] = useState<any | null>(null);
+  const [editing, setEditing] = useState<Vendor | null>(null);
+  const [viewing, setViewing] = useState<Vendor | null>(null);
+  const [deleting, setDeleting] = useState<Vendor | null>(null);
   const qc = useQueryClient();
 
   const { data: vendors, isLoading } = useQuery({
@@ -55,50 +88,66 @@ function VendorsPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from("vendors").select("*").order("name");
       if (error) throw error;
-      return data;
+      return data as Vendor[];
     },
   });
 
-  const { data: partCounts } = useQuery({
+  const { data: partCountsMap } = useQuery({
     queryKey: ["vendors", "part-counts"],
     queryFn: async () => {
-      // count distinct parts per vendor via raw_materials → part_batches
-      const { data, error } = await supabase.from("raw_materials").select("vendor_id, part_batches(part_id)");
+      const { data, error } = await supabase
+        .from("raw_materials")
+        .select("vendor_id, part_batches(part_id)");
       if (error) throw error;
+      const rawList = (data ?? []) as unknown as RawMatWithPartBatches[];
       const map = new Map<string, Set<string>>();
-      (data ?? []).forEach((r: any) => {
+      rawList.forEach((r) => {
         const set = map.get(r.vendor_id) ?? new Set<string>();
-        (r.part_batches ?? []).forEach((pb: any) => set.add(pb.part_id));
+        (r.part_batches ?? []).forEach((pb) => set.add(pb.part_id));
         map.set(r.vendor_id, set);
       });
       const out: Record<string, number> = {};
-      map.forEach((s, k) => { out[k] = s.size; });
+      map.forEach((s, k) => {
+        out[k] = s.size;
+      });
       return out;
     },
   });
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("vendors").delete().eq("id", id);
+      const { error } = await (supabase.from("vendors") as any).delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Vendor deleted"); qc.invalidateQueries({ queryKey: ["vendors"] }); audit("delete", "vendor"); setDeleting(null); },
-    onError: (e: any) => toast.error(e.message ?? "Delete failed"),
+    onSuccess: () => {
+      toast.success("Vendor deleted");
+      qc.invalidateQueries({ queryKey: ["vendors"] });
+      audit("delete", "vendor");
+      setDeleting(null);
+    },
+    onError: (e: Error) => toast.error(e.message ?? "Delete failed"),
   });
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from("vendors").update({ is_active }).eq("id", id);
+      const { error } = await (supabase.from("vendors") as any).update({ is_active }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["vendors"] }),
+    onError: (e: Error) => toast.error(e.message ?? "Failed"),
   });
 
-  const knownMaterials = Array.from(new Set(((vendors ?? []) as any[]).flatMap((v) => v.materials_supplied ?? []))).sort() as string[];
+  const knownMaterials = Array.from(
+    new Set((vendors ?? []).flatMap((v) => v.materials_supplied ?? [])),
+  ).sort();
 
   const filtered = (vendors ?? []).filter((v) => {
     const term = debouncedQ.toLowerCase();
-    const matchQ = !term || [v.name, v.phone, ...(v.materials_supplied ?? [])].some((f) => String(f).toLowerCase().includes(term));
+    const matchQ =
+      !term ||
+      [v.name, v.phone, ...(v.materials_supplied ?? [])].some((f) =>
+        String(f).toLowerCase().includes(term),
+      );
     const matchM = material === "all" || (v.materials_supplied ?? []).includes(material);
     return matchQ && matchM;
   });
@@ -110,9 +159,21 @@ function VendorsPage() {
         description="Suppliers that feed raw material into production. Active vendors are eligible for FIFO allocation."
         meta={
           <>
-            <span className="text-[12px] text-muted-foreground">Total <span className="text-foreground num font-medium ml-1">{filtered.length}</span></span>
-            <span className="text-[12px] text-muted-foreground">Active <span className="text-foreground num font-medium ml-1">{filtered.filter((v) => v.is_active).length}</span></span>
-            <span className="text-[12px] text-muted-foreground">Filter <span className="text-foreground font-medium ml-1">{material === "all" ? "All materials" : material}</span></span>
+            <span className="text-[12px] text-muted-foreground">
+              Total <span className="text-foreground num font-medium ml-1">{filtered.length}</span>
+            </span>
+            <span className="text-[12px] text-muted-foreground">
+              Active{" "}
+              <span className="text-foreground num font-medium ml-1">
+                {filtered.filter((v) => v.is_active).length}
+              </span>
+            </span>
+            <span className="text-[12px] text-muted-foreground">
+              Filter{" "}
+              <span className="text-foreground font-medium ml-1">
+                {material === "all" ? "All materials" : material}
+              </span>
+            </span>
           </>
         }
         actions={
@@ -125,19 +186,43 @@ function VendorsPage() {
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <Input placeholder="Search by name, phone, material…" value={q} onChange={(e) => setQ(e.target.value)} className="pl-8 h-8 text-[13px]" />
+          <Input
+            placeholder="Search by name, phone, material…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="pl-8 h-8 text-[13px]"
+          />
         </div>
         <Select value={material} onValueChange={setMaterial}>
-          <SelectTrigger className="sm:w-48 h-8 text-[13px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="sm:w-48 h-8 text-[13px]">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All materials</SelectItem>
-            {knownMaterials.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            {knownMaterials.map((m) => (
+              <SelectItem key={m} value={m}>
+                {m}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
-      {isLoading ? <div className="p-4"><TableSkeleton /></div> : filtered.length === 0 ? (
-        <EmptyState icon={Users} title="No vendors yet" description="Add your first supplier to start tracking raw material sources." action={<Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Add Vendor</Button>} />
+      {isLoading ? (
+        <div className="p-4">
+          <TableSkeleton />
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No vendors yet"
+          description="Add your first supplier to start tracking raw material sources."
+          action={
+            <Button onClick={() => setAddOpen(true)}>
+              <Plus className="h-4 w-4" /> Add Vendor
+            </Button>
+          }
+        />
       ) : (
         <Card className="overflow-hidden p-0">
           <Table>
@@ -156,15 +241,53 @@ function VendorsPage() {
               {filtered.map((v) => (
                 <TableRow key={v.id} className="row-rule">
                   <TableCell className="font-medium text-[13px] py-2.5">{v.name}</TableCell>
-                  <TableCell className="text-[12.5px] text-muted-foreground py-2.5">{v.phone}</TableCell>
-                  <TableCell className="max-w-xs truncate text-muted-foreground text-[13px] py-2.5">{v.address}</TableCell>
-                  <TableCell className="py-2.5"><div className="flex flex-wrap gap-1">{(v.materials_supplied ?? []).map((m: string) => <MaterialBadge key={m} material={m} />)}</div></TableCell>
-                  <TableCell className="text-right num py-2.5">{partCounts?.[v.id] ?? 0}</TableCell>
-                  <TableCell className="py-2.5"><Switch checked={v.is_active} onCheckedChange={(c) => toggleActive.mutate({ id: v.id, is_active: c })} /></TableCell>
+                  <TableCell className="text-[12.5px] text-muted-foreground py-2.5">
+                    {v.phone}
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate text-muted-foreground text-[13px] py-2.5">
+                    {v.address}
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    <div className="flex flex-wrap gap-1">
+                      {(v.materials_supplied ?? []).map((m) => (
+                        <MaterialBadge key={m} material={m} />
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right num py-2.5">
+                    {partCountsMap?.[v.id] ?? 0}
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    <Switch
+                      checked={v.is_active}
+                      onCheckedChange={(c) => toggleActive.mutate({ id: v.id, is_active: c })}
+                    />
+                  </TableCell>
                   <TableCell className="text-right py-2.5">
-                    <Button variant="ghost" size="icon" onClick={() => setViewing(v)} className="h-7 w-7"><Eye className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => setEditing(v)} className="h-7 w-7"><Pencil className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => setDeleting(v)} className="h-7 w-7"><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setViewing(v)}
+                      className="h-7 w-7"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditing(v)}
+                      className="h-7 w-7"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleting(v)}
+                      className="h-7 w-7"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -173,7 +296,16 @@ function VendorsPage() {
         </Card>
       )}
 
-      <VendorForm open={addOpen || !!editing} onOpenChange={(o) => { if (!o) { setAddOpen(false); setEditing(null); } }} vendor={editing} />
+      <VendorForm
+        open={addOpen || !!editing}
+        onOpenChange={(o) => {
+          if (!o) {
+            setAddOpen(false);
+            setEditing(null);
+          }
+        }}
+        vendor={editing}
+      />
       <VendorView open={!!viewing} onOpenChange={(o) => !o && setViewing(null)} vendor={viewing} />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
@@ -181,12 +313,18 @@ function VendorsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete vendor?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently removes {deleting?.name}. Raw material batches linked to this vendor will block deletion.
+              This permanently removes {deleting?.name}. Raw material batches linked to this vendor
+              will block deletion.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => del.mutate(deleting.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => deleting && del.mutate(deleting.id)}
+              className="bg-destructive text-destructive-foreground"
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -194,21 +332,38 @@ function VendorsPage() {
   );
 }
 
-function VendorForm({ open, onOpenChange, vendor }: { open: boolean; onOpenChange: (o: boolean) => void; vendor: any | null }) {
+function VendorForm({
+  open,
+  onOpenChange,
+  vendor,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  vendor: Vendor | null;
+}) {
   const qc = useQueryClient();
   const { data: vendors } = useQuery({
     queryKey: ["vendors", "for-materials"],
     staleTime: 5 * 60_000,
-    queryFn: async () => (await supabase.from("vendors").select("materials_supplied").order("name")).data ?? [],
+    queryFn: async () =>
+      ((await supabase.from("vendors").select("materials_supplied").order("name"))
+        .data as unknown as Pick<Vendor, "materials_supplied">[]) ?? [],
   });
-  const knownMaterials = Array.from(new Set(((vendors ?? []) as any[]).flatMap((v) => v.materials_supplied ?? []))).sort() as string[];
+  const knownMaterials = Array.from(
+    new Set((vendors ?? []).flatMap((v) => v.materials_supplied ?? [])),
+  ).sort();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", phone: "", address: "", materials_supplied: [], notes: "" },
-    values: vendor ? {
-      name: vendor.name, phone: vendor.phone, address: vendor.address,
-      materials_supplied: vendor.materials_supplied ?? [], notes: vendor.notes ?? "",
-    } : undefined,
+    values: vendor
+      ? {
+          name: vendor.name,
+          phone: vendor.phone,
+          address: vendor.address,
+          materials_supplied: vendor.materials_supplied ?? [],
+          notes: vendor.notes ?? "",
+        }
+      : undefined,
   });
   const [materialDraft, setMaterialDraft] = useState("");
 
@@ -216,10 +371,10 @@ function VendorForm({ open, onOpenChange, vendor }: { open: boolean; onOpenChang
     mutationFn: async (v: FormValues) => {
       const payload = { ...v, notes: v.notes || null };
       if (vendor) {
-        const { error } = await supabase.from("vendors").update(payload).eq("id", vendor.id);
+        const { error } = await (supabase.from("vendors") as any).update(payload).eq("id", vendor.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("vendors").insert(payload);
+        const { error } = await (supabase.from("vendors") as any).insert(payload);
         if (error) throw error;
       }
     },
@@ -230,7 +385,7 @@ function VendorForm({ open, onOpenChange, vendor }: { open: boolean; onOpenChang
       onOpenChange(false);
       form.reset();
     },
-    onError: (e: any) => toast.error(e.message ?? "Save failed"),
+    onError: (e: Error) => toast.error(e.message ?? "Save failed"),
   });
 
   const mats = form.watch("materials_supplied") ?? [];
@@ -238,35 +393,56 @@ function VendorForm({ open, onOpenChange, vendor }: { open: boolean; onOpenChang
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>{vendor ? "Edit vendor" : "Add vendor"}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{vendor ? "Edit vendor" : "Add vendor"}</DialogTitle>
+        </DialogHeader>
         <form onSubmit={form.handleSubmit((v) => save.mutate(v))} className="space-y-4">
           <div>
             <Label className="label-caps">Name *</Label>
             <Input {...form.register("name")} className="mt-1" />
-            {form.formState.errors.name && <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>}
+            {form.formState.errors.name && (
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.name.message}</p>
+            )}
           </div>
           <div>
             <Label className="label-caps">Phone *</Label>
             <Input {...form.register("phone")} className="mt-1" />
-            {form.formState.errors.phone && <p className="text-xs text-destructive mt-1">{form.formState.errors.phone.message}</p>}
+            {form.formState.errors.phone && (
+              <p className="text-xs text-destructive mt-1">{form.formState.errors.phone.message}</p>
+            )}
           </div>
           <div>
             <Label className="label-caps">Address *</Label>
             <Textarea rows={3} {...form.register("address")} className="mt-1" />
-            {form.formState.errors.address && <p className="text-xs text-destructive mt-1">{form.formState.errors.address.message}</p>}
+            {form.formState.errors.address && (
+              <p className="text-xs text-destructive mt-1">
+                {form.formState.errors.address.message}
+              </p>
+            )}
           </div>
           <div>
             <Label className="label-caps">Materials supplied *</Label>
             <div className="mt-1 flex flex-wrap gap-1.5 min-h-[34px] border rounded-md p-2 bg-background">
               {mats.map((m) => (
-                <span key={m} className="inline-flex items-center gap-1 bg-secondary text-secondary-foreground rounded px-2 py-0.5 text-[12px]">
+                <span
+                  key={m}
+                  className="inline-flex items-center gap-1 bg-secondary text-secondary-foreground rounded px-2 py-0.5 text-[12px]"
+                >
                   {m}
                   <button
                     type="button"
-                    onClick={() => form.setValue("materials_supplied", mats.filter((x) => x !== m), { shouldValidate: true })}
+                    onClick={() =>
+                      form.setValue(
+                        "materials_supplied",
+                        mats.filter((x) => x !== m),
+                        { shouldValidate: true },
+                      )
+                    }
                     className="hover:text-destructive"
                     aria-label={`Remove ${m}`}
-                  >×</button>
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
               <input
@@ -276,16 +452,20 @@ function VendorForm({ open, onOpenChange, vendor }: { open: boolean; onOpenChang
                   if ((e.key === "Enter" || e.key === ",") && materialDraft.trim()) {
                     e.preventDefault();
                     const v = materialDraft.trim();
-                    if (!mats.includes(v)) form.setValue("materials_supplied", [...mats, v], { shouldValidate: true });
+                    if (!mats.includes(v))
+                      form.setValue("materials_supplied", [...mats, v], { shouldValidate: true });
                     setMaterialDraft("");
                   } else if (e.key === "Backspace" && !materialDraft && mats.length) {
-                    form.setValue("materials_supplied", mats.slice(0, -1), { shouldValidate: true });
+                    form.setValue("materials_supplied", mats.slice(0, -1), {
+                      shouldValidate: true,
+                    });
                   }
                 }}
                 onBlur={() => {
                   if (materialDraft.trim()) {
                     const v = materialDraft.trim();
-                    if (!mats.includes(v)) form.setValue("materials_supplied", [...mats, v], { shouldValidate: true });
+                    if (!mats.includes(v))
+                      form.setValue("materials_supplied", [...mats, v], { shouldValidate: true });
                     setMaterialDraft("");
                   }
                 }}
@@ -294,18 +474,28 @@ function VendorForm({ open, onOpenChange, vendor }: { open: boolean; onOpenChang
                 className="flex-1 min-w-[120px] outline-none bg-transparent text-[13px]"
               />
               <datalist id="known-materials-vendor">
-                {knownMaterials.map((m) => <option key={m} value={m} />)}
+                {knownMaterials.map((m) => (
+                  <option key={m} value={m} />
+                ))}
               </datalist>
             </div>
-            {form.formState.errors.materials_supplied && <p className="text-xs text-destructive mt-1">{form.formState.errors.materials_supplied.message}</p>}
+            {form.formState.errors.materials_supplied && (
+              <p className="text-xs text-destructive mt-1">
+                {form.formState.errors.materials_supplied.message}
+              </p>
+            )}
           </div>
           <div>
             <Label className="label-caps">Notes</Label>
             <Textarea rows={2} {...form.register("notes")} className="mt-1" />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={save.isPending}>{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Save</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={save.isPending}>
+              {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Save
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -313,43 +503,91 @@ function VendorForm({ open, onOpenChange, vendor }: { open: boolean; onOpenChang
   );
 }
 
-function VendorView({ open, onOpenChange, vendor }: { open: boolean; onOpenChange: (o: boolean) => void; vendor: any | null }) {
+type RawMaterialLight = Pick<
+  RawMaterial,
+  "id" | "batch_number" | "material_type" | "initial_quantity_kg" | "purchase_date"
+>;
+
+function VendorView({
+  open,
+  onOpenChange,
+  vendor,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  vendor: Vendor | null;
+}) {
   const { data: batches } = useQuery({
     queryKey: ["vendors", vendor?.id, "batches"],
     enabled: !!vendor,
     queryFn: async () => {
-      const { data, error } = await supabase.from("raw_materials").select("id,batch_number,material_type,initial_quantity_kg,purchase_date").eq("vendor_id", vendor.id).order("purchase_date", { ascending: false }).limit(10);
+      const { data, error } = await supabase
+        .from("raw_materials")
+        .select("id,batch_number,material_type,initial_quantity_kg,purchase_date")
+        .eq("vendor_id", vendor!.id)
+        .order("purchase_date", { ascending: false })
+        .limit(10);
       if (error) throw error;
-      return data;
+      return data as RawMaterialLight[];
     },
   });
   if (!vendor) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
-        <DialogHeader><DialogTitle>{vendor.name}</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>{vendor.name}</DialogTitle>
+        </DialogHeader>
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <div><div className="label-caps">Phone</div><div className="text-sm">{vendor.phone}</div></div>
-            <div><div className="label-caps">Address</div><div className="text-sm">{vendor.address}</div></div>
+            <div>
+              <div className="label-caps">Phone</div>
+              <div className="text-sm">{vendor.phone}</div>
+            </div>
+            <div>
+              <div className="label-caps">Address</div>
+              <div className="text-sm">{vendor.address}</div>
+            </div>
             <div>
               <div className="label-caps">Materials</div>
-              <div className="flex flex-wrap gap-1 mt-1">{(vendor.materials_supplied ?? []).map((m: string) => <MaterialBadge key={m} material={m} />)}</div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {(vendor.materials_supplied ?? []).map((m) => (
+                  <MaterialBadge key={m} material={m} />
+                ))}
+              </div>
             </div>
-            {vendor.notes && <div><div className="label-caps">Notes</div><div className="text-sm">{vendor.notes}</div></div>}
+            {vendor.notes && (
+              <div>
+                <div className="label-caps">Notes</div>
+                <div className="text-sm">{vendor.notes}</div>
+              </div>
+            )}
           </div>
           <div>
             <div className="label-caps mb-2">Recent raw material batches</div>
-            {(batches ?? []).length === 0 ? <div className="text-sm text-muted-foreground">No batches yet.</div> : (
+            {(batches ?? []).length === 0 ? (
+              <div className="text-sm text-muted-foreground">No batches yet.</div>
+            ) : (
               <Table>
-                <TableHeader><TableRow><TableHead>Batch</TableHead><TableHead>Material</TableHead><TableHead>Qty</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Batch</TableHead>
+                    <TableHead>Material</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
                   {batches?.map((b) => (
                     <TableRow key={b.id}>
                       <TableCell className="font-medium">{b.batch_number}</TableCell>
-                      <TableCell><MaterialBadge material={b.material_type} /></TableCell>
+                      <TableCell>
+                        <MaterialBadge material={b.material_type} />
+                      </TableCell>
                       <TableCell>{Number(b.initial_quantity_kg)} kg</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{fmtDate(b.purchase_date)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {fmtDate(b.purchase_date)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

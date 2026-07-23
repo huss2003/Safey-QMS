@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Bell, Info, AlertTriangle, ShieldAlert, Check } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Alert } from "@/integrations/supabase/database.types";
 import { PageHeader } from "@/components/inventory/page-header";
 import { EmptyState } from "@/components/inventory/empty-state";
 import { Button } from "@/components/ui/button";
@@ -26,19 +27,29 @@ function AlertsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["alerts", "all"],
-    queryFn: async () => (await supabase.from("alerts").select("*").order("created_at", { ascending: false }).limit(200)).data ?? [],
+    queryFn: async () =>
+      ((await supabase.from("alerts").select("*").order("created_at", { ascending: false }).limit(200)).data as Alert[]) ?? [],
   });
 
   const markOne = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("alerts").update({ is_read: true }).eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from("alerts") as any).update({ is_read: true }).eq("id", id);
+      if (error) throw error;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["alerts"] }),
-  });
-  const markAll = useMutation({
-    mutationFn: async () => { const { error } = await supabase.from("alerts").update({ is_read: true }).eq("is_read", false); if (error) throw error; },
-    onSuccess: () => { toast.success("All marked read"); qc.invalidateQueries({ queryKey: ["alerts"] }); audit("update", "alerts_mark_all"); },
+    onError: (e: Error) => toast.error(e.message ?? "Failed"),
   });
 
-  const filtered = (data ?? []).filter((a: any) => {
+  const markAll = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.from("alerts") as any).update({ is_read: true }).eq("is_read", false);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("All marked read"); qc.invalidateQueries({ queryKey: ["alerts"] }); audit("update", "alerts_mark_all"); },
+    onError: (e: Error) => toast.error(e.message ?? "Failed"),
+  });
+
+  const filtered = (data ?? []).filter((a) => {
     if (filter === "unread") return !a.is_read;
     if (filter === "low") return a.alert_type.startsWith("low_stock");
     if (filter === "waste") return a.alert_type.startsWith("high_wastage");
@@ -46,7 +57,7 @@ function AlertsPage() {
     return true;
   });
 
-  const unread = (data ?? []).filter((a: any) => !a.is_read).length;
+  const unread = (data ?? []).filter((a) => !a.is_read).length;
 
   return (
     <div>
@@ -69,7 +80,7 @@ function AlertsPage() {
       {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p> :
         filtered.length === 0 ? <Card><CardContent><EmptyState icon={Bell} title="No alerts" description="You're all caught up." /></CardContent></Card> :
         <div className="space-y-2">
-          {filtered.map((a: any) => {
+          {filtered.map((a) => {
             const Icon = a.severity === "info" ? Info : a.severity === "warning" ? AlertTriangle : ShieldAlert;
             const iconColor = a.severity === "info" ? "text-blue-500" : a.severity === "warning" ? "text-warning" : "text-destructive";
             const nav = a.alert_type.includes("raw") ? "/raw-materials" : a.alert_type.includes("part") ? "/parts" : a.alert_type.includes("product") ? "/production" : "/dashboard";

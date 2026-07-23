@@ -22,7 +22,9 @@ export function PageHeader({
       </div>
       {(description || subtitle || meta) && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          {(description || subtitle) && <p className="text-[13px] text-muted-foreground max-w-2xl">{description ?? subtitle}</p>}
+          {(description || subtitle) && (
+            <p className="text-[13px] text-muted-foreground max-w-2xl">{description ?? subtitle}</p>
+          )}
           {meta && <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">{meta}</div>}
         </div>
       )}
@@ -30,11 +32,27 @@ export function PageHeader({
   );
 }
 
-export function StatInline({ label, value, tone = "default" }: { label: string; value: ReactNode; tone?: "default" | "alert" | "ok" }) {
+export function StatInline({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: ReactNode;
+  tone?: "default" | "alert" | "ok";
+}) {
   return (
     <div className="flex items-center gap-1.5 text-[12px]">
       <span className="text-muted-foreground">{label}</span>
-      <span className={cn("num font-medium", tone === "alert" && "text-destructive", tone === "ok" && "text-success")}>{value}</span>
+      <span
+        className={cn(
+          "num font-medium",
+          tone === "alert" && "text-destructive",
+          tone === "ok" && "text-success",
+        )}
+      >
+        {value}
+      </span>
     </div>
   );
 }

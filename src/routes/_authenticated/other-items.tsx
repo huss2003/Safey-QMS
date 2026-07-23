@@ -11,8 +11,21 @@ import { TableSkeleton } from "@/components/inventory/skeletons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { fmtNum } from "@/lib/inventory/format";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +43,14 @@ type Item = {
   notes: string | null;
 };
 
-const EMPTY_FORM = { name: "", category: "", unit: "pcs", current_stock: 0, low_stock_threshold: 0, notes: "" };
+const EMPTY_FORM = {
+  name: "",
+  category: "",
+  unit: "pcs",
+  current_stock: 0,
+  low_stock_threshold: 0,
+  notes: "",
+};
 
 function OtherItemsPage() {
   const qc = useQueryClient();
@@ -54,14 +74,17 @@ function OtherItemsPage() {
   const upsert = useMutation({
     mutationFn: async (payload: typeof form & { id?: string }) => {
       if (payload.id) {
-        const { error } = await supabase.from("other_items").update({
-          name: payload.name,
-          category: payload.category,
-          unit: payload.unit,
-          current_stock: Number(payload.current_stock),
-          low_stock_threshold: Number(payload.low_stock_threshold),
-          notes: payload.notes || null,
-        }).eq("id", payload.id);
+        const { error } = await supabase
+          .from("other_items")
+          .update({
+            name: payload.name,
+            category: payload.category,
+            unit: payload.unit,
+            current_stock: Number(payload.current_stock),
+            low_stock_threshold: Number(payload.low_stock_threshold),
+            notes: payload.notes || null,
+          })
+          .eq("id", payload.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("other_items").insert({
@@ -139,13 +162,19 @@ function OtherItemsPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-4"><TableSkeleton /></div>
+            <div className="p-4">
+              <TableSkeleton />
+            </div>
           ) : (data ?? []).length === 0 ? (
             <EmptyState
               icon={Archive}
               title="No other items yet"
               description="Track standalone inventory like boxes, tapes, and consumables. No production link — stock and low-stock alerts only."
-              action={<Button onClick={openCreate} size="sm"><Plus className="h-3.5 w-3.5" /> Add first item</Button>}
+              action={
+                <Button onClick={openCreate} size="sm">
+                  <Plus className="h-3.5 w-3.5" /> Add first item
+                </Button>
+              }
             />
           ) : (
             <Table>
@@ -166,18 +195,38 @@ function OtherItemsPage() {
                     <TableRow key={it.id}>
                       <TableCell>
                         <div className="font-medium">{it.name}</div>
-                        {it.notes && <div className="text-[11px] text-muted-foreground">{it.notes}</div>}
+                        {it.notes && (
+                          <div className="text-[11px] text-muted-foreground">{it.notes}</div>
+                        )}
                       </TableCell>
                       <TableCell className="text-[12.5px]">{it.category}</TableCell>
-                      <TableCell className={cn("text-right num", low && "text-warning font-medium")}>{fmtNum(it.current_stock)}</TableCell>
-                      <TableCell className="text-right num text-xs text-muted-foreground">{fmtNum(it.low_stock_threshold)}</TableCell>
+                      <TableCell
+                        className={cn("text-right num", low && "text-warning font-medium")}
+                      >
+                        {fmtNum(it.current_stock)}
+                      </TableCell>
+                      <TableCell className="text-right num text-xs text-muted-foreground">
+                        {fmtNum(it.low_stock_threshold)}
+                      </TableCell>
                       <TableCell className="text-[12px] text-muted-foreground">{it.unit}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 justify-end">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(it)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => openEdit(it)}
+                          >
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { if (confirm(`Delete "${it.name}"?`)) remove.mutate(it.id); }}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive"
+                            onClick={() => {
+                              if (confirm(`Delete "${it.name}"?`)) remove.mutate(it.id);
+                            }}
+                          >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -197,35 +246,80 @@ function OtherItemsPage() {
             <DialogTitle>{editing ? "Edit item" : "Add item"}</DialogTitle>
           </DialogHeader>
           <form
-            onSubmit={(e) => { e.preventDefault(); upsert.mutate({ ...form, id: editing?.id }); }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              upsert.mutate({ ...form, id: editing?.id });
+            }}
             className="space-y-3"
           >
             <Field label="Name" required>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="h-9" />
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                className="h-9"
+              />
             </Field>
             <Field label="Category" required hint="e.g. Packaging, Consumables, Tools">
-              <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required className="h-9" list="other-categories" />
+              <Input
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                required
+                className="h-9"
+                list="other-categories"
+              />
               <datalist id="other-categories">
-                {categories.map((c) => <option key={c} value={c} />)}
+                {categories.map((c) => (
+                  <option key={c} value={c} />
+                ))}
               </datalist>
             </Field>
             <div className="grid grid-cols-3 gap-3">
               <Field label="Unit">
-                <Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="h-9" placeholder="pcs, m, kg…" />
+                <Input
+                  value={form.unit}
+                  onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                  className="h-9"
+                  placeholder="pcs, m, kg…"
+                />
               </Field>
               <Field label="Stock">
-                <Input type="number" step="any" min="0" value={form.current_stock} onChange={(e) => setForm({ ...form, current_stock: Number(e.target.value) })} className="h-9" />
+                <Input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={form.current_stock}
+                  onChange={(e) => setForm({ ...form, current_stock: Number(e.target.value) })}
+                  className="h-9"
+                />
               </Field>
               <Field label="Threshold">
-                <Input type="number" step="any" min="0" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: Number(e.target.value) })} className="h-9" />
+                <Input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={form.low_stock_threshold}
+                  onChange={(e) =>
+                    setForm({ ...form, low_stock_threshold: Number(e.target.value) })
+                  }
+                  className="h-9"
+                />
               </Field>
             </div>
             <Field label="Notes">
-              <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="h-9" />
+              <Input
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                className="h-9"
+              />
             </Field>
             <DialogFooter className="gap-2">
-              <Button type="button" variant="ghost" onClick={closeDialog}><X className="h-3.5 w-3.5" /> Cancel</Button>
-              <Button type="submit" disabled={upsert.isPending}><Save className="h-3.5 w-3.5" /> {editing ? "Update" : "Add"}</Button>
+              <Button type="button" variant="ghost" onClick={closeDialog}>
+                <X className="h-3.5 w-3.5" /> Cancel
+              </Button>
+              <Button type="submit" disabled={upsert.isPending}>
+                <Save className="h-3.5 w-3.5" /> {editing ? "Update" : "Add"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -234,11 +328,22 @@ function OtherItemsPage() {
   );
 }
 
-function Field({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  hint,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
       <label className="label-caps">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}
+        {required && <span className="text-destructive"> *</span>}
       </label>
       {children}
       {hint && <div className="text-[11px] text-muted-foreground">{hint}</div>}

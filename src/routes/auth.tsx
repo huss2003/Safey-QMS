@@ -54,7 +54,8 @@ function AuthPage() {
             From raw material to finished product — every batch captured.
           </h1>
           <p className="mt-3 text-[13.5px] text-muted-foreground leading-relaxed">
-            Track vendor sources, monitor wastage, plan production, and trace any finished unit back to its origin in seconds.
+            Track vendor sources, monitor wastage, plan production, and trace any finished unit back
+            to its origin in seconds.
           </p>
           <ul className="mt-6 space-y-1.5 text-[13px] text-muted-foreground">
             <li>· Forward and backward batch traceability</li>
@@ -63,7 +64,9 @@ function AuthPage() {
             <li>· Recall cascades across part and production batches</li>
           </ul>
         </div>
-        <div className="text-[11px] text-muted-foreground">© {new Date().getFullYear()} Traceability · v1.0</div>
+        <div className="text-[11px] text-muted-foreground">
+          © {new Date().getFullYear()} Traceability · v1.0
+        </div>
       </div>
 
       <div className="flex items-center justify-center p-6 sm:p-10">
@@ -74,11 +77,19 @@ function AuthPage() {
           <CardContent>
             <Tabs value={mode} onValueChange={(v) => setMode(v as "signin" | "signup")}>
               <TabsList className="grid w-full grid-cols-2 h-8">
-                <TabsTrigger value="signin" className="text-[12.5px]">Sign in</TabsTrigger>
-                <TabsTrigger value="signup" className="text-[12.5px]">Sign up</TabsTrigger>
+                <TabsTrigger value="signin" className="text-[12.5px]">
+                  Sign in
+                </TabsTrigger>
+                <TabsTrigger value="signup" className="text-[12.5px]">
+                  Sign up
+                </TabsTrigger>
               </TabsList>
-              <TabsContent value="signin" className="mt-4"><AuthForm mode="signin" /></TabsContent>
-              <TabsContent value="signup" className="mt-4"><AuthForm mode="signup" /></TabsContent>
+              <TabsContent value="signin" className="mt-4">
+                <AuthForm mode="signin" />
+              </TabsContent>
+              <TabsContent value="signup" className="mt-4">
+                <AuthForm mode="signup" />
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
@@ -88,7 +99,10 @@ function AuthPage() {
 }
 
 function AuthForm({ mode }: { mode: "signin" | "signup" }) {
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { email: "", password: "" } });
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "", password: "" },
+  });
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(v: FormValues) {
@@ -105,7 +119,9 @@ function AuthForm({ mode }: { mode: "signin" | "signup" }) {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Check your inbox to confirm your email — or sign in if confirmations are disabled.");
+        toast.success(
+          "Check your inbox to confirm your email — or sign in if confirmations are disabled.",
+        );
       }
     } catch (e: any) {
       toast.error(e?.message ?? "Authentication failed");
@@ -118,13 +134,27 @@ function AuthForm({ mode }: { mode: "signin" | "signup" }) {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
       <div className="space-y-1.5">
         <Label className="text-[12px] text-muted-foreground">Email</Label>
-        <Input type="email" {...form.register("email")} className="h-9 text-[13px]" placeholder="you@company.com" />
-        {form.formState.errors.email && <p className="text-[11px] text-destructive">{form.formState.errors.email.message}</p>}
+        <Input
+          type="email"
+          {...form.register("email")}
+          className="h-9 text-[13px]"
+          placeholder="you@company.com"
+        />
+        {form.formState.errors.email && (
+          <p className="text-[11px] text-destructive">{form.formState.errors.email.message}</p>
+        )}
       </div>
       <div className="space-y-1.5">
         <Label className="text-[12px] text-muted-foreground">Password</Label>
-        <Input type="password" {...form.register("password")} className="h-9 text-[13px]" placeholder="••••••••" />
-        {form.formState.errors.password && <p className="text-[11px] text-destructive">{form.formState.errors.password.message}</p>}
+        <Input
+          type="password"
+          {...form.register("password")}
+          className="h-9 text-[13px]"
+          placeholder="••••••••"
+        />
+        {form.formState.errors.password && (
+          <p className="text-[11px] text-destructive">{form.formState.errors.password.message}</p>
+        )}
       </div>
       <Button type="submit" className="w-full h-9 text-[13px]" disabled={loading}>
         {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

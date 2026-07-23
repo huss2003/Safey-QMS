@@ -1,10 +1,11 @@
 # Performance Optimization Plan
 
-Scope: audit and fix real bottlenecks across DB, data-fetching, and rendering. I'll skip theatre (Lighthouse score chasing, moment.js — we don't use it) and focus on changes that measurably help *this* app.
+Scope: audit and fix real bottlenecks across DB, data-fetching, and rendering. I'll skip theatre (Lighthouse score chasing, moment.js — we don't use it) and focus on changes that measurably help _this_ app.
 
 ## 1. Database: indexes + RPCs (single migration)
 
 **Add indexes** on FKs and hot filter columns that don't already exist:
+
 - `raw_materials(vendor_id)`, `(material_type, is_blocked)`, `(purchase_date desc)`
 - `part_batches(part_id)`, `(raw_material_batch_id)`, `(created_at desc)`
 - `production_batches(product_id)`, `(production_date desc)`, `(status)`, `(created_at desc)`
@@ -15,6 +16,7 @@ Scope: audit and fix real bottlenecks across DB, data-fetching, and rendering. I
 - `product_bom(product_id)`
 
 **Add RPC functions** (single round-trip replacements):
+
 - `get_dashboard_kpis()` — returns totals for raw stock, finished goods, today's production, vendor/part/RM-batch counts, low-stock counts, today's wastage %. Replaces 6+ dashboard queries.
 - `get_traceability_forward(p_raw_material_id uuid)` and `get_traceability_backward(p_production_batch_id uuid)` — recursive CTE returning full chain as JSONB. Replaces JS-side recursive fetches.
 - `get_reports_summary(p_from date, p_to date)` — aggregates for the Reports screen.
@@ -24,9 +26,11 @@ All functions `SECURITY DEFINER`, `SET search_path = public`, `STABLE`, granted 
 ## 2. React Query configuration
 
 Global defaults in `src/router.tsx` QueryClient:
+
 - `staleTime: 30_000`, `gcTime: 5*60_000`, `refetchOnWindowFocus: false`, `retry: 1`.
 
 Per-query overrides:
+
 - Reference data (vendors, parts, products, BOMs): `staleTime: 5*60_000`.
 - Alerts unread badge: `refetchInterval: 60_000`.
 - Paginated tables: `placeholderData: keepPreviousData`.
@@ -68,6 +72,7 @@ Current triggers already do minimal work (single UPDATE + one wastage log + cond
 ## Technical details
 
 **Files touched**
+
 - New migration: indexes + 3 RPC functions (single `supabase--migration` call).
 - `src/router.tsx` — QueryClient defaults.
 - `src/hooks/use-debounced-value.ts` — new.
@@ -80,6 +85,7 @@ Current triggers already do minimal work (single UPDATE + one wastage log + cond
 - `README.md` — document optimizations + before/after numbers.
 
 **Out of scope (deliberate)**
+
 - Trigger rewrite (not the bottleneck).
 - Font subsetting, image compression (no user images / custom fonts in this project).
 - HTTP/2, cache headers (handled by Lovable hosting).

@@ -4,13 +4,21 @@ import { useMemo, useState } from "react";
 import { Search, Warehouse, Package, Puzzle, Boxes, Archive } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import type { RawMaterial, Part, Product, OtherItem } from "@/integrations/supabase/database.types";
 import { PageHeader } from "@/components/inventory/page-header";
 import { TableSkeleton } from "@/components/inventory/skeletons";
 import { MaterialBadge } from "@/components/inventory/material-badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { fmtKg, fmtNum } from "@/lib/inventory/format";
 import { cn } from "@/lib/utils";
 
@@ -19,10 +27,46 @@ export const Route = createFileRoute("/_authenticated/stock")({
 });
 
 type StockRow =
-  | { type: "raw"; id: string; name: string; sub: string; material: string; stock_kg: number; low: boolean; blocked: boolean }
-  | { type: "part"; id: string; name: string; sub: string; material: string; stock_units: number; threshold: number; low: boolean }
-  | { type: "product"; id: string; name: string; sub: string; material: string; stock_units: number; active: boolean }
-  | { type: "other"; id: string; name: string; sub: string; material: string; stock_units: number; threshold: number; unit: string; low: boolean };
+  | {
+      type: "raw";
+      id: string;
+      name: string;
+      sub: string;
+      material: string;
+      stock_kg: number;
+      low: boolean;
+      blocked: boolean;
+    }
+  | {
+      type: "part";
+      id: string;
+      name: string;
+      sub: string;
+      material: string;
+      stock_units: number;
+      threshold: number;
+      low: boolean;
+    }
+  | {
+      type: "product";
+      id: string;
+      name: string;
+      sub: string;
+      material: string;
+      stock_units: number;
+      active: boolean;
+    }
+  | {
+      type: "other";
+      id: string;
+      name: string;
+      sub: string;
+      material: string;
+      stock_units: number;
+      threshold: number;
+      unit: string;
+      low: boolean;
+    };
 
 const FILTERS = [
   { value: "all", label: "All" },
@@ -39,28 +83,73 @@ function StockPage() {
 
   const { data: raws, isLoading: l1 } = useQuery({
     queryKey: ["stock", "raw"],
-    queryFn: async () => (await supabase.from("raw_materials").select("id, batch_number, material_type, remaining_quantity_kg, is_blocked").eq("is_blocked", false).order("batch_number")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("raw_materials")
+          .select("id, batch_number, material_type, remaining_quantity_kg, is_blocked")
+          .eq("is_blocked", false)
+          .order("batch_number")
+      ).data ?? [],
   });
 
   const { data: parts, isLoading: l2 } = useQuery({
     queryKey: ["stock", "parts"],
-    queryFn: async () => (await supabase.from("parts").select("id, part_name, material_type, current_stock, low_stock_threshold").order("part_name")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("parts")
+          .select("id, part_name, material_type, current_stock, low_stock_threshold")
+          .order("part_name")
+      ).data ?? [],
   });
 
   const { data: products, isLoading: l3 } = useQuery({
     queryKey: ["stock", "products"],
-    queryFn: async () => (await supabase.from("products").select("id, product_name, product_code, is_active").order("product_name")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("products")
+          .select("id, product_name, product_code, is_active")
+          .order("product_name")
+      ).data ?? [],
   });
 
   const { data: others, isLoading: l4 } = useQuery({
     queryKey: ["stock", "other"],
-    queryFn: async () => (await supabase.from("other_items").select("id, name, category, unit, current_stock, low_stock_threshold").order("category").order("name")).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("other_items")
+          .select("id, name, category, unit, current_stock, low_stock_threshold")
+          .order("category")
+          .order("name")
+      ).data ?? [],
   });
 
   const isLoading = l1 || l2 || l3 || l4;
 
+  const rawList = raws as
+    | Pick<
+        RawMaterial,
+        "id" | "batch_number" | "material_type" | "remaining_quantity_kg" | "is_blocked"
+      >[]
+    | undefined;
+  const partList = parts as
+    | Pick<Part, "id" | "part_name" | "material_type" | "current_stock" | "low_stock_threshold">[]
+    | undefined;
+  const productList = products as
+    | Pick<Product, "id" | "product_name" | "product_code" | "is_active">[]
+    | undefined;
+  const otherList = others as
+    | Pick<
+        OtherItem,
+        "id" | "name" | "category" | "unit" | "current_stock" | "low_stock_threshold"
+      >[]
+    | undefined;
+
   const rows = useMemo<StockRow[]>(() => {
-    const rawRows: StockRow[] = (raws ?? []).map((r: any) => ({
+    const rawRows: StockRow[] = (rawList ?? []).map((r) => ({
       type: "raw",
       id: r.id,
       name: r.batch_number,
@@ -70,7 +159,7 @@ function StockPage() {
       low: Number(r.remaining_quantity_kg) < 50,
       blocked: !!r.is_blocked,
     }));
-    const partRows: StockRow[] = (parts ?? []).map((p: any) => ({
+    const partRows: StockRow[] = (partList ?? []).map((p) => ({
       type: "part",
       id: p.id,
       name: p.part_name,
@@ -80,18 +169,16 @@ function StockPage() {
       threshold: Number(p.low_stock_threshold),
       low: Number(p.current_stock) < Number(p.low_stock_threshold),
     }));
-    // Products don't carry an explicit stock column — derive from production_batches sum.
-    // For now show "0" placeholder; the production page is the source of truth.
-    const productRows: StockRow[] = (products ?? []).map((p: any) => ({
+    const productRows: StockRow[] = (productList ?? []).map((p) => ({
       type: "product",
       id: p.id,
       name: p.product_name,
-      sub: p.product_code,
+      sub: p.product_code ?? "",
       material: "—",
       stock_units: 0,
       active: !!p.is_active,
     }));
-    const otherRows: StockRow[] = (others ?? []).map((o: any) => ({
+    const otherRows: StockRow[] = (otherList ?? []).map((o) => ({
       type: "other",
       id: o.id,
       name: o.name,
@@ -103,7 +190,7 @@ function StockPage() {
       low: Number(o.current_stock) < Number(o.low_stock_threshold),
     }));
     return [...rawRows, ...partRows, ...productRows, ...otherRows];
-  }, [raws, parts, products, others]);
+  }, [rawList, partList, productList, otherList]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -159,12 +246,16 @@ function StockPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-4"><TableSkeleton /></div>
+            <div className="p-4">
+              <TableSkeleton />
+            </div>
           ) : filtered.length === 0 ? (
             <div className="p-12 text-center">
               <Warehouse className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
               <div className="text-sm font-medium">No items match</div>
-              <div className="text-xs text-muted-foreground mt-1">Adjust filters or search to see stock.</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Adjust filters or search to see stock.
+              </div>
             </div>
           ) : (
             <Table>
@@ -183,36 +274,44 @@ function StockPage() {
                   const linkTo = r.type === "other" ? "/other-items" : "/stock-history/$type/$id";
                   const linkParams = r.type === "other" ? undefined : { type: r.type, id: r.id };
                   return (
-                  <TableRow
-                    key={`${r.type}-${r.id}`}
-                    className="cursor-pointer hover:bg-muted/40"
-                  >
-                    <TableCell>
-                      <Link
-                        to={linkTo as any}
-                        params={linkParams as any}
-                        className="inline-flex items-center gap-1.5"
-                      >
-                        <TypeBadge type={r.type} />
-                      </Link>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <Link to={linkTo as any} params={linkParams as any} className="hover:underline">
-                        {r.name}
-                      </Link>
-                      <div className="text-[11px] text-muted-foreground">{r.sub}</div>
-                    </TableCell>
-                    <TableCell>
-                      {r.material === "—" ? <span className="text-muted-foreground">—</span> : <MaterialBadge material={r.material} />}
-                    </TableCell>
-                    <TableCell className="text-right num">
-                      {r.type === "raw" ? fmtKg(r.stock_kg) : fmtNum(r.stock_units)}
-                    </TableCell>
-                    <TableCell className="text-right num text-xs text-muted-foreground">
-                      {(r.type === "part" || r.type === "other") ? fmtNum(r.threshold) : "—"}
-                    </TableCell>
-                    <TableCell>{renderStatus(r)}</TableCell>
-                  </TableRow>
+                    <TableRow
+                      key={`${r.type}-${r.id}`}
+                      className="cursor-pointer hover:bg-muted/40"
+                    >
+                      <TableCell>
+                        <Link
+                          to={linkTo as any}
+                          params={linkParams as any}
+                          className="inline-flex items-center gap-1.5"
+                        >
+                          <TypeBadge type={r.type} />
+                        </Link>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <Link
+                          to={linkTo as any}
+                          params={linkParams as any}
+                          className="hover:underline"
+                        >
+                          {r.name}
+                        </Link>
+                        <div className="text-[11px] text-muted-foreground">{r.sub}</div>
+                      </TableCell>
+                      <TableCell>
+                        {r.material === "—" ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <MaterialBadge material={r.material} />
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right num">
+                        {r.type === "raw" ? fmtKg(r.stock_kg) : fmtNum(r.stock_units)}
+                      </TableCell>
+                      <TableCell className="text-right num text-xs text-muted-foreground">
+                        {r.type === "part" || r.type === "other" ? fmtNum(r.threshold) : "—"}
+                      </TableCell>
+                      <TableCell>{renderStatus(r)}</TableCell>
+                    </TableRow>
                   );
                 })}
               </TableBody>
@@ -225,21 +324,54 @@ function StockPage() {
 }
 
 function TypeBadge({ type }: { type: "raw" | "part" | "product" | "other" }) {
-  if (type === "raw") return <Badge variant="outline" className="gap-1"><Package className="h-3 w-3" /> Raw</Badge>;
-  if (type === "part") return <Badge variant="outline" className="gap-1"><Puzzle className="h-3 w-3" /> Part</Badge>;
-  if (type === "other") return <Badge variant="outline" className="gap-1"><Archive className="h-3 w-3" /> Other</Badge>;
-  return <Badge variant="outline" className="gap-1"><Boxes className="h-3 w-3" /> Product</Badge>;
+  if (type === "raw")
+    return (
+      <Badge variant="outline" className="gap-1">
+        <Package className="h-3 w-3" /> Raw
+      </Badge>
+    );
+  if (type === "part")
+    return (
+      <Badge variant="outline" className="gap-1">
+        <Puzzle className="h-3 w-3" /> Part
+      </Badge>
+    );
+  if (type === "other")
+    return (
+      <Badge variant="outline" className="gap-1">
+        <Archive className="h-3 w-3" /> Other
+      </Badge>
+    );
+  return (
+    <Badge variant="outline" className="gap-1">
+      <Boxes className="h-3 w-3" /> Product
+    </Badge>
+  );
 }
 
 function renderStatus(r: StockRow) {
   if (r.type === "raw") {
     if (r.blocked) return <Badge variant="destructive">Blocked</Badge>;
-    if (r.low) return <Badge variant="outline" className="border-warning text-warning">Low</Badge>;
+    if (r.low)
+      return (
+        <Badge variant="outline" className="border-warning text-warning">
+          Low
+        </Badge>
+      );
     return <Badge variant="secondary">Active</Badge>;
   }
   if (r.type === "part" || r.type === "other") {
-    if (r.low) return <Badge variant="outline" className="border-warning text-warning">Low</Badge>;
+    if (r.low)
+      return (
+        <Badge variant="outline" className="border-warning text-warning">
+          Low
+        </Badge>
+      );
     return <Badge variant="secondary">OK</Badge>;
   }
-  return r.active ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>;
+  return r.active ? (
+    <Badge variant="secondary">Active</Badge>
+  ) : (
+    <Badge variant="outline">Inactive</Badge>
+  );
 }

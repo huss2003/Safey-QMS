@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Date:** 10 July 2026  
-**Status:** Production  
+**Status:** Production
 
 ---
 
@@ -26,17 +26,17 @@ Small manufacturing factories producing finished goods from raw materials throug
 
 ## 2. Tech Stack
 
-| Layer | Technology |
-|---|---|
+| Layer    | Technology                                                             |
+| -------- | ---------------------------------------------------------------------- |
 | Frontend | React 19, TanStack Start (file-based routing), TanStack React Query v5 |
-| Styling | Tailwind CSS v4, Radix UI primitives |
-| Forms | React Hook Form + Zod validation |
-| Charts | Recharts (lazy-loaded) |
-| Backend | Supabase (PostgreSQL 15+), Row Level Security |
-| Build | Vite 8, Bun |
-| Hosting | Netlify (static export) |
-| Icons | Lucide React |
-| Toasts | Sonner |
+| Styling  | Tailwind CSS v4, Radix UI primitives                                   |
+| Forms    | React Hook Form + Zod validation                                       |
+| Charts   | Recharts (lazy-loaded)                                                 |
+| Backend  | Supabase (PostgreSQL 15+), Row Level Security                          |
+| Build    | Vite 8, Bun                                                            |
+| Hosting  | Netlify (static export)                                                |
+| Icons    | Lucide React                                                           |
+| Toasts   | Sonner                                                                 |
 
 ---
 
@@ -64,184 +64,184 @@ Other Items (miscellaneous inventory)
 
 #### `vendors`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `name` | TEXT | NOT NULL |
-| `phone` | TEXT | NOT NULL |
-| `address` | TEXT | NOT NULL |
-| `materials_supplied` | TEXT[] | Array of material type strings |
-| `notes` | TEXT | nullable |
-| `is_active` | BOOLEAN | default `true` |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | auto-updated by trigger |
+| Column               | Type        | Constraints                    |
+| -------------------- | ----------- | ------------------------------ |
+| `id`                 | UUID        | PK                             |
+| `name`               | TEXT        | NOT NULL                       |
+| `phone`              | TEXT        | NOT NULL                       |
+| `address`            | TEXT        | NOT NULL                       |
+| `materials_supplied` | TEXT[]      | Array of material type strings |
+| `notes`              | TEXT        | nullable                       |
+| `is_active`          | BOOLEAN     | default `true`                 |
+| `created_at`         | TIMESTAMPTZ |                                |
+| `updated_at`         | TIMESTAMPTZ | auto-updated by trigger        |
 
 #### `raw_materials`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `material_type` | TEXT | e.g. PC, POM, PP, TPE |
-| `vendor_id` | UUID | FK → `vendors.id`, ON DELETE RESTRICT |
-| `batch_number` | TEXT | UNIQUE, auto-generated (e.g. `PP-001`) |
-| `initial_quantity_kg` | NUMERIC(10,3) | > 0 |
-| `remaining_quantity_kg` | NUMERIC(10,3) | ≥ 0, decremented by triggers |
-| `rate_per_kg` | NUMERIC(10,2) | ≥ 0 |
-| `total_cost` | NUMERIC(14,2) | STORED GENERATED = initial × rate |
-| `purchase_date` | DATE | default CURRENT_DATE |
-| `notes` | TEXT | |
-| `is_blocked` | BOOLEAN | default false; triggers cascade block |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column                  | Type          | Constraints                            |
+| ----------------------- | ------------- | -------------------------------------- |
+| `id`                    | UUID          | PK                                     |
+| `material_type`         | TEXT          | e.g. PC, POM, PP, TPE                  |
+| `vendor_id`             | UUID          | FK → `vendors.id`, ON DELETE RESTRICT  |
+| `batch_number`          | TEXT          | UNIQUE, auto-generated (e.g. `PP-001`) |
+| `initial_quantity_kg`   | NUMERIC(10,3) | > 0                                    |
+| `remaining_quantity_kg` | NUMERIC(10,3) | ≥ 0, decremented by triggers           |
+| `rate_per_kg`           | NUMERIC(10,2) | ≥ 0                                    |
+| `total_cost`            | NUMERIC(14,2) | STORED GENERATED = initial × rate      |
+| `purchase_date`         | DATE          | default CURRENT_DATE                   |
+| `notes`                 | TEXT          |                                        |
+| `is_blocked`            | BOOLEAN       | default false; triggers cascade block  |
+| `created_at`            | TIMESTAMPTZ   |                                        |
+| `updated_at`            | TIMESTAMPTZ   |                                        |
 
 #### `parts`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `part_name` | TEXT | UNIQUE |
-| `material_type` | TEXT | |
-| `consumption_per_unit_kg` | NUMERIC(10,4) | > 0 |
-| `current_stock` | NUMERIC(12,3) | default 0; managed by triggers |
-| `low_stock_threshold` | NUMERIC(12,3) | default 100 |
-| `notes` | TEXT | |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column                    | Type          | Constraints                    |
+| ------------------------- | ------------- | ------------------------------ |
+| `id`                      | UUID          | PK                             |
+| `part_name`               | TEXT          | UNIQUE                         |
+| `material_type`           | TEXT          |                                |
+| `consumption_per_unit_kg` | NUMERIC(10,4) | > 0                            |
+| `current_stock`           | NUMERIC(12,3) | default 0; managed by triggers |
+| `low_stock_threshold`     | NUMERIC(12,3) | default 100                    |
+| `notes`                   | TEXT          |                                |
+| `created_at`              | TIMESTAMPTZ   |                                |
+| `updated_at`              | TIMESTAMPTZ   |                                |
 
 #### `part_batches`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `batch_number` | TEXT | UNIQUE, auto-generated (e.g. `CLIP-B003`) |
-| `part_id` | UUID | FK → `parts.id` |
-| `quantity` | NUMERIC(12,3) | ≥ 0 |
-| `raw_material_batch_id` | UUID | FK → `raw_materials.id` |
-| `expected_usage_kg` | NUMERIC(10,3) | |
-| `actual_usage_kg` | NUMERIC(10,3) | ≥ 0 |
-| `wastage_kg` | NUMERIC(10,3) | STORED GENERATED = actual − expected |
-| `wastage_reason` | TEXT | CHECK: machine_issue, operator_error, material_defect, setup_loss, other |
-| `wastage_notes` | TEXT | |
-| `is_blocked` | BOOLEAN | default false; cascaded from raw_material |
-| `created_at` | TIMESTAMPTZ | |
+| Column                  | Type          | Constraints                                                              |
+| ----------------------- | ------------- | ------------------------------------------------------------------------ |
+| `id`                    | UUID          | PK                                                                       |
+| `batch_number`          | TEXT          | UNIQUE, auto-generated (e.g. `CLIP-B003`)                                |
+| `part_id`               | UUID          | FK → `parts.id`                                                          |
+| `quantity`              | NUMERIC(12,3) | ≥ 0                                                                      |
+| `raw_material_batch_id` | UUID          | FK → `raw_materials.id`                                                  |
+| `expected_usage_kg`     | NUMERIC(10,3) |                                                                          |
+| `actual_usage_kg`       | NUMERIC(10,3) | ≥ 0                                                                      |
+| `wastage_kg`            | NUMERIC(10,3) | STORED GENERATED = actual − expected                                     |
+| `wastage_reason`        | TEXT          | CHECK: machine_issue, operator_error, material_defect, setup_loss, other |
+| `wastage_notes`         | TEXT          |                                                                          |
+| `is_blocked`            | BOOLEAN       | default false; cascaded from raw_material                                |
+| `created_at`            | TIMESTAMPTZ   |                                                                          |
 
 #### `products`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `product_name` | TEXT | NOT NULL, UNIQUE |
-| `product_code` | TEXT | UNIQUE, nullable |
-| `description` | TEXT | |
-| `is_active` | BOOLEAN | default true |
-| `created_at` | TIMESTAMPTZ | |
+| Column         | Type        | Constraints      |
+| -------------- | ----------- | ---------------- |
+| `id`           | UUID        | PK               |
+| `product_name` | TEXT        | NOT NULL, UNIQUE |
+| `product_code` | TEXT        | UNIQUE, nullable |
+| `description`  | TEXT        |                  |
+| `is_active`    | BOOLEAN     | default true     |
+| `created_at`   | TIMESTAMPTZ |                  |
 
 #### `product_bom` (Bill of Materials)
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `product_id` | UUID | FK → `products.id`, ON DELETE CASCADE |
-| `part_id` | UUID | FK → `parts.id` |
-| `quantity_required` | INTEGER | > 0 |
-| | | UNIQUE(product_id, part_id) |
+| Column              | Type    | Constraints                           |
+| ------------------- | ------- | ------------------------------------- |
+| `id`                | UUID    | PK                                    |
+| `product_id`        | UUID    | FK → `products.id`, ON DELETE CASCADE |
+| `part_id`           | UUID    | FK → `parts.id`                       |
+| `quantity_required` | INTEGER | > 0                                   |
+|                     |         | UNIQUE(product_id, part_id)           |
 
 #### `production_batches`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `batch_number` | TEXT | UNIQUE, auto-generated (e.g. `B001`) |
-| `product_id` | UUID | FK → `products.id` |
-| `quantity_produced` | INTEGER | > 0 |
-| `expected_raw_material_kg` | NUMERIC(10,3) | |
-| `actual_raw_material_kg` | NUMERIC(10,3) | ≥ 0 |
-| `wastage_kg` | NUMERIC(10,3) | STORED GENERATED = actual − expected |
-| `wastage_reason` | TEXT | |
-| `wastage_notes` | TEXT | |
-| `extra_raw_material_batch_id` | UUID | FK → `raw_materials.id`, nullable |
-| `production_date` | DATE | default CURRENT_DATE |
-| `status` | TEXT | CHECK: in_progress, completed, recalled |
-| `notes` | TEXT | |
-| `created_at` | TIMESTAMPTZ | |
+| Column                        | Type          | Constraints                             |
+| ----------------------------- | ------------- | --------------------------------------- |
+| `id`                          | UUID          | PK                                      |
+| `batch_number`                | TEXT          | UNIQUE, auto-generated (e.g. `B001`)    |
+| `product_id`                  | UUID          | FK → `products.id`                      |
+| `quantity_produced`           | INTEGER       | > 0                                     |
+| `expected_raw_material_kg`    | NUMERIC(10,3) |                                         |
+| `actual_raw_material_kg`      | NUMERIC(10,3) | ≥ 0                                     |
+| `wastage_kg`                  | NUMERIC(10,3) | STORED GENERATED = actual − expected    |
+| `wastage_reason`              | TEXT          |                                         |
+| `wastage_notes`               | TEXT          |                                         |
+| `extra_raw_material_batch_id` | UUID          | FK → `raw_materials.id`, nullable       |
+| `production_date`             | DATE          | default CURRENT_DATE                    |
+| `status`                      | TEXT          | CHECK: in_progress, completed, recalled |
+| `notes`                       | TEXT          |                                         |
+| `created_at`                  | TIMESTAMPTZ   |                                         |
 
 #### `production_batch_parts`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `production_batch_id` | UUID | FK → `production_batches.id`, ON DELETE CASCADE |
-| `part_batch_id` | UUID | FK → `part_batches.id` |
-| `quantity_used` | NUMERIC(12,3) | > 0 |
-| | | UNIQUE(production_batch_id, part_batch_id) |
+| Column                | Type          | Constraints                                     |
+| --------------------- | ------------- | ----------------------------------------------- |
+| `id`                  | UUID          | PK                                              |
+| `production_batch_id` | UUID          | FK → `production_batches.id`, ON DELETE CASCADE |
+| `part_batch_id`       | UUID          | FK → `part_batches.id`                          |
+| `quantity_used`       | NUMERIC(12,3) | > 0                                             |
+|                       |               | UNIQUE(production_batch_id, part_batch_id)      |
 
 #### `wastage_logs`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `level` | TEXT | CHECK: part, product |
-| `reference_id` | UUID | polymorphic reference |
-| `level_name` | TEXT | human-readable label |
-| `expected_kg` | NUMERIC(10,3) | |
-| `actual_kg` | NUMERIC(10,3) | |
-| `wastage_kg` | NUMERIC(10,3) | |
-| `wastage_percentage` | NUMERIC(8,2) | STORED GENERATED |
-| `reason` | TEXT | |
-| `notes` | TEXT | |
-| `created_at` | TIMESTAMPTZ | |
+| Column               | Type          | Constraints           |
+| -------------------- | ------------- | --------------------- |
+| `id`                 | UUID          | PK                    |
+| `level`              | TEXT          | CHECK: part, product  |
+| `reference_id`       | UUID          | polymorphic reference |
+| `level_name`         | TEXT          | human-readable label  |
+| `expected_kg`        | NUMERIC(10,3) |                       |
+| `actual_kg`          | NUMERIC(10,3) |                       |
+| `wastage_kg`         | NUMERIC(10,3) |                       |
+| `wastage_percentage` | NUMERIC(8,2)  | STORED GENERATED      |
+| `reason`             | TEXT          |                       |
+| `notes`              | TEXT          |                       |
+| `created_at`         | TIMESTAMPTZ   |                       |
 
 #### `alerts`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `alert_type` | TEXT | CHECK: low_stock_raw, low_stock_part, high_wastage_part, high_wastage_product, shortage_planned, info |
-| `severity` | TEXT | CHECK: info, warning, critical |
-| `title` | TEXT | |
-| `message` | TEXT | |
-| `reference_id` | UUID | nullable |
-| `is_read` | BOOLEAN | default false |
-| `created_at` | TIMESTAMPTZ | |
+| Column         | Type        | Constraints                                                                                           |
+| -------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| `id`           | UUID        | PK                                                                                                    |
+| `alert_type`   | TEXT        | CHECK: low_stock_raw, low_stock_part, high_wastage_part, high_wastage_product, shortage_planned, info |
+| `severity`     | TEXT        | CHECK: info, warning, critical                                                                        |
+| `title`        | TEXT        |                                                                                                       |
+| `message`      | TEXT        |                                                                                                       |
+| `reference_id` | UUID        | nullable                                                                                              |
+| `is_read`      | BOOLEAN     | default false                                                                                         |
+| `created_at`   | TIMESTAMPTZ |                                                                                                       |
 
 #### `production_plans`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `plan_number` | TEXT | UNIQUE, auto-generated (e.g. `PLAN-20260710-001`) |
-| `product_id` | UUID | FK → `products.id` |
-| `planned_quantity` | INTEGER | > 0 |
-| `planned_date` | DATE | |
-| `required_parts` | JSONB | snapshot of part requirements |
-| `required_raw_materials` | JSONB | snapshot of RM requirements |
-| `status` | TEXT | CHECK: planned, in_progress, completed, cancelled |
-| `created_at` | TIMESTAMPTZ | |
+| Column                   | Type        | Constraints                                       |
+| ------------------------ | ----------- | ------------------------------------------------- |
+| `id`                     | UUID        | PK                                                |
+| `plan_number`            | TEXT        | UNIQUE, auto-generated (e.g. `PLAN-20260710-001`) |
+| `product_id`             | UUID        | FK → `products.id`                                |
+| `planned_quantity`       | INTEGER     | > 0                                               |
+| `planned_date`           | DATE        |                                                   |
+| `required_parts`         | JSONB       | snapshot of part requirements                     |
+| `required_raw_materials` | JSONB       | snapshot of RM requirements                       |
+| `status`                 | TEXT        | CHECK: planned, in_progress, completed, cancelled |
+| `created_at`             | TIMESTAMPTZ |                                                   |
 
 #### `app_settings` (singleton)
 
-| Column | Type | Default |
-|---|---|---|
-| `id` | INTEGER | 1 |
-| `factory_name` | TEXT | 'My Factory' |
-| `currency_symbol` | TEXT | '₹' |
-| `wastage_alert_threshold` | NUMERIC(5,2) | 10 (%) |
-| `low_stock_raw_threshold` | NUMERIC(10,2) | 50 (kg) |
-| `updated_at` | TIMESTAMPTZ | |
+| Column                    | Type          | Default      |
+| ------------------------- | ------------- | ------------ |
+| `id`                      | INTEGER       | 1            |
+| `factory_name`            | TEXT          | 'My Factory' |
+| `currency_symbol`         | TEXT          | '₹'          |
+| `wastage_alert_threshold` | NUMERIC(5,2)  | 10 (%)       |
+| `low_stock_raw_threshold` | NUMERIC(10,2) | 50 (kg)      |
+| `updated_at`              | TIMESTAMPTZ   |              |
 
 #### `other_items`
 
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | UUID | PK |
-| `name` | TEXT | NOT NULL |
-| `category` | TEXT | NOT NULL |
-| `unit` | TEXT | default 'pcs' |
-| `current_stock` | NUMERIC | ≥ 0 |
-| `low_stock_threshold` | NUMERIC | ≥ 0 |
-| `notes` | TEXT | |
-| `created_at` | TIMESTAMPTZ | |
-| `updated_at` | TIMESTAMPTZ | |
+| Column                | Type        | Constraints   |
+| --------------------- | ----------- | ------------- |
+| `id`                  | UUID        | PK            |
+| `name`                | TEXT        | NOT NULL      |
+| `category`            | TEXT        | NOT NULL      |
+| `unit`                | TEXT        | default 'pcs' |
+| `current_stock`       | NUMERIC     | ≥ 0           |
+| `low_stock_threshold` | NUMERIC     | ≥ 0           |
+| `notes`               | TEXT        |               |
+| `created_at`          | TIMESTAMPTZ |               |
+| `updated_at`          | TIMESTAMPTZ |               |
 
 ---
 
@@ -250,6 +250,7 @@ Other Items (miscellaneous inventory)
 ### `get_dashboard_kpis() → JSONB`
 
 Single round-trip returning all dashboard KPIs:
+
 - Total raw material stock (kg), active raw batch count, material type count
 - Finished goods count, active product count
 - Today's production: batch count, units, total actual kg, total wastage
@@ -262,6 +263,7 @@ Single round-trip returning all dashboard KPIs:
 ### `get_part_availability(part_ids UUID[]) → JSONB`
 
 Given an array of part IDs, returns:
+
 - Per-part: total available quantity
 - Per-batch: batch_id, batch_number, original quantity, remaining quantity, created_at
 
@@ -270,12 +272,14 @@ Used by the production wizard and planning page.
 ### `get_traceability_forward(raw_material_id UUID) → JSONB`
 
 Given a raw material batch ID:
+
 - Raw material details + vendor info
 - All downstream part_batches with their production_batches (product, quantity, date, status)
 
 ### `get_traceability_backward(production_batch_id UUID) → JSONB`
 
 Given a production batch ID:
+
 - Production batch + product info
 - All upstream part_batches with raw_materials and vendors
 
@@ -295,16 +299,17 @@ Utility using advisory lock + MAX query for sequential batch numbering.
 
 BEFORE INSERT triggers auto-generate sequential batch numbers:
 
-| Table | Pattern | Example |
-|---|---|---|
-| `raw_materials` | `{MATERIAL_TYPE}-NNN` | `PP-001` |
-| `part_batches` | `{PART_CODE}-BNNN` | `CLIP-B003` |
-| `production_batches` | `BNNN` | `B027` |
-| `production_plans` | `PLAN-YYYYMMDD-NNN` | `PLAN-20260710-001` |
+| Table                | Pattern               | Example             |
+| -------------------- | --------------------- | ------------------- |
+| `raw_materials`      | `{MATERIAL_TYPE}-NNN` | `PP-001`            |
+| `part_batches`       | `{PART_CODE}-BNNN`    | `CLIP-B003`         |
+| `production_batches` | `BNNN`                | `B027`              |
+| `production_plans`   | `PLAN-YYYYMMDD-NNN`   | `PLAN-20260710-001` |
 
 ### 5.3 Part Batch After Insert
 
 When a part batch is created:
+
 1. Deduct `actual_usage_kg` from `raw_materials.remaining_quantity_kg`
 2. Add `quantity` to `parts.current_stock`
 3. Insert a `wastage_logs` entry
@@ -314,12 +319,14 @@ When a part batch is created:
 ### 5.4 Production Batch Part After Insert
 
 When a production batch part is consumed:
+
 - Deduct `quantity_used` from `parts.current_stock`
 - Raise exception if stock goes negative (prevents over-consumption)
 
 ### 5.5 Production Batch After Insert
 
 When a production batch is created:
+
 1. If `extra_raw_material_batch_id` set → deduct from that RM
 2. Insert product-level `wastage_logs` entry
 3. If wastage > threshold → insert `high_wastage_product` alert
@@ -327,11 +334,13 @@ When a production batch is created:
 ### 5.6 Other Items Low Stock
 
 When an other item is inserted/updated:
+
 - If `current_stock < low_stock_threshold` → insert `low_stock_raw` alert
 
 ### 5.7 Raw Material Block Cascade
 
 When `is_blocked` changes from false to true on `raw_materials`:
+
 1. Block all related `part_batches`
 2. Set `status='recalled'` on all related `production_batches`
 3. Insert a critical alert with affected counts
@@ -343,6 +352,7 @@ When `is_blocked` changes from false to true on `raw_materials`:
 ### 6.1 Dashboard (`/`)
 
 KPI cards with real-time data from `get_dashboard_kpis` RPC:
+
 - Raw Material Stock (kg) + batch count + material types
 - Finished Goods count + active products
 - Today's Production (batches, units)
@@ -406,6 +416,7 @@ Quick actions: "Trace batch", "Start production". Each card links to its detail 
 ### 6.8 Production Wizard (`/production-new`)
 
 5-step guided production flow:
+
 1. **Product & Quantity** — select product, enter quantity to produce
 2. **Availability Check** — calls `get_part_availability` RPC, shows part shortages
 3. **Pick Part Batches** — manual selection or FIFO auto-allocate
@@ -432,6 +443,7 @@ Quick actions: "Trace batch", "Start production". Each card links to its detail 
 ### 6.11 Stock History (`/stock-history/$type/$id`)
 
 Parametric route for detailed stock history:
+
 - **Raw**: part batches produced from this RM, usage, wastage
 - **Part**: batch history, source RM, vendor
 - **Product**: BOM + all production runs
@@ -452,6 +464,7 @@ Parametric route for detailed stock history:
 ### 6.14 Reports (`/reports`)
 
 Three report tabs:
+
 1. **Wastage** — date range picker, bar/pie charts, CSV export
 2. **Monthly Production** — month picker, chart by product/day, CSV export
 3. **Stock Report** — raw/parts/finished goods tables, CSV export
@@ -488,48 +501,48 @@ Three report tabs:
 
 ### 7.1 Stock Invariants (Enforced by Triggers)
 
-| Rule | Enforcement |
-|---|---|
-| Part production deducts from RM remaining | `part_batch_after_insert` trigger |
-| Part production adds to parts current_stock | `part_batch_after_insert` trigger |
-| Production consumption deducts from parts current_stock | `production_batch_part_after_insert` trigger |
-| No negative parts stock | Exception raised in trigger |
-| Wastage auto-logged at part and product level | Triggers insert into `wastage_logs` |
-| Blocking RM cascades to part batches + production recall | `raw_material_block_cascade` trigger |
+| Rule                                                     | Enforcement                                  |
+| -------------------------------------------------------- | -------------------------------------------- |
+| Part production deducts from RM remaining                | `part_batch_after_insert` trigger            |
+| Part production adds to parts current_stock              | `part_batch_after_insert` trigger            |
+| Production consumption deducts from parts current_stock  | `production_batch_part_after_insert` trigger |
+| No negative parts stock                                  | Exception raised in trigger                  |
+| Wastage auto-logged at part and product level            | Triggers insert into `wastage_logs`          |
+| Blocking RM cascades to part batches + production recall | `raw_material_block_cascade` trigger         |
 
 ### 7.2 Batch Number Format
 
-| Entity | Format | Example |
-|---|---|---|
-| Raw Material | `{MATERIAL_TYPE}-NNN` | `PP-001` |
-| Part Batch | `{PART_CODE}-BNNN` | `CLIP-B003` |
-| Production Batch | `BNNN` | `B027` |
-| Production Plan | `PLAN-YYYYMMDD-NNN` | `PLAN-20260710-001` |
+| Entity           | Format                | Example             |
+| ---------------- | --------------------- | ------------------- |
+| Raw Material     | `{MATERIAL_TYPE}-NNN` | `PP-001`            |
+| Part Batch       | `{PART_CODE}-BNNN`    | `CLIP-B003`         |
+| Production Batch | `BNNN`                | `B027`              |
+| Production Plan  | `PLAN-YYYYMMDD-NNN`   | `PLAN-20260710-001` |
 
 ### 7.3 Alert Types
 
-| Type | Trigger Condition | Severity |
-|---|---|---|
-| `low_stock_raw` | RM remaining < threshold | warning |
-| `low_stock_part` | Part stock < threshold | warning |
-| `high_wastage_part` | Part wastage % > threshold | critical |
+| Type                   | Trigger Condition             | Severity |
+| ---------------------- | ----------------------------- | -------- |
+| `low_stock_raw`        | RM remaining < threshold      | warning  |
+| `low_stock_part`       | Part stock < threshold        | warning  |
+| `high_wastage_part`    | Part wastage % > threshold    | critical |
 | `high_wastage_product` | Product wastage % > threshold | critical |
-| `shortage_planned` | Production plan has shortages | warning |
+| `shortage_planned`     | Production plan has shortages | warning  |
 
 ---
 
 ## 8. UI Components
 
-| Component | Purpose |
-|---|---|
-| `PageHeader` | Page title, subtitle, stats, action buttons |
-| `DataTable` | Generic typed table with loading/empty states |
-| `MaterialBadge` | Color-coded material type badge |
-| `PartProduceDialog` | 4-step part production wizard |
-| `EmptyState` | Centered empty state with icon and action |
-| `TableSkeleton` | Loading skeleton for tables |
-| `CardSkeleton` | Loading skeleton for cards |
-| `TopProgress` | Slim animated progress bar during navigation |
+| Component           | Purpose                                       |
+| ------------------- | --------------------------------------------- |
+| `PageHeader`        | Page title, subtitle, stats, action buttons   |
+| `DataTable`         | Generic typed table with loading/empty states |
+| `MaterialBadge`     | Color-coded material type badge               |
+| `PartProduceDialog` | 4-step part production wizard                 |
+| `EmptyState`        | Centered empty state with icon and action     |
+| `TableSkeleton`     | Loading skeleton for tables                   |
+| `CardSkeleton`      | Loading skeleton for cards                    |
+| `TopProgress`       | Slim animated progress bar during navigation  |
 
 ---
 
@@ -574,4 +587,4 @@ Block/Recall ──> Cascades through RM → Part Batches → Production Batches
 
 ---
 
-*End of specification.*
+_End of specification._
