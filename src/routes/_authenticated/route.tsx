@@ -24,6 +24,7 @@ import {
   Menu,
   Warehouse,
   Archive,
+  Wrench,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -70,6 +71,7 @@ const NAV: NavItem[] = [
   { to: "/parts", label: "Parts", icon: Puzzle, group: "ops" },
   { to: "/products", label: "Products", icon: Boxes, group: "ops" },
   { to: "/production", label: "Production", icon: Factory, group: "ops" },
+  { to: "/equipment", label: "Equipment", icon: Wrench, group: "ops" },
   {
     to: "/production-planning",
     label: "Production planning",

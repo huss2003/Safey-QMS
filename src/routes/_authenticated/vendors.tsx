@@ -371,7 +371,9 @@ function VendorForm({
     mutationFn: async (v: FormValues) => {
       const payload = { ...v, notes: v.notes || null };
       if (vendor) {
-        const { error } = await (supabase.from("vendors") as any).update(payload).eq("id", vendor.id);
+        const { error } = await (supabase.from("vendors") as any)
+          .update(payload)
+          .eq("id", vendor.id);
         if (error) throw error;
       } else {
         const { error } = await (supabase.from("vendors") as any).insert(payload);

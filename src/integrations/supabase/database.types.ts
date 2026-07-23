@@ -17,6 +17,19 @@ export type Alert = Database["public"]["Tables"]["alerts"]["Row"];
 export type ProductionPlan = Database["public"]["Tables"]["production_plans"]["Row"];
 export type OtherItem = Database["public"]["Tables"]["other_items"]["Row"];
 export type AppSettings = Database["public"]["Tables"]["app_settings"]["Row"];
+export type Equipment = Database["public"]["Tables"]["equipment"]["Row"];
+export type EquipmentInsert = Database["public"]["Tables"]["equipment"]["Insert"];
+export type EquipmentCalibration = Database["public"]["Tables"]["equipment_calibrations"]["Row"];
+export type EquipmentCalibrationInsert =
+  Database["public"]["Tables"]["equipment_calibrations"]["Insert"];
+export type EquipmentAdjustment = Database["public"]["Tables"]["equipment_adjustments"]["Row"];
+export type EquipmentAdjustmentInsert =
+  Database["public"]["Tables"]["equipment_adjustments"]["Insert"];
+export type EquipmentRepair = Database["public"]["Tables"]["equipment_repairs"]["Row"];
+export type EquipmentRepairInsert = Database["public"]["Tables"]["equipment_repairs"]["Insert"];
+export type EquipmentMaintenance = Database["public"]["Tables"]["equipment_maintenance"]["Row"];
+export type EquipmentMaintenanceInsert =
+  Database["public"]["Tables"]["equipment_maintenance"]["Insert"];
 
 export type {
   MaterialType,

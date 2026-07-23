@@ -214,8 +214,7 @@ function TraceView({ result }: { result: Result }) {
         return { mode: "forward" as const, payload: data as unknown as TraceForwardResponse };
       }
       // part: fetch the part batch's raw_material_batch_id, then reuse the forward RPC scoped to just this part batch
-      const { data: pb, error: pbErr } = await (supabase
-        .from("part_batches") as any)
+      const { data: pb, error: pbErr } = await (supabase.from("part_batches") as any)
         .select("raw_material_batch_id")
         .eq("id", result.id)
         .single();

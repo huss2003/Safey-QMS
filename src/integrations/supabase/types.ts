@@ -228,6 +228,119 @@ export interface Database {
           updated_at: string;
         };
       };
+      equipment: {
+        Row: {
+          id: string;
+          equipment_id: string;
+          name: string;
+          equipment_type: string;
+          status: string;
+          purchased_date: string;
+          purchased_from: string;
+          calibration_frequency: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          equipment_id?: string;
+          name: string;
+          equipment_type: string;
+          status?: string;
+          purchased_date: string;
+          purchased_from: string;
+          calibration_frequency: string;
+          notes?: string | null;
+        };
+      };
+      equipment_calibrations: {
+        Row: {
+          id: string;
+          equipment_id: string;
+          calibration_date: string;
+          managed_by: string;
+          lab_name: string;
+          lab_address: string;
+          next_calibration_date: string | null;
+          report_url: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          equipment_id: string;
+          calibration_date: string;
+          managed_by: string;
+          lab_name: string;
+          lab_address: string;
+          next_calibration_date?: string | null;
+          report_url?: string | null;
+          status?: string;
+        };
+      };
+      equipment_adjustments: {
+        Row: {
+          id: string;
+          equipment_id: string;
+          adjustment_date: string;
+          managed_by: string;
+          notes: string;
+          measurements_before: string;
+          measurements_after: string;
+          company_name: string;
+          company_address: string;
+          evidence_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          equipment_id: string;
+          adjustment_date: string;
+          managed_by: string;
+          notes: string;
+          measurements_before: string;
+          measurements_after: string;
+          company_name: string;
+          company_address: string;
+          evidence_url?: string | null;
+        };
+      };
+      equipment_repairs: {
+        Row: {
+          id: string;
+          equipment_id: string;
+          repair_date: string;
+          notes: string;
+          repaired_by: string;
+          test_run: string;
+          test_run_notes: string;
+          tested_by: string;
+          created_at: string;
+        };
+        Insert: {
+          equipment_id: string;
+          repair_date: string;
+          notes: string;
+          repaired_by: string;
+          test_run: string;
+          test_run_notes: string;
+          tested_by: string;
+        };
+      };
+      equipment_maintenance: {
+        Row: {
+          id: string;
+          equipment_id: string;
+          maintenance_date: string;
+          maintenance_done_by: string;
+          maintenance_types: string[];
+          created_at: string;
+        };
+        Insert: {
+          equipment_id: string;
+          maintenance_date: string;
+          maintenance_done_by: string;
+          maintenance_types: string[];
+        };
+      };
     };
     Functions: {
       get_dashboard_kpis: {
@@ -261,3 +374,73 @@ export interface Database {
     };
   };
 }
+
+// Equipment types
+export type EquipmentStatus = "active" | "inactive";
+export type CalibrationFrequency = "6_monthly" | "yearly";
+export type EquipmentType = "process" | "measuring";
+export type CalibrationStatus = "active" | "inactive";
+export type TestRunResult = "success" | "failed";
+export type MeasurementResult = "accurate" | "inaccurate";
+
+export type EquipmentRow = {
+  id: string;
+  equipment_id: string;
+  name: string;
+  purchased_date: string;
+  purchased_from: string | null;
+  status: EquipmentStatus;
+  calibration_frequency: CalibrationFrequency;
+  equipment_type: EquipmentType;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type EquipmentRepairRow = {
+  id: string;
+  equipment_id: string;
+  repair_date: string;
+  repair_notes: string | null;
+  repaired_by: string | null;
+  test_run: TestRunResult | null;
+  test_run_notes: string | null;
+  tested_by: string | null;
+  created_at: string;
+};
+
+export type EquipmentCalibrationRow = {
+  id: string;
+  equipment_id: string;
+  calibration_date: string;
+  calibration_managed_by: string | null;
+  lab_name: string | null;
+  lab_address: string | null;
+  next_calibration_date: string | null;
+  calibration_report_url: string | null;
+  calibration_status: CalibrationStatus;
+  created_at: string;
+};
+
+export type EquipmentAdjustmentRow = {
+  id: string;
+  equipment_id: string;
+  adjustment_date: string;
+  adjustment_managed_by: string | null;
+  adjustment_notes: string | null;
+  measurements_before: string | null;
+  measurements_after: MeasurementResult | null;
+  company_name: string | null;
+  company_address: string | null;
+  evidence_url: string | null;
+  created_at: string;
+};
+
+export type EquipmentMaintenanceRow = {
+  id: string;
+  equipment_id: string;
+  maintenance_date: string;
+  maintenance_done_by: string | null;
+  maintenance_types: string[];
+  created_at: string;
+};

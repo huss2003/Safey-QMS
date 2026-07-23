@@ -24,10 +24,14 @@ import { Route as AuthenticatedProductionNewRouteImport } from './routes/_authen
 import { Route as AuthenticatedProductionRouteImport } from './routes/_authenticated/production'
 import { Route as AuthenticatedPartsRouteImport } from './routes/_authenticated/parts'
 import { Route as AuthenticatedOtherItemsRouteImport } from './routes/_authenticated/other-items'
+import { Route as AuthenticatedEquipmentNewRouteImport } from './routes/_authenticated/equipment-new'
+import { Route as AuthenticatedEquipmentRouteImport } from './routes/_authenticated/equipment'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBatchRecallRouteImport } from './routes/_authenticated/batch-recall'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedProductsBomIdRouteImport } from './routes/_authenticated/products-bom.$id'
+import { Route as AuthenticatedEquipmentEditIdRouteImport } from './routes/_authenticated/equipment-edit.$id'
+import { Route as AuthenticatedEquipmentDetailIdRouteImport } from './routes/_authenticated/equipment-detail.$id'
 import { Route as AuthenticatedStockHistoryTypeIdRouteImport } from './routes/_authenticated/stock-history.$type.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -108,6 +112,17 @@ const AuthenticatedOtherItemsRoute = AuthenticatedOtherItemsRouteImport.update({
   path: '/other-items',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEquipmentNewRoute =
+  AuthenticatedEquipmentNewRouteImport.update({
+    id: '/equipment-new',
+    path: '/equipment-new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEquipmentRoute = AuthenticatedEquipmentRouteImport.update({
+  id: '/equipment',
+  path: '/equipment',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -130,6 +145,18 @@ const AuthenticatedProductsBomIdRoute =
     path: '/products-bom/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedEquipmentEditIdRoute =
+  AuthenticatedEquipmentEditIdRouteImport.update({
+    id: '/equipment-edit/$id',
+    path: '/equipment-edit/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEquipmentDetailIdRoute =
+  AuthenticatedEquipmentDetailIdRouteImport.update({
+    id: '/equipment-detail/$id',
+    path: '/equipment-detail/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStockHistoryTypeIdRoute =
   AuthenticatedStockHistoryTypeIdRouteImport.update({
     id: '/stock-history/$type/$id',
@@ -143,6 +170,8 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/equipment': typeof AuthenticatedEquipmentRoute
+  '/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/other-items': typeof AuthenticatedOtherItemsRoute
   '/parts': typeof AuthenticatedPartsRoute
   '/production': typeof AuthenticatedProductionRoute
@@ -155,6 +184,8 @@ export interface FileRoutesByFullPath {
   '/stock': typeof AuthenticatedStockRoute
   '/traceability': typeof AuthenticatedTraceabilityRoute
   '/vendors': typeof AuthenticatedVendorsRoute
+  '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
+  '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
 }
@@ -164,6 +195,8 @@ export interface FileRoutesByTo {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/equipment': typeof AuthenticatedEquipmentRoute
+  '/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/other-items': typeof AuthenticatedOtherItemsRoute
   '/parts': typeof AuthenticatedPartsRoute
   '/production': typeof AuthenticatedProductionRoute
@@ -176,6 +209,8 @@ export interface FileRoutesByTo {
   '/stock': typeof AuthenticatedStockRoute
   '/traceability': typeof AuthenticatedTraceabilityRoute
   '/vendors': typeof AuthenticatedVendorsRoute
+  '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
+  '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
 }
@@ -187,6 +222,8 @@ export interface FileRoutesById {
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/equipment': typeof AuthenticatedEquipmentRoute
+  '/_authenticated/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/_authenticated/other-items': typeof AuthenticatedOtherItemsRoute
   '/_authenticated/parts': typeof AuthenticatedPartsRoute
   '/_authenticated/production': typeof AuthenticatedProductionRoute
@@ -199,6 +236,8 @@ export interface FileRoutesById {
   '/_authenticated/stock': typeof AuthenticatedStockRoute
   '/_authenticated/traceability': typeof AuthenticatedTraceabilityRoute
   '/_authenticated/vendors': typeof AuthenticatedVendorsRoute
+  '/_authenticated/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
+  '/_authenticated/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/_authenticated/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/_authenticated/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
 }
@@ -210,6 +249,8 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/batch-recall'
     | '/dashboard'
+    | '/equipment'
+    | '/equipment-new'
     | '/other-items'
     | '/parts'
     | '/production'
@@ -222,6 +263,8 @@ export interface FileRouteTypes {
     | '/stock'
     | '/traceability'
     | '/vendors'
+    | '/equipment-detail/$id'
+    | '/equipment-edit/$id'
     | '/products-bom/$id'
     | '/stock-history/$type/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -231,6 +274,8 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/batch-recall'
     | '/dashboard'
+    | '/equipment'
+    | '/equipment-new'
     | '/other-items'
     | '/parts'
     | '/production'
@@ -243,6 +288,8 @@ export interface FileRouteTypes {
     | '/stock'
     | '/traceability'
     | '/vendors'
+    | '/equipment-detail/$id'
+    | '/equipment-edit/$id'
     | '/products-bom/$id'
     | '/stock-history/$type/$id'
   id:
@@ -253,6 +300,8 @@ export interface FileRouteTypes {
     | '/_authenticated/alerts'
     | '/_authenticated/batch-recall'
     | '/_authenticated/dashboard'
+    | '/_authenticated/equipment'
+    | '/_authenticated/equipment-new'
     | '/_authenticated/other-items'
     | '/_authenticated/parts'
     | '/_authenticated/production'
@@ -265,6 +314,8 @@ export interface FileRouteTypes {
     | '/_authenticated/stock'
     | '/_authenticated/traceability'
     | '/_authenticated/vendors'
+    | '/_authenticated/equipment-detail/$id'
+    | '/_authenticated/equipment-edit/$id'
     | '/_authenticated/products-bom/$id'
     | '/_authenticated/stock-history/$type/$id'
   fileRoutesById: FileRoutesById
@@ -382,6 +433,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOtherItemsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/equipment-new': {
+      id: '/_authenticated/equipment-new'
+      path: '/equipment-new'
+      fullPath: '/equipment-new'
+      preLoaderRoute: typeof AuthenticatedEquipmentNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/equipment': {
+      id: '/_authenticated/equipment'
+      path: '/equipment'
+      fullPath: '/equipment'
+      preLoaderRoute: typeof AuthenticatedEquipmentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -410,6 +475,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsBomIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/equipment-edit/$id': {
+      id: '/_authenticated/equipment-edit/$id'
+      path: '/equipment-edit/$id'
+      fullPath: '/equipment-edit/$id'
+      preLoaderRoute: typeof AuthenticatedEquipmentEditIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/equipment-detail/$id': {
+      id: '/_authenticated/equipment-detail/$id'
+      path: '/equipment-detail/$id'
+      fullPath: '/equipment-detail/$id'
+      preLoaderRoute: typeof AuthenticatedEquipmentDetailIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/stock-history/$type/$id': {
       id: '/_authenticated/stock-history/$type/$id'
       path: '/stock-history/$type/$id'
@@ -424,6 +503,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedBatchRecallRoute: typeof AuthenticatedBatchRecallRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEquipmentRoute: typeof AuthenticatedEquipmentRoute
+  AuthenticatedEquipmentNewRoute: typeof AuthenticatedEquipmentNewRoute
   AuthenticatedOtherItemsRoute: typeof AuthenticatedOtherItemsRoute
   AuthenticatedPartsRoute: typeof AuthenticatedPartsRoute
   AuthenticatedProductionRoute: typeof AuthenticatedProductionRoute
@@ -436,6 +517,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStockRoute: typeof AuthenticatedStockRoute
   AuthenticatedTraceabilityRoute: typeof AuthenticatedTraceabilityRoute
   AuthenticatedVendorsRoute: typeof AuthenticatedVendorsRoute
+  AuthenticatedEquipmentDetailIdRoute: typeof AuthenticatedEquipmentDetailIdRoute
+  AuthenticatedEquipmentEditIdRoute: typeof AuthenticatedEquipmentEditIdRoute
   AuthenticatedProductsBomIdRoute: typeof AuthenticatedProductsBomIdRoute
   AuthenticatedStockHistoryTypeIdRoute: typeof AuthenticatedStockHistoryTypeIdRoute
 }
@@ -444,6 +527,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedBatchRecallRoute: AuthenticatedBatchRecallRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEquipmentRoute: AuthenticatedEquipmentRoute,
+  AuthenticatedEquipmentNewRoute: AuthenticatedEquipmentNewRoute,
   AuthenticatedOtherItemsRoute: AuthenticatedOtherItemsRoute,
   AuthenticatedPartsRoute: AuthenticatedPartsRoute,
   AuthenticatedProductionRoute: AuthenticatedProductionRoute,
@@ -456,6 +541,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStockRoute: AuthenticatedStockRoute,
   AuthenticatedTraceabilityRoute: AuthenticatedTraceabilityRoute,
   AuthenticatedVendorsRoute: AuthenticatedVendorsRoute,
+  AuthenticatedEquipmentDetailIdRoute: AuthenticatedEquipmentDetailIdRoute,
+  AuthenticatedEquipmentEditIdRoute: AuthenticatedEquipmentEditIdRoute,
   AuthenticatedProductsBomIdRoute: AuthenticatedProductsBomIdRoute,
   AuthenticatedStockHistoryTypeIdRoute: AuthenticatedStockHistoryTypeIdRoute,
 }

@@ -63,3 +63,31 @@ export function materialColorClass(m: string) {
       return "bg-muted text-muted-foreground border-border";
   }
 }
+
+// Equipment formatting
+export const CALIBRATION_FREQ_LABELS: Record<string, string> = {
+  "6_monthly": "6 Monthly",
+  yearly: "Yearly",
+};
+
+export const EQUIPMENT_TYPE_LABELS: Record<string, string> = {
+  process: "Process",
+  measuring: "Measuring",
+};
+
+export const TEST_RUN_LABELS: Record<string, string> = {
+  success: "Success",
+  failed: "Failed",
+};
+
+export function calibrationFreqLabel(v: string | null | undefined) {
+  return CALIBRATION_FREQ_LABELS[v ?? ""] ?? v ?? "—";
+}
+
+export function equipmentTypeLabel(v: string | null | undefined) {
+  return EQUIPMENT_TYPE_LABELS[v ?? ""] ?? v ?? "—";
+}
+
+export function testRunLabel(v: string | null | undefined) {
+  return TEST_RUN_LABELS[v ?? ""] ?? v ?? "—";
+}
