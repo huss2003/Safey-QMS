@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, PackagePlus } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, PackagePlus, Users, Settings2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/inventory/page-header";
@@ -48,6 +48,13 @@ import {
 import { fmtKg, fmtNum, fmtDate } from "@/lib/inventory/format";
 import { audit } from "@/lib/inventory/audit";
 import { cn } from "@/lib/utils";
+import {
+  EMPLOYEE_ROLES,
+  EMPLOYEES,
+  employeesByRole,
+  employeeLabel,
+  roleLabel,
+} from "@/lib/inventory/employees";
 
 export const Route = createFileRoute("/_authenticated/production-new")({
   component: NewProductionWizard,
@@ -71,7 +78,7 @@ type PartPlan = {
   consumption_per_unit_kg: number;
 };
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 7;
 
 function NewProductionWizard() {
   const navigate = useNavigate();
@@ -87,6 +94,16 @@ function NewProductionWizard() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successBatch, setSuccessBatch] = useState<string | null>(null);
 
+  // Step 2 — team allocation
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+
+  // Step 3 — equipment
+  const [processEquipmentId, setProcessEquipmentId] = useState<string>("");
+  const [measuringEquipmentId, setMeasuringEquipmentId] = useState<string>("");
+
+  const employeesForRole = selectedRole ? employeesByRole(selectedRole) : [];
+
   const { data: products } = useQuery({
     queryKey: ["products", "active"],
     staleTime: 5 * 60_000,
@@ -100,17 +117,47 @@ function NewProductionWizard() {
       ).data ?? [],
   });
 
+  const { data: processEquipment } = useQuery({
+    queryKey: ["equipment", "process", "active"],
+    staleTime: 5 * 60_000,
+    queryFn: async () =>
+      (
+        await supabase
+          .from("equipment")
+          .select("id, equipment_id, name")
+          .eq("status", "active")
+          .eq("equipment_type", "process")
+          .order("name")
+      ).data ?? [],
+  });
+
+  const { data: measuringEquipment } = useQuery({
+    queryKey: ["equipment", "measuring", "active"],
+    staleTime: 5 * 60_000,
+    queryFn: async () =>
+      (
+        await supabase
+          .from("equipment")
+          .select("id, equipment_id, name")
+          .eq("status", "active")
+          .eq("equipment_type", "measuring")
+          .order("name")
+      ).data ?? [],
+  });
+
   const productName = products?.find((p: any) => p.id === productId)?.product_name;
 
   // canNext for each step
   const canNext = useMemo(() => {
     if (step === 1) return !!productId && qty > 0;
-    if (step === 2) return plan.length > 0 && plan.every((p) => p.required <= p.available);
-    if (step === 3)
+    if (step === 2) return !!selectedRole && !!selectedEmployee;
+    if (step === 3) return true;
+    if (step === 4) return plan.length > 0 && plan.every((p) => p.required <= p.available);
+    if (step === 5)
       return plan.every((p) => p.allocations.reduce((s, a) => s + a.quantity, 0) >= p.required);
-    if (step === 4) return true;
+    if (step === 6) return true;
     return true;
-  }, [step, productId, qty, plan]);
+  }, [step, productId, qty, plan, selectedRole, selectedEmployee]);
 
   const calculate = useMutation({
     mutationFn: async () => {
@@ -146,7 +193,7 @@ function NewProductionWizard() {
     },
     onSuccess: (data) => {
       setPlan(data);
-      setStep(2);
+      setStep(4);
     },
     onError: (e: any) => toast.error(e.message ?? "Calculation failed"),
   });
@@ -209,6 +256,9 @@ function NewProductionWizard() {
         p_actual_raw_kg: expectedRawTotal,
         p_notes: notes || null,
         p_picks: picks,
+        p_assigned_employee: selectedEmployee || null,
+        p_process_equipment_id: processEquipmentId || null,
+        p_measuring_equipment_id: measuringEquipmentId || null,
       });
       if (error) throw error;
       return (data as any).batch_number as string;
@@ -298,6 +348,128 @@ function NewProductionWizard() {
       )}
 
       {step === 2 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <Users className="h-5 w-5 inline mr-2" />
+              Allocate production team
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 max-w-xl">
+            <div>
+              <Label className="label-caps">Select role *</Label>
+              <Select value={selectedRole} onValueChange={(v) => { setSelectedRole(v); setSelectedEmployee(""); }}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Choose a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EMPLOYEE_ROLES.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedRole && (
+              <div>
+                <Label className="label-caps">Employee *</Label>
+                {employeesForRole.length === 0 ? (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    No employees found for this role.
+                  </p>
+                ) : employeesForRole.length === 1 ? (
+                  <div className="mt-1 p-3 border rounded-md bg-muted/30 text-sm font-medium flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-success" />
+                    {employeesForRole[0].label}
+                  </div>
+                ) : (
+                  <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select employee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employeesForRole.map((e) => (
+                        <SelectItem key={e.value} value={e.value}>
+                          {e.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+            <div className="flex justify-between pt-2">
+              <Button variant="outline" onClick={() => setStep(1)}>
+                Back
+              </Button>
+              <Button onClick={() => setStep(3)} disabled={!canNext}>
+                Next: set equipment
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 3 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <Settings2 className="h-5 w-5 inline mr-2" />
+              Set equipment
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 max-w-xl">
+            <div>
+              <Label className="label-caps">Process equipment</Label>
+              <Select value={processEquipmentId} onValueChange={setProcessEquipmentId}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={processEquipment?.length ? "Select process equipment" : "No active process equipment"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(processEquipment ?? []).map((e: any) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.name} ({e.equipment_id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="label-caps">Measuring equipment</Label>
+              <Select value={measuringEquipmentId} onValueChange={setMeasuringEquipmentId}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={measuringEquipment?.length ? "Select measuring equipment" : "No active measuring equipment"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(measuringEquipment ?? []).map((e: any) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.name} ({e.equipment_id})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-between pt-2">
+              <Button variant="outline" onClick={() => setStep(2)}>
+                Back
+              </Button>
+              <Button onClick={() => {
+                // Calculate BOM if not already calculated, otherwise go to step 4
+                if (plan.length === 0) {
+                  calculate.mutate();
+                } else {
+                  setStep(4);
+                }
+              }}>
+                Next: availability check
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 4 && (
         <Card>
           <CardHeader>
             <CardTitle>Availability check</CardTitle>
@@ -395,7 +567,7 @@ function NewProductionWizard() {
               <Button variant="outline" onClick={() => setStep(1)}>
                 Back
               </Button>
-              <Button onClick={() => setStep(3)} disabled={hasShortage}>
+              <Button onClick={() => setStep(5)} disabled={hasShortage}>
                 Next: pick batches
               </Button>
             </div>
@@ -403,7 +575,7 @@ function NewProductionWizard() {
         </Card>
       )}
 
-      {step === 3 && (
+      {step === 5 && (
         <Card>
           <CardHeader>
             <CardTitle>Pick part batches</CardTitle>
@@ -500,10 +672,10 @@ function NewProductionWizard() {
               );
             })}
             <div className="flex justify-between pt-2">
-              <Button variant="outline" onClick={() => setStep(2)}>
+              <Button variant="outline" onClick={() => setStep(4)}>
                 Back
               </Button>
-              <Button onClick={() => setStep(4)} disabled={!canNext}>
+              <Button onClick={() => setStep(6)} disabled={!canNext}>
                 Next: date & notes
               </Button>
             </div>
@@ -511,7 +683,7 @@ function NewProductionWizard() {
         </Card>
       )}
 
-      {step === 4 && (
+      {step === 6 && (
         <Card>
           <CardHeader>
             <CardTitle>Date & notes</CardTitle>
@@ -536,16 +708,16 @@ function NewProductionWizard() {
               />
             </div>
             <div className="flex justify-between pt-2">
-              <Button variant="outline" onClick={() => setStep(3)}>
+              <Button variant="outline" onClick={() => setStep(5)}>
                 Back
               </Button>
-              <Button onClick={() => setStep(5)}>Next: confirm</Button>
+              <Button onClick={() => setStep(7)}>Next: confirm</Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {step === 5 && (
+      {step === 7 && (
         <Card>
           <CardHeader>
             <CardTitle>Confirm production</CardTitle>
@@ -560,6 +732,24 @@ function NewProductionWizard() {
                 <span className="text-muted-foreground">Quantity:</span>{" "}
                 <strong>{fmtNum(qty)}</strong>
               </div>
+              {selectedRole && selectedEmployee && (
+                <div>
+                  <span className="text-muted-foreground">Assigned:</span>{" "}
+                  <strong>{roleLabel(selectedRole)} — {employeeLabel(selectedEmployee)}</strong>
+                </div>
+              )}
+              {processEquipmentId && (
+                <div>
+                  <span className="text-muted-foreground">Process equipment:</span>{" "}
+                  <strong>{(processEquipment ?? []).find((e: any) => e.id === processEquipmentId)?.name ?? "—"} ({(processEquipment ?? []).find((e: any) => e.id === processEquipmentId)?.equipment_id ?? "—"})</strong>
+                </div>
+              )}
+              {measuringEquipmentId && (
+                <div>
+                  <span className="text-muted-foreground">Measuring equipment:</span>{" "}
+                  <strong>{(measuringEquipment ?? []).find((e: any) => e.id === measuringEquipmentId)?.name ?? "—"} ({(measuringEquipment ?? []).find((e: any) => e.id === measuringEquipmentId)?.equipment_id ?? "—"})</strong>
+                </div>
+              )}
               <div>
                 <span className="text-muted-foreground">Date:</span>{" "}
                 <strong>{fmtDate(date)}</strong>
@@ -583,7 +773,7 @@ function NewProductionWizard() {
               </div>
             </div>
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(4)}>
+              <Button variant="outline" onClick={() => setStep(6)}>
                 Back
               </Button>
               <Button onClick={() => setConfirmOpen(true)}>Complete production</Button>

@@ -9,7 +9,11 @@ export type Part = Database["public"]["Tables"]["parts"]["Row"];
 export type PartInsert = Database["public"]["Tables"]["parts"]["Insert"];
 export type Product = Database["public"]["Tables"]["products"]["Row"];
 export type ProductBom = Database["public"]["Tables"]["product_bom"]["Row"];
-export type ProductionBatch = Database["public"]["Tables"]["production_batches"]["Row"];
+export type ProductionBatch = Database["public"]["Tables"]["production_batches"]["Row"] & {
+  assigned_employee?: string | null;
+  process_equipment_id?: string | null;
+  measuring_equipment_id?: string | null;
+};
 export type ProductionBatchPart = Database["public"]["Tables"]["production_batch_parts"]["Row"];
 export type PartBatch = Database["public"]["Tables"]["part_batches"]["Row"];
 export type WastageLog = Database["public"]["Tables"]["wastage_logs"]["Row"];

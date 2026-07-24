@@ -33,6 +33,67 @@ import { CreateRepairDialog } from "@/components/equipment/create-repair-dialog"
 import { CreateMaintenanceDialog } from "@/components/equipment/create-maintenance-dialog";
 import { EquipmentDetailModal } from "@/components/equipment/equipment-detail-modal";
 
+/* ── Helpers ─────────────────────────────────────────────────── */
+
+/** Capitalize first letter of a string, or return "—" for blank */
+function capFirst(v: string | null | undefined) {
+  if (!v || v.trim() === "") return "—";
+  const s = v.trim();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Render a measurement value (accurate/inaccurate) as a colored badge */
+function MeasurementBadge({ value }: { value: string | null | undefined }) {
+  if (!value || value.trim() === "") return <span className="text-muted-foreground">—</span>;
+  const s = value.trim();
+  const lower = s.toLowerCase();
+  const display = s.charAt(0).toUpperCase() + s.slice(1);
+  if (lower === "accurate") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-500/30">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+        {display}
+      </span>
+    );
+  }
+  if (lower === "inaccurate") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/20 dark:bg-red-950 dark:text-red-300 dark:ring-red-500/30">
+        <span className="h-1.5 w-1.5 rounded-full bg-red-500 dark:bg-red-400" />
+        {display}
+      </span>
+    );
+  }
+  return <span className="text-foreground font-medium">{display}</span>;
+}
+
+/** Render a maintenance type badge — "Cleaning" and "Oiling" get bold colored styling */
+function MaintenanceTypeBadge({ type }: { type: string }) {
+  const lower = type.toLowerCase();
+  if (lower === "cleaning") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-600/20 dark:bg-blue-950 dark:text-blue-300 dark:ring-blue-500/30">
+        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
+        {type}
+      </span>
+    );
+  }
+  if (lower === "oiling") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-500/30">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
+        {type}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-slate-50 text-slate-700 ring-1 ring-slate-600/20 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-500/30">
+      <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+      {type}
+    </span>
+  );
+}
+
 export const Route = createFileRoute("/_authenticated/equipment-detail/$id")({
   ssr: false,
   component: EquipmentDetailPage,
@@ -257,56 +318,52 @@ function EquipmentDetailPage() {
           {(calibrations ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">No calibration records yet.</p>
           ) : (
-            <Card className="overflow-hidden p-0">
+            <Card className="overflow-hidden border border-border/60 shadow-sm">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Managed By</TableHead>
-                    <TableHead>Lab Name</TableHead>
-                    <TableHead>Next Calibration</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[60px]">Actions</TableHead>
+                  <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-border">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Date</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Managed By</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Lab Name</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Next Calibration</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Status</TableHead>
+                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {calibrations?.map((c) => (
-                    <TableRow key={c.id} className="row-rule">
-                      <TableCell className="text-[13px] py-2.5">
+                  {calibrations?.map((c, i) => (
+                    <TableRow key={c.id} className="row-rule group border-b border-border/40 last:border-0">
+                      <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">
                         {fmtDate(c.calibration_date)}
                       </TableCell>
-                      <TableCell className="text-[13px] py-2.5">
-                        {employeeLabel(c.managed_by)}
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">
+                        {employeeLabel(c.calibration_managed_by)}
                       </TableCell>
-                      <TableCell className="text-[13px] py-2.5">{c.lab_name}</TableCell>
-                      <TableCell className="text-[13px] py-2.5">
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">{c.lab_name}</TableCell>
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">
                         {fmtDate(c.next_calibration_date)}
                       </TableCell>
-                      <TableCell className="py-2.5">
-                        {c.status === "active" ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-success/15 text-success border-success/20"
-                          >
+                      <TableCell className="py-3.5">
+                        {c.calibration_status === "active" ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                             Active
-                          </Badge>
+                          </span>
                         ) : (
-                          <Badge
-                            variant="secondary"
-                            className="bg-destructive/15 text-destructive border-destructive/20"
-                          >
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/20 dark:bg-red-950 dark:text-red-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                             Inactive
-                          </Badge>
+                          </span>
                         )}
                       </TableCell>
-                      <TableCell className="py-2.5">
+                      <TableCell className="py-3.5">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0"
+                          className="h-9 w-9 p-0 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950 transition-colors"
                           onClick={() => openModal({ type: "calibration", data: c })}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-[18px] w-[18px]" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -334,46 +391,46 @@ function EquipmentDetailPage() {
           {(adjustments ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">No adjustment records yet.</p>
           ) : (
-            <Card className="overflow-hidden p-0">
+            <Card className="overflow-hidden border border-border/60 shadow-sm">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Managed By</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead>Before</TableHead>
-                    <TableHead>After</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead className="w-[60px]">Actions</TableHead>
+                  <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-border">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Date</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Managed By</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Notes</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Before</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">After</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Company</TableHead>
+                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {adjustments?.map((a) => (
-                    <TableRow key={a.id} className="row-rule">
-                      <TableCell className="text-[13px] py-2.5">
+                    <TableRow key={a.id} className="row-rule group border-b border-border/40 last:border-0">
+                      <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">
                         {fmtDate(a.adjustment_date)}
                       </TableCell>
-                      <TableCell className="text-[13px] py-2.5">
-                        {employeeLabel(a.managed_by)}
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">
+                        {employeeLabel(a.adjustment_managed_by)}
                       </TableCell>
-                      <TableCell className="max-w-xs truncate text-muted-foreground text-[13px] py-2.5">
-                        {a.notes}
+                      <TableCell className="max-w-[200px] truncate text-slate-400 text-[13px] py-3.5">
+                        {a.adjustment_notes}
                       </TableCell>
-                      <TableCell className="text-[13px] py-2.5 font-mono">
-                        {a.measurements_before ?? "—"}
+                      <TableCell className="py-3.5">
+                        <MeasurementBadge value={a.measurements_before} />
                       </TableCell>
-                      <TableCell className="text-[13px] py-2.5 font-mono">
-                        {a.measurements_after ?? "—"}
+                      <TableCell className="py-3.5">
+                        <MeasurementBadge value={a.measurements_after} />
                       </TableCell>
-                      <TableCell className="text-[13px] py-2.5">{a.company_name}</TableCell>
-                      <TableCell className="py-2.5">
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">{a.company_name}</TableCell>
+                      <TableCell className="py-3.5">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0"
+                          className="h-9 w-9 p-0 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950 transition-colors"
                           onClick={() => openModal({ type: "adjustment", data: a })}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-[18px] w-[18px]" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -400,56 +457,52 @@ function EquipmentDetailPage() {
           {(repairs ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">No repair records yet.</p>
           ) : (
-            <Card className="overflow-hidden p-0">
+            <Card className="overflow-hidden border border-border/60 shadow-sm">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Repaired By</TableHead>
-                    <TableHead>Notes</TableHead>
-                    <TableHead>Test Run</TableHead>
-                    <TableHead>Tested By</TableHead>
-                    <TableHead className="w-[60px]">Actions</TableHead>
+                  <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-border">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Date</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Repaired By</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Notes</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Test Run</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Tested By</TableHead>
+                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {repairs?.map((r) => (
-                    <TableRow key={r.id} className="row-rule">
-                      <TableCell className="text-[13px] py-2.5">{fmtDate(r.repair_date)}</TableCell>
-                      <TableCell className="text-[13px] py-2.5">
+                    <TableRow key={r.id} className="row-rule group border-b border-border/40 last:border-0">
+                      <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">{fmtDate(r.repair_date)}</TableCell>
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">
                         {employeeLabel(r.repaired_by)}
                       </TableCell>
-                      <TableCell className="max-w-xs truncate text-muted-foreground text-[13px] py-2.5">
-                        {r.notes}
+                      <TableCell className="max-w-[200px] truncate text-slate-400 text-[13px] py-3.5">
+                        {r.repair_notes}
                       </TableCell>
-                      <TableCell className="py-2.5">
+                      <TableCell className="py-3.5">
                         {r.test_run === "success" ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-success/15 text-success border-success/20"
-                          >
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-950 dark:text-emerald-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                             Success
-                          </Badge>
+                          </span>
                         ) : (
-                          <Badge
-                            variant="secondary"
-                            className="bg-destructive/15 text-destructive border-destructive/20"
-                          >
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/20 dark:bg-red-950 dark:text-red-300">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                             Failed
-                          </Badge>
+                          </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-[13px] py-2.5">
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">
                         {employeeLabel(r.tested_by)}
                       </TableCell>
-                      <TableCell className="py-2.5">
+                      <TableCell className="py-3.5">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0"
+                          className="h-9 w-9 p-0 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950 transition-colors"
                           onClick={() => openModal({ type: "repair", data: r })}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-[18px] w-[18px]" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -476,42 +529,40 @@ function EquipmentDetailPage() {
           {(maintenance ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground py-4">No maintenance records yet.</p>
           ) : (
-            <Card className="overflow-hidden p-0">
+            <Card className="overflow-hidden border border-border/60 shadow-sm">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Done By</TableHead>
-                    <TableHead>Maintenance Types</TableHead>
-                    <TableHead className="w-[60px]">Actions</TableHead>
+                  <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-border">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Date</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Done By</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Maintenance Types</TableHead>
+                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {maintenance?.map((m) => (
-                    <TableRow key={m.id} className="row-rule">
-                      <TableCell className="text-[13px] py-2.5">
+                    <TableRow key={m.id} className="row-rule group border-b border-border/40 last:border-0">
+                      <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">
                         {fmtDate(m.maintenance_date)}
                       </TableCell>
-                      <TableCell className="text-[13px] py-2.5">
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">
                         {employeeLabel(m.maintenance_done_by)}
                       </TableCell>
-                      <TableCell className="py-2.5">
-                        <div className="flex flex-wrap gap-1">
+                      <TableCell className="py-3.5">
+                        <div className="flex flex-wrap gap-1.5">
                           {m.maintenance_types.map((t) => (
-                            <Badge key={t} variant="secondary" className="text-[11px]">
-                              {t}
-                            </Badge>
+                            <MaintenanceTypeBadge key={t} type={t} />
                           ))}
                         </div>
                       </TableCell>
-                      <TableCell className="py-2.5">
+                      <TableCell className="py-3.5">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0"
+                          className="h-9 w-9 p-0 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-950 transition-colors"
                           onClick={() => openModal({ type: "maintenance", data: m })}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-[18px] w-[18px]" />
                         </Button>
                       </TableCell>
                     </TableRow>

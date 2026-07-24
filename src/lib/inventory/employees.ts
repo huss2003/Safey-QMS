@@ -1,15 +1,34 @@
+// Mock employee data — roles will be provided later
+export const EMPLOYEE_ROLES = [
+  { value: "operator", label: "Operator" },
+  { value: "supervisor", label: "Supervisor" },
+  { value: "qc_inspector", label: "QC Inspector" },
+  { value: "production_manager", label: "Production Manager" },
+] as const;
+
+export type EmployeeRoleValue = (typeof EMPLOYEE_ROLES)[number]["value"];
+
 export const EMPLOYEES = [
-  { value: "deepak_sharma", label: "Deepak Sharma" },
-  { value: "rahul_patil", label: "Rahul Patil" },
-  { value: "anita_joshi", label: "Anita Joshi" },
-  { value: "suresh_kumar", label: "Suresh Kumar" },
-  { value: "pooja_deshpande", label: "Pooja Deshpande" },
+  { value: "deepak_sharma", label: "Deepak Sharma", role: "operator" },
+  { value: "rahul_patil", label: "Rahul Patil", role: "operator" },
+  { value: "suresh_kumar", label: "Suresh Kumar", role: "supervisor" },
+  { value: "anita_joshi", label: "Anita Joshi", role: "qc_inspector" },
+  { value: "pooja_deshpande", label: "Pooja Deshpande", role: "qc_inspector" },
+  { value: "vikram_singh", label: "Vikram Singh", role: "production_manager" },
 ] as const;
 
 export type EmployeeValue = (typeof EMPLOYEES)[number]["value"];
 
+export function employeesByRole(role: string) {
+  return EMPLOYEES.filter((e) => e.role === role);
+}
+
 export function employeeLabel(value: string | null | undefined) {
   return EMPLOYEES.find((e) => e.value === value)?.label ?? value ?? "—";
+}
+
+export function roleLabel(value: string | null | undefined) {
+  return EMPLOYEE_ROLES.find((r) => r.value === value)?.label ?? value ?? "—";
 }
 
 export const EQUIPMENT_TYPES = [

@@ -258,23 +258,23 @@ export interface Database {
           id: string;
           equipment_id: string;
           calibration_date: string;
-          managed_by: string;
+          calibration_managed_by: string | null;
           lab_name: string;
           lab_address: string;
           next_calibration_date: string | null;
-          report_url: string | null;
-          status: string;
+          calibration_report_url: string | null;
+          calibration_status: string;
           created_at: string;
         };
         Insert: {
           equipment_id: string;
           calibration_date: string;
-          managed_by: string;
+          calibration_managed_by?: string | null;
           lab_name: string;
           lab_address: string;
           next_calibration_date?: string | null;
-          report_url?: string | null;
-          status?: string;
+          calibration_report_url?: string | null;
+          calibration_status?: string;
         };
       };
       equipment_adjustments: {
@@ -282,8 +282,8 @@ export interface Database {
           id: string;
           equipment_id: string;
           adjustment_date: string;
-          managed_by: string;
-          notes: string;
+          adjustment_managed_by: string | null;
+          adjustment_notes: string | null;
           measurements_before: string;
           measurements_after: string;
           company_name: string;
@@ -294,8 +294,8 @@ export interface Database {
         Insert: {
           equipment_id: string;
           adjustment_date: string;
-          managed_by: string;
-          notes: string;
+          adjustment_managed_by?: string | null;
+          adjustment_notes?: string | null;
           measurements_before: string;
           measurements_after: string;
           company_name: string;
@@ -308,21 +308,23 @@ export interface Database {
           id: string;
           equipment_id: string;
           repair_date: string;
-          notes: string;
-          repaired_by: string;
-          test_run: string;
-          test_run_notes: string;
-          tested_by: string;
+          repair_notes: string | null;
+          repaired_by: string | null;
+          test_run: string | null;
+          test_run_notes: string | null;
+          tested_by: string | null;
+          document_url: string | null;
           created_at: string;
         };
         Insert: {
           equipment_id: string;
           repair_date: string;
-          notes: string;
-          repaired_by: string;
-          test_run: string;
-          test_run_notes: string;
-          tested_by: string;
+          repair_notes?: string | null;
+          repaired_by?: string | null;
+          test_run?: string | null;
+          test_run_notes?: string | null;
+          tested_by?: string | null;
+          document_url?: string | null;
         };
       };
       equipment_maintenance: {
@@ -332,6 +334,7 @@ export interface Database {
           maintenance_date: string;
           maintenance_done_by: string;
           maintenance_types: string[];
+          document_url: string | null;
           created_at: string;
         };
         Insert: {
@@ -339,6 +342,7 @@ export interface Database {
           maintenance_date: string;
           maintenance_done_by: string;
           maintenance_types: string[];
+          document_url?: string | null;
         };
       };
     };
