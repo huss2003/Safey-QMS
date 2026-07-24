@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, PackagePlus, Users, Settings2 } from "lucide-react";
 
@@ -103,6 +103,19 @@ function NewProductionWizard() {
   const [measuringEquipmentId, setMeasuringEquipmentId] = useState<string>("");
 
   const employeesForRole = selectedRole ? employeesByRole(selectedRole) : [];
+
+  // Auto-select the employee when only one matches the chosen role
+  useEffect(() => {
+    if (employeesForRole.length === 1) {
+      setSelectedEmployee(employeesForRole[0].value);
+    } else if (
+      selectedEmployee &&
+      !employeesForRole.find((e) => e.value === selectedEmployee)
+    ) {
+      // Clear selection if current employee no longer matches the role
+      setSelectedEmployee("");
+    }
+  }, [selectedRole, employeesForRole]);
 
   const { data: products } = useQuery({
     queryKey: ["products", "active"],
