@@ -39,6 +39,7 @@ import { Route as AuthenticatedStockHistoryTypeIdRouteImport } from './routes/_a
 import { Route as AuthenticatedRolesTrainingNewRouteImport } from './routes/_authenticated/roles.training.new'
 import { Route as AuthenticatedRolesTrainingIdRouteImport } from './routes/_authenticated/roles.training.$id'
 import { Route as AuthenticatedRolesEmployeesNewRouteImport } from './routes/_authenticated/roles.employees.new'
+import { Route as AuthenticatedRolesEmployeesIdRouteImport } from './routes/_authenticated/roles.employees.$id'
 import { Route as AuthenticatedRolesTrainingIdEditRouteImport } from './routes/_authenticated/roles.training.$id.edit'
 import { Route as AuthenticatedRolesEmployeesIdEditRouteImport } from './routes/_authenticated/roles.employees.$id.edit'
 
@@ -206,6 +207,12 @@ const AuthenticatedRolesEmployeesNewRoute =
     path: '/new',
     getParentRoute: () => AuthenticatedRolesEmployeesRoute,
   } as any)
+const AuthenticatedRolesEmployeesIdRoute =
+  AuthenticatedRolesEmployeesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedRolesEmployeesRoute,
+  } as any)
 const AuthenticatedRolesTrainingIdEditRoute =
   AuthenticatedRolesTrainingIdEditRouteImport.update({
     id: '/edit',
@@ -214,9 +221,9 @@ const AuthenticatedRolesTrainingIdEditRoute =
   } as any)
 const AuthenticatedRolesEmployeesIdEditRoute =
   AuthenticatedRolesEmployeesIdEditRouteImport.update({
-    id: '/$id/edit',
-    path: '/$id/edit',
-    getParentRoute: () => AuthenticatedRolesEmployeesRoute,
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedRolesEmployeesIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/roles/employees/$id': typeof AuthenticatedRolesEmployeesIdRouteWithChildren
   '/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
   '/roles/training/$id': typeof AuthenticatedRolesTrainingIdRouteWithChildren
   '/roles/training/new': typeof AuthenticatedRolesTrainingNewRoute
@@ -278,6 +286,7 @@ export interface FileRoutesByTo {
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/roles/employees/$id': typeof AuthenticatedRolesEmployeesIdRouteWithChildren
   '/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
   '/roles/training/$id': typeof AuthenticatedRolesTrainingIdRouteWithChildren
   '/roles/training/new': typeof AuthenticatedRolesTrainingNewRoute
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/_authenticated/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/_authenticated/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/_authenticated/roles/employees/$id': typeof AuthenticatedRolesEmployeesIdRouteWithChildren
   '/_authenticated/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
   '/_authenticated/roles/training/$id': typeof AuthenticatedRolesTrainingIdRouteWithChildren
   '/_authenticated/roles/training/new': typeof AuthenticatedRolesTrainingNewRoute
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/products-bom/$id'
     | '/roles/employees'
     | '/roles/training'
+    | '/roles/employees/$id'
     | '/roles/employees/new'
     | '/roles/training/$id'
     | '/roles/training/new'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/products-bom/$id'
     | '/roles/employees'
     | '/roles/training'
+    | '/roles/employees/$id'
     | '/roles/employees/new'
     | '/roles/training/$id'
     | '/roles/training/new'
@@ -415,6 +427,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products-bom/$id'
     | '/_authenticated/roles/employees'
     | '/_authenticated/roles/training'
+    | '/_authenticated/roles/employees/$id'
     | '/_authenticated/roles/employees/new'
     | '/_authenticated/roles/training/$id'
     | '/_authenticated/roles/training/new'
@@ -641,6 +654,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRolesEmployeesNewRouteImport
       parentRoute: typeof AuthenticatedRolesEmployeesRoute
     }
+    '/_authenticated/roles/employees/$id': {
+      id: '/_authenticated/roles/employees/$id'
+      path: '/$id'
+      fullPath: '/roles/employees/$id'
+      preLoaderRoute: typeof AuthenticatedRolesEmployeesIdRouteImport
+      parentRoute: typeof AuthenticatedRolesEmployeesRoute
+    }
     '/_authenticated/roles/training/$id/edit': {
       id: '/_authenticated/roles/training/$id/edit'
       path: '/edit'
@@ -650,24 +670,39 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/roles/employees/$id/edit': {
       id: '/_authenticated/roles/employees/$id/edit'
-      path: '/$id/edit'
+      path: '/edit'
       fullPath: '/roles/employees/$id/edit'
       preLoaderRoute: typeof AuthenticatedRolesEmployeesIdEditRouteImport
-      parentRoute: typeof AuthenticatedRolesEmployeesRoute
+      parentRoute: typeof AuthenticatedRolesEmployeesIdRoute
     }
   }
 }
 
-interface AuthenticatedRolesEmployeesRouteChildren {
-  AuthenticatedRolesEmployeesNewRoute: typeof AuthenticatedRolesEmployeesNewRoute
+interface AuthenticatedRolesEmployeesIdRouteChildren {
   AuthenticatedRolesEmployeesIdEditRoute: typeof AuthenticatedRolesEmployeesIdEditRoute
+}
+
+const AuthenticatedRolesEmployeesIdRouteChildren: AuthenticatedRolesEmployeesIdRouteChildren =
+  {
+    AuthenticatedRolesEmployeesIdEditRoute:
+      AuthenticatedRolesEmployeesIdEditRoute,
+  }
+
+const AuthenticatedRolesEmployeesIdRouteWithChildren =
+  AuthenticatedRolesEmployeesIdRoute._addFileChildren(
+    AuthenticatedRolesEmployeesIdRouteChildren,
+  )
+
+interface AuthenticatedRolesEmployeesRouteChildren {
+  AuthenticatedRolesEmployeesIdRoute: typeof AuthenticatedRolesEmployeesIdRouteWithChildren
+  AuthenticatedRolesEmployeesNewRoute: typeof AuthenticatedRolesEmployeesNewRoute
 }
 
 const AuthenticatedRolesEmployeesRouteChildren: AuthenticatedRolesEmployeesRouteChildren =
   {
+    AuthenticatedRolesEmployeesIdRoute:
+      AuthenticatedRolesEmployeesIdRouteWithChildren,
     AuthenticatedRolesEmployeesNewRoute: AuthenticatedRolesEmployeesNewRoute,
-    AuthenticatedRolesEmployeesIdEditRoute:
-      AuthenticatedRolesEmployeesIdEditRoute,
   }
 
 const AuthenticatedRolesEmployeesRouteWithChildren =

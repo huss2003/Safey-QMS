@@ -116,7 +116,7 @@ export function CreateAdjustmentDialog({
 
   const save = useMutation({
     mutationFn: async (v: FormValues) => {
-      const { error } = await supabase.from("equipment_adjustments").insert({
+      const { error } = await (supabase as any).from("equipment_adjustments").insert({
         equipment_id: equipmentId,
         adjustment_date: v.adjustment_date,
         adjustment_managed_by: v.managed_by,

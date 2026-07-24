@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FileUpload, FileList } from "@/components/inventory/file-upload";
 import { TRAINING_PERSONNEL, TRAINING_SCHEDULES } from "@/lib/inventory/employees";
 
 export const Route = createFileRoute("/_authenticated/roles/training/$id/edit")({
@@ -53,6 +54,7 @@ function TrainingEditPage() {
   const [status, setStatus] = useState<string | null>(null);
   const [evaluation, setEvaluation] = useState<string | null>(null);
   const [schedule, setSchedule] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<string[]>([]);
 
   // hydrate once data arrives
   const hydrated = name !== null || p === undefined ? true : name !== null;
@@ -75,6 +77,7 @@ function TrainingEditPage() {
           performance_evaluation:
             v(evaluation, p!.performance_evaluation ?? "") || null,
           schedule: v(schedule, p!.schedule),
+          documents: documents.length ? documents : (p!.documents ?? []),
         })
         .eq("id", id);
       if (error) throw error;
@@ -250,6 +253,20 @@ function TrainingEditPage() {
               defaultValue={p.performance_evaluation ?? ""}
               onChange={(e) => setEvaluation(e.target.value)}
               className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label className="label-caps">Documents</Label>
+            {p.documents && p.documents.length > 0 && documents.length === 0 && (
+              <div className="mb-2">
+                <FileList urls={p.documents} />
+              </div>
+            )}
+            <FileUpload
+              pathPrefix="training"
+              onFilesChange={setDocuments}
+              existingUrls={documents}
             />
           </div>
 

@@ -406,6 +406,18 @@ export interface Database {
           schedule?: string;
         };
       };
+      employee_interviews: {
+        Row: EmployeeInterviewRow;
+      };
+      employee_trainings: {
+        Row: EmployeeTrainingRow;
+      };
+      employee_performance_evaluations: {
+        Row: EmployeePerformanceEvaluationRow;
+      };
+      employee_health_records: {
+        Row: EmployeeHealthRecordRow;
+      };
     };
     Functions: {
       get_dashboard_kpis: {
@@ -507,5 +519,54 @@ export type EquipmentMaintenanceRow = {
   maintenance_date: string;
   maintenance_done_by: string | null;
   maintenance_types: string[];
+  created_at: string;
+};
+
+// Employee record types
+export type EmployeeInterviewRow = {
+  id: string;
+  employee_id: string;
+  interviewer: string | null;
+  interview_date: string | null;
+  years_experience: string | null;
+  education: string | null;
+  skills: Json;
+  total_score: number | null;
+  is_completed: boolean;
+  documents: string[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type EmployeeTrainingRow = {
+  id: string;
+  employee_id: string;
+  training_name: string;
+  training_date: string | null;
+  trainer: string | null;
+  notes: string | null;
+  documents: string[];
+  created_at: string;
+};
+
+export type EmployeePerformanceEvaluationRow = {
+  id: string;
+  employee_id: string;
+  evaluation_date: string | null;
+  evaluator: string | null;
+  criteria: string | null;
+  rating: string | null;
+  notes: string | null;
+  documents: string[];
+  created_at: string;
+};
+
+export type EmployeeHealthRecordRow = {
+  id: string;
+  employee_id: string;
+  record_date: string | null;
+  record_type: string | null;
+  description: string | null;
+  documents: string[];
   created_at: string;
 };

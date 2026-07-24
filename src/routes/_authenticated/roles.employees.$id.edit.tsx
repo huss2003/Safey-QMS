@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FileUpload, FileList } from "@/components/inventory/file-upload";
 import { EMPLOYEE_ROLES } from "@/lib/inventory/employees";
 
 export const Route = createFileRoute("/_authenticated/roles/employees/$id/edit")({
@@ -47,6 +48,7 @@ function EmployeeEditPage() {
   const [role, setRole] = useState<string | null>(null);
   const [dob, setDob] = useState<string | null>(null);
   const [recruited, setRecruited] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<string[]>([]);
 
   const v = (val: string | null | undefined, fallback: string) =>
     val === null ? fallback : val;
@@ -60,6 +62,7 @@ function EmployeeEditPage() {
           employee_role: v(role, emp!.employee_role),
           date_of_birth: v(dob, emp!.date_of_birth ?? "") || null,
           recruited_date: v(recruited, emp!.recruited_date ?? "") || null,
+          documents: documents.length ? documents : (emp!.documents ?? []),
         })
         .eq("id", id);
       if (error) throw error;
@@ -157,6 +160,20 @@ function EmployeeEditPage() {
                 className="mt-1"
               />
             </div>
+          </div>
+
+          <div>
+            <Label className="label-caps">Documents</Label>
+            {emp.documents && emp.documents.length > 0 && documents.length === 0 && (
+              <div className="mb-2">
+                <FileList urls={emp.documents} />
+              </div>
+            )}
+            <FileUpload
+              pathPrefix={`employees/${id}`}
+              onFilesChange={setDocuments}
+              existingUrls={documents}
+            />
           </div>
 
           <div className="flex justify-between pt-2">

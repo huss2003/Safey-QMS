@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FileUpload } from "@/components/inventory/file-upload";
 import { EMPLOYEE_ROLES } from "@/lib/inventory/employees";
 
 export const Route = createFileRoute("/_authenticated/roles/employees/new")({
@@ -36,6 +37,7 @@ function EmployeesNewPage() {
   const [role, setRole] = useState("");
   const [dob, setDob] = useState("");
   const [recruited, setRecruited] = useState("");
+  const [documents, setDocuments] = useState<string[]>([]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -44,6 +46,7 @@ function EmployeesNewPage() {
         employee_role: role,
         date_of_birth: dob || null,
         recruited_date: recruited || null,
+        documents,
       });
       if (error) throw error;
     },
@@ -123,7 +126,16 @@ function EmployeesNewPage() {
             />
           </div>
 
-          <div className="flex justify-between pt-2">
+          <div className="max-w-xl">
+            <Label className="label-caps">Documents</Label>
+            <FileUpload
+              pathPrefix={`employees/${Date.now()}`}
+              onFilesChange={setDocuments}
+              existingUrls={documents}
+            />
+          </div>
+
+          <div className="flex justify-between pt-2 max-w-xl">
             <Button
               variant="outline"
               onClick={() => navigate({ to: "/roles/employees" })}

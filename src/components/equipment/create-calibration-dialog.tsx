@@ -123,7 +123,7 @@ export function CreateCalibrationDialog({
 
   const save = useMutation({
     mutationFn: async (v: FormValues) => {
-      const { error } = await supabase.from("equipment_calibrations").insert({
+      const { error } = await (supabase as any).from("equipment_calibrations").insert({
         equipment_id: equipmentId,
         calibration_date: v.calibration_date,
         calibration_managed_by: v.managed_by,
