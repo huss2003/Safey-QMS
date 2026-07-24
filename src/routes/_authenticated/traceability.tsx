@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -8,6 +8,7 @@ import {
   Puzzle,
   Factory as FactoryIcon,
   Users as UsersIcon,
+  Wrench,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -24,9 +25,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { fmtDate, fmtKg, fmtNum } from "@/lib/inventory/format";
+import { EMPLOYEES, roleLabel } from "@/lib/inventory/employees";
 
 export const Route = createFileRoute("/_authenticated/traceability")({
   component: Traceability,
+  validateSearch: (search: Record<string, unknown>): { q?: string } => {
+    return { q: typeof search.q === "string" ? search.q : undefined };
+  },
 });
 
 type Kind = "production" | "part" | "raw";
@@ -65,6 +70,9 @@ type TraceBackwardResponse = {
     production_date: string;
     status: string;
     wastage_kg: number | null;
+    assigned_employee?: string | null;
+    process_equipment_name?: string | null;
+    measuring_equipment_name?: string | null;
   } | null;
   parts?: TraceBackwardPart[];
 };
@@ -81,6 +89,9 @@ type TraceForwardPartBatch = {
     product_name: string;
     quantity_produced: number;
     status: string;
+    assigned_employee?: string | null;
+    process_equipment_name?: string | null;
+    measuring_equipment_name?: string | null;
   }[];
 };
 
@@ -98,8 +109,16 @@ type TraceForwardResponse = {
   part_batches?: TraceForwardPartBatch[];
 };
 
+function empLabel(val: string | null | undefined): string {
+  if (!val) return "—";
+  const emp = EMPLOYEES.find((e) => e.value === val);
+  if (!emp) return val;
+  return `${emp.label} (${roleLabel(emp.role)})`;
+}
+
 function Traceability() {
-  const [q, setQ] = useState("");
+  const { q: initialQ } = useSearch({ from: Route.id });
+  const [q, setQ] = useState(initialQ ?? "");
   const debouncedQ = useDebouncedValue(q, 300);
   const [selected, setSelected] = useState<Result | null>(null);
 
@@ -285,6 +304,24 @@ function BackwardTree({ payload }: { payload: TraceBackwardResponse }) {
       subtitle={`${prod.product_name} × ${fmtNum(prod.quantity_produced)} · ${fmtDate(prod.production_date)}`}
       status={prod.status}
     >
+      {prod.assigned_employee && (
+        <TreeNode
+          icon={UsersIcon}
+          title={`Employee: ${empLabel(prod.assigned_employee)}`}
+        />
+      )}
+      {prod.process_equipment_name && (
+        <TreeNode
+          icon={Wrench}
+          title={`Process: ${prod.process_equipment_name}`}
+        />
+      )}
+      {prod.measuring_equipment_name && (
+        <TreeNode
+          icon={Wrench}
+          title={`Measuring: ${prod.measuring_equipment_name}`}
+        />
+      )}
       {(payload.parts ?? []).map((p) => (
         <TreeNode
           key={p.part_batch?.id}
@@ -349,7 +386,26 @@ function ForwardTree({ payload }: { payload: TraceForwardResponse }) {
               title={`Production ${p.batch_number}`}
               subtitle={`${p.product_name} × ${fmtNum(p.quantity_produced)}`}
               status={p.status}
-            />
+            >
+              {p.assigned_employee && (
+                <TreeNode
+                  icon={UsersIcon}
+                  title={`Employee: ${empLabel(p.assigned_employee)}`}
+                />
+              )}
+              {p.process_equipment_name && (
+                <TreeNode
+                  icon={Wrench}
+                  title={`Process: ${p.process_equipment_name}`}
+                />
+              )}
+              {p.measuring_equipment_name && (
+                <TreeNode
+                  icon={Wrench}
+                  title={`Measuring: ${p.measuring_equipment_name}`}
+                />
+              )}
+            </TreeNode>
           ))}
         </TreeNode>
       ))}

@@ -115,7 +115,15 @@ function ProductionPage() {
                         : 0;
                     return (
                       <TableRow key={r.id}>
-                        <TableCell className="font-medium">{r.batch_number}</TableCell>
+                        <TableCell className="font-medium">
+                          <Link
+                            to="/traceability"
+                            search={{ q: r.batch_number }}
+                            className="hover:text-primary transition-colors"
+                          >
+                            {r.batch_number}
+                          </Link>
+                        </TableCell>
                         <TableCell>{r.products?.product_name}</TableCell>
                         <TableCell>{fmtNum(r.quantity_produced)}</TableCell>
                         <TableCell>{fmtKg(r.expected_raw_material_kg)}</TableCell>
