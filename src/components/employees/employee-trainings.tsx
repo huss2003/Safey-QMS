@@ -121,6 +121,12 @@ export function EmployeeTrainings({ employee }: Props) {
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!selectedProgram) throw new Error("No training program selected");
+
+      // Generate next REC_HRM_TR_ID
+      const { count } = await (supabase as any).from("employee_trainings").select("*", { count: "exact", head: true }).eq("employee_id", employee.id);
+      const nextNum = String((count || 0) + 1).padStart(3, "0");
+      const recordId = `REC_HRM_TR_${nextNum}`;
+
       const docUrls: string[] = [];
 
       // Upload files first
@@ -137,6 +143,7 @@ export function EmployeeTrainings({ employee }: Props) {
       }
 
       const { error } = await (supabase as any).from("employee_trainings").insert({
+        record_id: recordId,
         employee_id: employee.id,
         training_id: selectedProgram.training_id,
         training_name: selectedProgram.training_name,
@@ -239,7 +246,7 @@ export function EmployeeTrainings({ employee }: Props) {
                       {roleLabel(r.trainee_role || employee.employee_role)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-[13px] text-muted-foreground font-mono">{r.training_id || trnId(i)}</TableCell>
+                  <TableCell className="text-[13px] text-muted-foreground font-mono">{r.record_id || trnId(i)}</TableCell>
                   <TableCell className="text-[13px] text-muted-foreground">{r.trainer}</TableCell>
                   <TableCell className="text-[13px] font-medium">{r.training_name}</TableCell>
                   <TableCell className="text-[13px] text-muted-foreground">{fmtDate(r.performance_date)}</TableCell>
@@ -408,7 +415,7 @@ export function EmployeeTrainings({ employee }: Props) {
                 </div>
                 <div>
                   <Label className="label-caps">Training ID</Label>
-                  <Input value={viewRecord.training_id} disabled className="mt-1" />
+                  <Input value={viewRecord.record_id || "—"} disabled className="mt-1" />
                 </div>
                 <div>
                   <Label className="label-caps">Trainee Name</Label>

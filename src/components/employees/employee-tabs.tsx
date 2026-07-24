@@ -392,6 +392,7 @@ function ViewHealthDialog({ record, employee }: { record: any; employee?: any })
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Health Record Details</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 text-[13px]">
+            <div><div className="label-caps text-muted-foreground">Record ID</div><div className="font-mono">{record.record_id || "—"}</div></div>
             <div><div className="label-caps text-muted-foreground">Date</div><div>{fmtDate(record.record_date) || "—"}</div></div>
             <div><div className="label-caps text-muted-foreground">Gender</div><div>{record.gender || "—"}</div></div>
             <div><div className="label-caps text-muted-foreground">Age</div><div>{record.age ?? "—"}</div></div>
@@ -437,7 +438,13 @@ export function EmployeeHealthTab({ employeeId, employee }: Props & { employee?:
 
   const save = useMutation({
     mutationFn: async () => {
+      // Generate next REC_WI_HCR_ID
+      const { count } = await (supabase as any).from("employee_health_records").select("*", { count: "exact", head: true }).eq("employee_id", employeeId);
+      const nextNum = String((count || 0) + 1).padStart(3, "0");
+      const recordId = `REC_WI_HCR_${nextNum}`;
+
       const { error } = await (supabase as any).from("employee_health_records").insert({
+        record_id: recordId,
         employee_id: employeeId, record_date: date || null, gender, age, weight: weight ? parseFloat(weight) : null, height: height ? parseFloat(height) : null, eyesight: eyesight || null, diabetes: diabetes || null, blood_pressure: bp || null, chronic_disease: chronic || null, documents,
       });
       if (error) throw error;
@@ -459,10 +466,11 @@ export function EmployeeHealthTab({ employeeId, employee }: Props & { employee?:
       ) : (
         <Card className="overflow-hidden p-0">
           <Table><TableHeader><TableRow>
-            <TableHead>Gender</TableHead><TableHead>Age</TableHead><TableHead>Weight</TableHead><TableHead>Height</TableHead><TableHead>Date</TableHead><TableHead className="w-12">View</TableHead>
+            <TableHead>Record ID</TableHead><TableHead>Gender</TableHead><TableHead>Age</TableHead><TableHead>Weight</TableHead><TableHead>Height</TableHead><TableHead>Date</TableHead><TableHead className="w-12">View</TableHead>
           </TableRow></TableHeader><TableBody>
             {(records ?? []).map((r: any) => (
               <TableRow key={r.id} className="row-rule">
+                <TableCell className="text-[12px] font-mono">{r.record_id || "—"}</TableCell>
                 <TableCell className="text-[12px]">{r.gender || "—"}</TableCell>
                 <TableCell className="text-[12px]">{r.age ?? "—"}</TableCell>
                 <TableCell className="text-[12px]">{r.weight ? `${r.weight} kg` : "—"}</TableCell>
