@@ -16,6 +16,7 @@ import { Route as AuthenticatedVendorsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedTraceabilityRouteImport } from './routes/_authenticated/traceability'
 import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/stock'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedRawMaterialsRouteImport } from './routes/_authenticated/raw-materials'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
@@ -29,10 +30,17 @@ import { Route as AuthenticatedEquipmentRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBatchRecallRouteImport } from './routes/_authenticated/batch-recall'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
+import { Route as AuthenticatedRolesTrainingRouteImport } from './routes/_authenticated/roles.training'
+import { Route as AuthenticatedRolesEmployeesRouteImport } from './routes/_authenticated/roles.employees'
 import { Route as AuthenticatedProductsBomIdRouteImport } from './routes/_authenticated/products-bom.$id'
 import { Route as AuthenticatedEquipmentEditIdRouteImport } from './routes/_authenticated/equipment-edit.$id'
 import { Route as AuthenticatedEquipmentDetailIdRouteImport } from './routes/_authenticated/equipment-detail.$id'
 import { Route as AuthenticatedStockHistoryTypeIdRouteImport } from './routes/_authenticated/stock-history.$type.$id'
+import { Route as AuthenticatedRolesTrainingNewRouteImport } from './routes/_authenticated/roles.training.new'
+import { Route as AuthenticatedRolesTrainingIdRouteImport } from './routes/_authenticated/roles.training.$id'
+import { Route as AuthenticatedRolesEmployeesNewRouteImport } from './routes/_authenticated/roles.employees.new'
+import { Route as AuthenticatedRolesTrainingIdEditRouteImport } from './routes/_authenticated/roles.training.$id.edit'
+import { Route as AuthenticatedRolesEmployeesIdEditRouteImport } from './routes/_authenticated/roles.employees.$id.edit'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -67,6 +75,11 @@ const AuthenticatedStockRoute = AuthenticatedStockRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRolesRoute = AuthenticatedRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
@@ -139,6 +152,18 @@ const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRolesTrainingRoute =
+  AuthenticatedRolesTrainingRouteImport.update({
+    id: '/training',
+    path: '/training',
+    getParentRoute: () => AuthenticatedRolesRoute,
+  } as any)
+const AuthenticatedRolesEmployeesRoute =
+  AuthenticatedRolesEmployeesRouteImport.update({
+    id: '/employees',
+    path: '/employees',
+    getParentRoute: () => AuthenticatedRolesRoute,
+  } as any)
 const AuthenticatedProductsBomIdRoute =
   AuthenticatedProductsBomIdRouteImport.update({
     id: '/products-bom/$id',
@@ -163,6 +188,36 @@ const AuthenticatedStockHistoryTypeIdRoute =
     path: '/stock-history/$type/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRolesTrainingNewRoute =
+  AuthenticatedRolesTrainingNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedRolesTrainingRoute,
+  } as any)
+const AuthenticatedRolesTrainingIdRoute =
+  AuthenticatedRolesTrainingIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedRolesTrainingRoute,
+  } as any)
+const AuthenticatedRolesEmployeesNewRoute =
+  AuthenticatedRolesEmployeesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedRolesEmployeesRoute,
+  } as any)
+const AuthenticatedRolesTrainingIdEditRoute =
+  AuthenticatedRolesTrainingIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedRolesTrainingIdRoute,
+  } as any)
+const AuthenticatedRolesEmployeesIdEditRoute =
+  AuthenticatedRolesEmployeesIdEditRouteImport.update({
+    id: '/$id/edit',
+    path: '/$id/edit',
+    getParentRoute: () => AuthenticatedRolesEmployeesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -180,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/products': typeof AuthenticatedProductsRoute
   '/raw-materials': typeof AuthenticatedRawMaterialsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/roles': typeof AuthenticatedRolesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/stock': typeof AuthenticatedStockRoute
   '/traceability': typeof AuthenticatedTraceabilityRoute
@@ -187,7 +243,14 @@ export interface FileRoutesByFullPath {
   '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
+  '/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
+  '/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
+  '/roles/training/$id': typeof AuthenticatedRolesTrainingIdRouteWithChildren
+  '/roles/training/new': typeof AuthenticatedRolesTrainingNewRoute
   '/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
+  '/roles/employees/$id/edit': typeof AuthenticatedRolesEmployeesIdEditRoute
+  '/roles/training/$id/edit': typeof AuthenticatedRolesTrainingIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -205,6 +268,7 @@ export interface FileRoutesByTo {
   '/products': typeof AuthenticatedProductsRoute
   '/raw-materials': typeof AuthenticatedRawMaterialsRoute
   '/reports': typeof AuthenticatedReportsRoute
+  '/roles': typeof AuthenticatedRolesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/stock': typeof AuthenticatedStockRoute
   '/traceability': typeof AuthenticatedTraceabilityRoute
@@ -212,7 +276,14 @@ export interface FileRoutesByTo {
   '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
+  '/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
+  '/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
+  '/roles/training/$id': typeof AuthenticatedRolesTrainingIdRouteWithChildren
+  '/roles/training/new': typeof AuthenticatedRolesTrainingNewRoute
   '/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
+  '/roles/employees/$id/edit': typeof AuthenticatedRolesEmployeesIdEditRoute
+  '/roles/training/$id/edit': typeof AuthenticatedRolesTrainingIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -232,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/raw-materials': typeof AuthenticatedRawMaterialsRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
+  '/_authenticated/roles': typeof AuthenticatedRolesRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/stock': typeof AuthenticatedStockRoute
   '/_authenticated/traceability': typeof AuthenticatedTraceabilityRoute
@@ -239,7 +311,14 @@ export interface FileRoutesById {
   '/_authenticated/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/_authenticated/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/_authenticated/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
+  '/_authenticated/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
+  '/_authenticated/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/_authenticated/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
+  '/_authenticated/roles/training/$id': typeof AuthenticatedRolesTrainingIdRouteWithChildren
+  '/_authenticated/roles/training/new': typeof AuthenticatedRolesTrainingNewRoute
   '/_authenticated/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
+  '/_authenticated/roles/employees/$id/edit': typeof AuthenticatedRolesEmployeesIdEditRoute
+  '/_authenticated/roles/training/$id/edit': typeof AuthenticatedRolesTrainingIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -259,6 +338,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/raw-materials'
     | '/reports'
+    | '/roles'
     | '/settings'
     | '/stock'
     | '/traceability'
@@ -266,7 +346,14 @@ export interface FileRouteTypes {
     | '/equipment-detail/$id'
     | '/equipment-edit/$id'
     | '/products-bom/$id'
+    | '/roles/employees'
+    | '/roles/training'
+    | '/roles/employees/new'
+    | '/roles/training/$id'
+    | '/roles/training/new'
     | '/stock-history/$type/$id'
+    | '/roles/employees/$id/edit'
+    | '/roles/training/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -284,6 +371,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/raw-materials'
     | '/reports'
+    | '/roles'
     | '/settings'
     | '/stock'
     | '/traceability'
@@ -291,7 +379,14 @@ export interface FileRouteTypes {
     | '/equipment-detail/$id'
     | '/equipment-edit/$id'
     | '/products-bom/$id'
+    | '/roles/employees'
+    | '/roles/training'
+    | '/roles/employees/new'
+    | '/roles/training/$id'
+    | '/roles/training/new'
     | '/stock-history/$type/$id'
+    | '/roles/employees/$id/edit'
+    | '/roles/training/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -310,6 +405,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products'
     | '/_authenticated/raw-materials'
     | '/_authenticated/reports'
+    | '/_authenticated/roles'
     | '/_authenticated/settings'
     | '/_authenticated/stock'
     | '/_authenticated/traceability'
@@ -317,7 +413,14 @@ export interface FileRouteTypes {
     | '/_authenticated/equipment-detail/$id'
     | '/_authenticated/equipment-edit/$id'
     | '/_authenticated/products-bom/$id'
+    | '/_authenticated/roles/employees'
+    | '/_authenticated/roles/training'
+    | '/_authenticated/roles/employees/new'
+    | '/_authenticated/roles/training/$id'
+    | '/_authenticated/roles/training/new'
     | '/_authenticated/stock-history/$type/$id'
+    | '/_authenticated/roles/employees/$id/edit'
+    | '/_authenticated/roles/training/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -375,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/roles': {
+      id: '/_authenticated/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof AuthenticatedRolesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/reports': {
@@ -468,6 +578,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAlertsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/roles/training': {
+      id: '/_authenticated/roles/training'
+      path: '/training'
+      fullPath: '/roles/training'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingRouteImport
+      parentRoute: typeof AuthenticatedRolesRoute
+    }
+    '/_authenticated/roles/employees': {
+      id: '/_authenticated/roles/employees'
+      path: '/employees'
+      fullPath: '/roles/employees'
+      preLoaderRoute: typeof AuthenticatedRolesEmployeesRouteImport
+      parentRoute: typeof AuthenticatedRolesRoute
+    }
     '/_authenticated/products-bom/$id': {
       id: '/_authenticated/products-bom/$id'
       path: '/products-bom/$id'
@@ -496,8 +620,106 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStockHistoryTypeIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/roles/training/new': {
+      id: '/_authenticated/roles/training/new'
+      path: '/new'
+      fullPath: '/roles/training/new'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingNewRouteImport
+      parentRoute: typeof AuthenticatedRolesTrainingRoute
+    }
+    '/_authenticated/roles/training/$id': {
+      id: '/_authenticated/roles/training/$id'
+      path: '/$id'
+      fullPath: '/roles/training/$id'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingIdRouteImport
+      parentRoute: typeof AuthenticatedRolesTrainingRoute
+    }
+    '/_authenticated/roles/employees/new': {
+      id: '/_authenticated/roles/employees/new'
+      path: '/new'
+      fullPath: '/roles/employees/new'
+      preLoaderRoute: typeof AuthenticatedRolesEmployeesNewRouteImport
+      parentRoute: typeof AuthenticatedRolesEmployeesRoute
+    }
+    '/_authenticated/roles/training/$id/edit': {
+      id: '/_authenticated/roles/training/$id/edit'
+      path: '/edit'
+      fullPath: '/roles/training/$id/edit'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingIdEditRouteImport
+      parentRoute: typeof AuthenticatedRolesTrainingIdRoute
+    }
+    '/_authenticated/roles/employees/$id/edit': {
+      id: '/_authenticated/roles/employees/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/roles/employees/$id/edit'
+      preLoaderRoute: typeof AuthenticatedRolesEmployeesIdEditRouteImport
+      parentRoute: typeof AuthenticatedRolesEmployeesRoute
+    }
   }
 }
+
+interface AuthenticatedRolesEmployeesRouteChildren {
+  AuthenticatedRolesEmployeesNewRoute: typeof AuthenticatedRolesEmployeesNewRoute
+  AuthenticatedRolesEmployeesIdEditRoute: typeof AuthenticatedRolesEmployeesIdEditRoute
+}
+
+const AuthenticatedRolesEmployeesRouteChildren: AuthenticatedRolesEmployeesRouteChildren =
+  {
+    AuthenticatedRolesEmployeesNewRoute: AuthenticatedRolesEmployeesNewRoute,
+    AuthenticatedRolesEmployeesIdEditRoute:
+      AuthenticatedRolesEmployeesIdEditRoute,
+  }
+
+const AuthenticatedRolesEmployeesRouteWithChildren =
+  AuthenticatedRolesEmployeesRoute._addFileChildren(
+    AuthenticatedRolesEmployeesRouteChildren,
+  )
+
+interface AuthenticatedRolesTrainingIdRouteChildren {
+  AuthenticatedRolesTrainingIdEditRoute: typeof AuthenticatedRolesTrainingIdEditRoute
+}
+
+const AuthenticatedRolesTrainingIdRouteChildren: AuthenticatedRolesTrainingIdRouteChildren =
+  {
+    AuthenticatedRolesTrainingIdEditRoute:
+      AuthenticatedRolesTrainingIdEditRoute,
+  }
+
+const AuthenticatedRolesTrainingIdRouteWithChildren =
+  AuthenticatedRolesTrainingIdRoute._addFileChildren(
+    AuthenticatedRolesTrainingIdRouteChildren,
+  )
+
+interface AuthenticatedRolesTrainingRouteChildren {
+  AuthenticatedRolesTrainingIdRoute: typeof AuthenticatedRolesTrainingIdRouteWithChildren
+  AuthenticatedRolesTrainingNewRoute: typeof AuthenticatedRolesTrainingNewRoute
+}
+
+const AuthenticatedRolesTrainingRouteChildren: AuthenticatedRolesTrainingRouteChildren =
+  {
+    AuthenticatedRolesTrainingIdRoute:
+      AuthenticatedRolesTrainingIdRouteWithChildren,
+    AuthenticatedRolesTrainingNewRoute: AuthenticatedRolesTrainingNewRoute,
+  }
+
+const AuthenticatedRolesTrainingRouteWithChildren =
+  AuthenticatedRolesTrainingRoute._addFileChildren(
+    AuthenticatedRolesTrainingRouteChildren,
+  )
+
+interface AuthenticatedRolesRouteChildren {
+  AuthenticatedRolesEmployeesRoute: typeof AuthenticatedRolesEmployeesRouteWithChildren
+  AuthenticatedRolesTrainingRoute: typeof AuthenticatedRolesTrainingRouteWithChildren
+}
+
+const AuthenticatedRolesRouteChildren: AuthenticatedRolesRouteChildren = {
+  AuthenticatedRolesEmployeesRoute:
+    AuthenticatedRolesEmployeesRouteWithChildren,
+  AuthenticatedRolesTrainingRoute: AuthenticatedRolesTrainingRouteWithChildren,
+}
+
+const AuthenticatedRolesRouteWithChildren =
+  AuthenticatedRolesRoute._addFileChildren(AuthenticatedRolesRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
@@ -513,6 +735,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedRawMaterialsRoute: typeof AuthenticatedRawMaterialsRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
+  AuthenticatedRolesRoute: typeof AuthenticatedRolesRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStockRoute: typeof AuthenticatedStockRoute
   AuthenticatedTraceabilityRoute: typeof AuthenticatedTraceabilityRoute
@@ -537,6 +760,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedRawMaterialsRoute: AuthenticatedRawMaterialsRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
+  AuthenticatedRolesRoute: AuthenticatedRolesRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStockRoute: AuthenticatedStockRoute,
   AuthenticatedTraceabilityRoute: AuthenticatedTraceabilityRoute,

@@ -345,6 +345,67 @@ export interface Database {
           document_url?: string | null;
         };
       };
+      employees: {
+        Row: {
+          id: string;
+          employee_name: string;
+          employee_role: string;
+          date_of_birth: string | null;
+          recruited_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          employee_name: string;
+          employee_role: string;
+          date_of_birth?: string | null;
+          recruited_date?: string | null;
+        };
+        Update: {
+          employee_name?: string;
+          employee_role?: string;
+          date_of_birth?: string | null;
+          recruited_date?: string | null;
+        };
+      };
+      training_programs: {
+        Row: {
+          id: string;
+          training_id: string;
+          training_name: string;
+          training_objectives: string | null;
+          training_duration: string | null;
+          trainer: string;
+          trainees: string[];
+          status: string;
+          performance_evaluation: string | null;
+          schedule: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          training_id?: string;
+          training_name: string;
+          training_objectives?: string | null;
+          training_duration?: string | null;
+          trainer: string;
+          trainees?: string[];
+          status?: string;
+          performance_evaluation?: string | null;
+          schedule: string;
+        };
+        Update: {
+          training_id?: string;
+          training_name?: string;
+          training_objectives?: string | null;
+          training_duration?: string | null;
+          trainer?: string;
+          trainees?: string[];
+          status?: string;
+          performance_evaluation?: string | null;
+          schedule?: string;
+        };
+      };
     };
     Functions: {
       get_dashboard_kpis: {

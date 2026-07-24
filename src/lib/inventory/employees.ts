@@ -31,6 +31,23 @@ export function roleLabel(value: string | null | undefined) {
   return EMPLOYEE_ROLES.find((r) => r.value === value)?.label ?? value ?? "—";
 }
 
+export const TRAINING_PERSONNEL = [
+  { value: "CTO", label: "CTO" },
+  { value: "Product Quality Lead", label: "Product Quality Lead" },
+  { value: "Factory Site Manager", label: "Factory Site Manager" },
+  { value: "Head of Sales", label: "Head of Sales" },
+  { value: "Production Executive", label: "Production Executive" },
+  { value: "Supplier and Purchase Management", label: "Supplier and Purchase Management" },
+  { value: "Injection Moulding Engineer", label: "Injection Moulding Engineer" },
+] as const;
+
+export type TrainingPersonnelValue = (typeof TRAINING_PERSONNEL)[number]["value"];
+
+export const TRAINING_SCHEDULES = [
+  { value: "Every 6 Months", label: "Every 6 Months" },
+  { value: "Once a year", label: "Once a year" },
+] as const;
+
 export const EQUIPMENT_TYPES = [
   { value: "process", label: "Process" },
   { value: "measuring", label: "Measuring" },

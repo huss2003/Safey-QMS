@@ -34,6 +34,11 @@ export type EquipmentRepairInsert = Database["public"]["Tables"]["equipment_repa
 export type EquipmentMaintenance = Database["public"]["Tables"]["equipment_maintenance"]["Row"];
 export type EquipmentMaintenanceInsert =
   Database["public"]["Tables"]["equipment_maintenance"]["Insert"];
+export type Employee = Database["public"]["Tables"]["employees"]["Row"];
+export type EmployeeInsert = Database["public"]["Tables"]["employees"]["Insert"];
+
+export type TrainingProgram = Database["public"]["Tables"]["training_programs"]["Row"];
+export type TrainingProgramInsert = Database["public"]["Tables"]["training_programs"]["Insert"];
 
 export type {
   MaterialType,
