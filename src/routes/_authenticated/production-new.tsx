@@ -193,7 +193,7 @@ function NewProductionWizard() {
     },
     onSuccess: (data) => {
       setPlan(data);
-      setStep(4);
+      setStep(2);
     },
     onError: (e: any) => toast.error(e.message ?? "Calculation failed"),
   });
@@ -454,14 +454,7 @@ function NewProductionWizard() {
               <Button variant="outline" onClick={() => setStep(2)}>
                 Back
               </Button>
-              <Button onClick={() => {
-                // Calculate BOM if not already calculated, otherwise go to step 4
-                if (plan.length === 0) {
-                  calculate.mutate();
-                } else {
-                  setStep(4);
-                }
-              }}>
+              <Button onClick={() => setStep(4)}>
                 Next: availability check
               </Button>
             </div>
@@ -564,7 +557,7 @@ function NewProductionWizard() {
             )}
 
             <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(1)}>
+              <Button variant="outline" onClick={() => setStep(3)}>
                 Back
               </Button>
               <Button onClick={() => setStep(5)} disabled={hasShortage}>
