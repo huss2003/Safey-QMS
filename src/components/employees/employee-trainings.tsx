@@ -287,7 +287,15 @@ export function EmployeeTrainings({ employee }: Props) {
                     <SelectValue placeholder="Choose a training program" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(programs as any[]).map((p) => (
+                    {(programs as any[])
+                      .filter((p) => {
+                        if (!p.trainees || p.trainees.length === 0) return true;
+                        return p.trainees.some((t: string) =>
+                          t.toLowerCase().includes(employee.employee_role?.toLowerCase() ?? "") ||
+                          employee.employee_role?.toLowerCase().includes(t.toLowerCase())
+                        );
+                      })
+                      .map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.training_name} ({p.training_id})
                       </SelectItem>
