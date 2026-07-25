@@ -122,10 +122,8 @@ export function EmployeeTrainings({ employee }: Props) {
     mutationFn: async () => {
       if (!selectedProgram) throw new Error("No training program selected");
 
-      // Generate next REC_HRM_TR_ID
-      const { count } = await (supabase as any).from("employee_trainings").select("*", { count: "exact", head: true }).eq("employee_id", employee.id);
-      const nextNum = String((count || 0) + 1).padStart(3, "0");
-      const recordId = `REC_HRM_TR_${nextNum}`;
+      // Generate unique record ID using crypto.randomUUID()
+      const recordId = `REC_TR_${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 
       const docUrls: string[] = [];
 

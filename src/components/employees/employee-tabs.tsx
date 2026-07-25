@@ -438,10 +438,8 @@ export function EmployeeHealthTab({ employeeId, employee }: Props & { employee?:
 
   const save = useMutation({
     mutationFn: async () => {
-      // Generate next REC_WI_HCR_ID
-      const { count } = await (supabase as any).from("employee_health_records").select("*", { count: "exact", head: true }).eq("employee_id", employeeId);
-      const nextNum = String((count || 0) + 1).padStart(3, "0");
-      const recordId = `REC_WI_HCR_${nextNum}`;
+      // Generate unique record ID using crypto.randomUUID()
+      const recordId = `REC_HCR_${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
 
       const { error } = await (supabase as any).from("employee_health_records").insert({
         record_id: recordId,
