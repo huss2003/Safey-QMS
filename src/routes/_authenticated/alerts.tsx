@@ -85,15 +85,17 @@ function AlertsPage() {
         }
       />
 
-      <Tabs value={filter} onValueChange={setFilter} className="mb-4">
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="unread">Unread</TabsTrigger>
-          <TabsTrigger value="low">Low Stock</TabsTrigger>
-          <TabsTrigger value="waste">High Wastage</TabsTrigger>
-          <TabsTrigger value="shortage">Shortage</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div onClick={(e) => e.stopPropagation()}>
+        <Tabs value={filter} onValueChange={setFilter} className="mb-4">
+          <TabsList>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="unread">Unread</TabsTrigger>
+            <TabsTrigger value="low">Low Stock</TabsTrigger>
+            <TabsTrigger value="waste">High Wastage</TabsTrigger>
+            <TabsTrigger value="shortage">Shortage</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>

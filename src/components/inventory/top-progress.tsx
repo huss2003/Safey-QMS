@@ -1,9 +1,12 @@
 import { useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /** Slim top-of-page progress bar that appears whenever the router is navigating. */
 export function TopProgress() {
   const isLoading = useRouterState({ select: (s) => s.isLoading || s.status === "pending" });
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
     <div
       aria-hidden
@@ -15,7 +18,7 @@ export function TopProgress() {
       <div
         className={cn(
           "h-full bg-primary origin-left",
-          isLoading ? "animate-[topbar_1.1s_ease-in-out_infinite]" : "",
+          mounted && isLoading ? "animate-[topbar_1.1s_ease-in-out_infinite]" : "",
         )}
         style={{ width: "40%" }}
       />

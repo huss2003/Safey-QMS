@@ -9,6 +9,7 @@ export function ThemeToggle() {
       onClick={toggle}
       className="h-8 w-8 flex items-center justify-center rounded border border-border hover:bg-accent transition-colors"
       aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+      suppressHydrationWarning
     >
       {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
     </button>
