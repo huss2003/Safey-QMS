@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Puzzle, ChevronDown, ChevronRight, Pencil, Loader2, Factory } from "lucide-react";
+import { Plus, Puzzle, ChevronDown, ChevronRight, Pencil, Loader2, Factory, ClipboardCheck } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Part, PartBatch } from "@/integrations/supabase/database.types";
@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -57,6 +58,7 @@ export const Route = createFileRoute("/_authenticated/parts")({
 
 const schema = z.object({
   part_name: z.string().trim().min(1).max(100),
+  part_code: z.string().trim().max(20).optional().or(z.literal("")),
   material_type: z.string().min(1, "Required").max(40),
   consumption_per_unit_kg: z.coerce.number().positive("Must be > 0"),
   low_stock_threshold: z.coerce.number().min(0),
@@ -203,6 +205,129 @@ function PartsPage() {
   );
 }
 
+function InspectionPicker({ batchId, currentResult }: { batchId: string; currentResult?: string }) {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ["inspection_templates"],
+    queryFn: async () => {
+      const { data } = await supabase.from("inspection_form_templates").select("id, part_name, record_id, tolerance, field_a, field_b, field_c").order("part_name");
+      return (data ?? []) as { id: string; part_name: string; record_id: string; tolerance: number; field_a: string | null; field_b: string | null; field_c: string | null }[];
+    },
+    staleTime: 60_000,
+  });
+
+  const filtered = templates.filter((t) =>
+    t.part_name.toLowerCase().includes(search.toLowerCase()) ||
+    t.record_id.toLowerCase().includes(search.toLowerCase())
+  );
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  const select = async (template: typeof templates[number]) => {
+    // Check if inspection_record already exists for this batch
+    const { data: existing } = await supabase
+      .from("inspection_records" as any)
+      .select("id")
+      .eq("batch_id", batchId)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      toast.success("Opening existing inspection form");
+      setOpen(false);
+      setSearch("");
+      navigate({ to: "/inspection-form/$batchId", params: { batchId } });
+      return;
+    }
+
+    // Look up batch_number from part_batches
+    const { data: batch } = await supabase
+      .from("part_batches")
+      .select("batch_number")
+      .eq("id", batchId)
+      .single();
+
+    const batchNumber = batch?.batch_number ?? "";
+
+    // Generate 20 empty QC rows
+    const qcRows = Array.from({ length: 20 }, (_, i) => ({
+      part_num: i + 1,
+      a_actual: Number(template.field_a) || 0,
+      a_measured: 0,
+      a_difference: 0,
+      b_actual: Number(template.field_b) || 0,
+      b_measured: 0,
+      b_difference: 0,
+      c_actual: Number(template.field_c) || 0,
+      c_measured: 0,
+      c_difference: 0,
+      tolerance: template.tolerance,
+      result: "Pending",
+    }));
+
+    const { error } = await supabase.from("inspection_records" as any).insert({
+      batch_id: batchId,
+      template_id: template.id,
+      form_id: template.record_id,
+      part_name: template.part_name,
+      batch_number: batchNumber,
+      tolerance: template.tolerance,
+      qc_rows: qcRows,
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Inspection form created");
+      setOpen(false);
+      setSearch("");
+      navigate({ to: "/inspection-form/$batchId", params: { batchId } });
+    }
+  };
+
+  return (
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); setSearch(""); }}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7">
+          <ClipboardCheck className="h-3.5 w-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-2" align="end">
+        <div className="text-[11px] font-medium text-muted-foreground mb-1 px-1">Select Inspection Form</div>
+        <Input
+          ref={inputRef}
+          placeholder="Search by part name or record ID..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-8 text-[12px] mb-1"
+        />
+        <div className="max-h-48 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <p className="text-xs text-muted-foreground p-2">No templates found</p>
+          ) : (
+            filtered.map((t) => (
+              <button
+                key={t.id}
+                className="w-full text-left px-2 py-1.5 text-[12px] rounded hover:bg-accent transition-colors"
+                onClick={() => select(t)}
+              >
+                <span className="font-medium">{t.part_name}</span>
+                <span className="text-muted-foreground ml-1">({t.record_id})</span>
+              </button>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function PartBatchesRow({ partId }: { partId: string }) {
   const { data } = useQuery({
     queryKey: ["parts", partId, "batches"],
@@ -227,11 +352,12 @@ function PartBatchesRow({ partId }: { partId: string }) {
                 <TableHead>Batch</TableHead>
                 <TableHead>Qty</TableHead>
                 <TableHead>Raw material</TableHead>
-                <TableHead>Vendor</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Wastage</TableHead>
                 <TableHead>Reason</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Inspection Result</TableHead>
+                <TableHead>Icons</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -240,7 +366,6 @@ function PartBatchesRow({ partId }: { partId: string }) {
                   <TableCell className="font-medium">{b.batch_number}</TableCell>
                   <TableCell>{fmtNum(b.quantity)}</TableCell>
                   <TableCell>{b.raw_materials?.batch_number}</TableCell>
-                  <TableCell>{b.raw_materials?.vendors?.name}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {fmtDate(b.created_at)}
                   </TableCell>
@@ -252,6 +377,18 @@ function PartBatchesRow({ partId }: { partId: string }) {
                     ) : (
                       <Badge variant="secondary">Active</Badge>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    {(b as any).inspection_result ? (
+                      <Badge variant={(b as any).inspection_result === "Pass" ? "default" : "destructive"}>
+                        {(b as any).inspection_result}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <InspectionPicker batchId={b.id} currentResult={(b as any).inspection_result} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -285,6 +422,7 @@ function PartForm({
     resolver: zodResolver(schema),
     defaultValues: {
       part_name: "",
+      part_code: "",
       material_type: "",
       consumption_per_unit_kg: 0.01,
       low_stock_threshold: 100,
@@ -293,6 +431,7 @@ function PartForm({
     values: part
       ? {
           part_name: part.part_name,
+          part_code: part.part_code ?? "",
           material_type: part.material_type,
           consumption_per_unit_kg: Number(part.consumption_per_unit_kg),
           low_stock_threshold: Number(part.low_stock_threshold),
@@ -311,6 +450,21 @@ function PartForm({
         const nameLower = v.part_name.toLowerCase();
         const dup = (allParts ?? []).find((p) => p.part_name.toLowerCase() === nameLower);
         if (dup) throw new Error(`A part named "${dup.part_name}" already exists`);
+
+        // Auto-increment part_code: if prefix like "TPX-" → TPX-001, TPX-002...
+        let finalCode = v.part_code || null;
+        if (finalCode) {
+          const prefix = finalCode; // e.g. "TPX-"
+          const existing = (allParts ?? [])
+            .filter((p) => p.part_code?.startsWith(prefix))
+            .map((p) => {
+              const num = parseInt(p.part_code!.slice(prefix.length), 10);
+              return isNaN(num) ? 0 : num;
+            });
+          const nextNum = (existing.length > 0 ? Math.max(...existing) : 0) + 1;
+          finalCode = `${prefix}${String(nextNum).padStart(3, "0")}`;
+        }
+        const payload = { ...v, part_code: finalCode, notes: v.notes || null };
         const { error } = await (supabase.from("parts") as any).insert(payload);
         if (error) {
           if (error.code === "23505")
@@ -346,6 +500,17 @@ function PartForm({
                 {form.formState.errors.part_name.message}
               </p>
             )}
+          </div>
+          <div>
+            <Label className="label-caps">Part Code</Label>
+            <Input
+              {...form.register("part_code")}
+              placeholder="e.g. TPX- (auto-increments to TPX-001, TPX-002...)"
+              className="mt-1"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Type the prefix only. Numbers are auto-generated (e.g. TPX- → TPX-001).
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

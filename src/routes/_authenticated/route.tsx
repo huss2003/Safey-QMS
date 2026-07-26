@@ -27,6 +27,7 @@ import {
   Wrench,
   UserRound,
   GraduationCap,
+  ClipboardCheck,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -110,6 +111,7 @@ const NAV: NavItem[] = [
   { to: "/alerts", label: "Alerts", icon: Bell, group: "insight" },
   { to: "/batch-recall", label: "Batch recall", icon: ShieldAlert, group: "system" },
   { to: "/settings", label: "Settings", icon: Settings, group: "system" },
+  { to: "/inspection-form-template", label: "Inspection Form Template", icon: ClipboardCheck, group: "qa" },
 ];
 
 function AuthenticatedLayout() {
@@ -175,7 +177,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const unread = useUnreadAlertsCount();
 
-  const grouped = (["ops", "insight", "system", "hr"] as const).map((g) => ({
+  const grouped = (["ops", "insight", "system", "hr", "qa"] as const).map((g) => ({
     group: g,
     items: NAV.filter((n) => n.group === g),
   }));
@@ -199,7 +201,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         {grouped.map(({ group, items }) => (
           <div key={group}>
             <div className="px-2 mb-1 label-caps">
-              {group === "ops" ? "Operations" : group === "insight" ? "Insight" : group === "system" ? "System" : "Human Resources"}
+              {group === "ops" ? "Operations" : group === "insight" ? "Insight" : group === "system" ? "System" : group === "hr" ? "Human Resources" : "Quality Assurance"}
             </div>
             <div className="space-y-px">
               {items.map((item) => {

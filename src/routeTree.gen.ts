@@ -25,6 +25,7 @@ import { Route as AuthenticatedProductionNewRouteImport } from './routes/_authen
 import { Route as AuthenticatedProductionRouteImport } from './routes/_authenticated/production'
 import { Route as AuthenticatedPartsRouteImport } from './routes/_authenticated/parts'
 import { Route as AuthenticatedOtherItemsRouteImport } from './routes/_authenticated/other-items'
+import { Route as AuthenticatedInspectionFormTemplateRouteImport } from './routes/_authenticated/inspection-form-template'
 import { Route as AuthenticatedEquipmentNewRouteImport } from './routes/_authenticated/equipment-new'
 import { Route as AuthenticatedEquipmentRouteImport } from './routes/_authenticated/equipment'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -33,6 +34,7 @@ import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedRolesTrainingRouteImport } from './routes/_authenticated/roles.training'
 import { Route as AuthenticatedRolesEmployeesRouteImport } from './routes/_authenticated/roles.employees'
 import { Route as AuthenticatedProductsBomIdRouteImport } from './routes/_authenticated/products-bom.$id'
+import { Route as AuthenticatedInspectionFormBatchIdRouteImport } from './routes/_authenticated/inspection-form.$batchId'
 import { Route as AuthenticatedEquipmentEditIdRouteImport } from './routes/_authenticated/equipment-edit.$id'
 import { Route as AuthenticatedEquipmentDetailIdRouteImport } from './routes/_authenticated/equipment-detail.$id'
 import { Route as AuthenticatedStockHistoryTypeIdRouteImport } from './routes/_authenticated/stock-history.$type.$id'
@@ -128,6 +130,12 @@ const AuthenticatedOtherItemsRoute = AuthenticatedOtherItemsRouteImport.update({
   path: '/other-items',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInspectionFormTemplateRoute =
+  AuthenticatedInspectionFormTemplateRouteImport.update({
+    id: '/inspection-form-template',
+    path: '/inspection-form-template',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedEquipmentNewRoute =
   AuthenticatedEquipmentNewRouteImport.update({
     id: '/equipment-new',
@@ -171,6 +179,12 @@ const AuthenticatedProductsBomIdRoute =
   AuthenticatedProductsBomIdRouteImport.update({
     id: '/products-bom/$id',
     path: '/products-bom/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedInspectionFormBatchIdRoute =
+  AuthenticatedInspectionFormBatchIdRouteImport.update({
+    id: '/inspection-form/$batchId',
+    path: '/inspection-form/$batchId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEquipmentEditIdRoute =
@@ -248,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/equipment': typeof AuthenticatedEquipmentRoute
   '/equipment-new': typeof AuthenticatedEquipmentNewRoute
+  '/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
   '/other-items': typeof AuthenticatedOtherItemsRoute
   '/parts': typeof AuthenticatedPartsRoute
   '/production': typeof AuthenticatedProductionRoute
@@ -263,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/vendors': typeof AuthenticatedVendorsRoute
   '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
+  '/inspection-form/$batchId': typeof AuthenticatedInspectionFormBatchIdRoute
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
@@ -284,6 +300,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/equipment': typeof AuthenticatedEquipmentRoute
   '/equipment-new': typeof AuthenticatedEquipmentNewRoute
+  '/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
   '/other-items': typeof AuthenticatedOtherItemsRoute
   '/parts': typeof AuthenticatedPartsRoute
   '/production': typeof AuthenticatedProductionRoute
@@ -299,6 +316,7 @@ export interface FileRoutesByTo {
   '/vendors': typeof AuthenticatedVendorsRoute
   '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
+  '/inspection-form/$batchId': typeof AuthenticatedInspectionFormBatchIdRoute
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
@@ -322,6 +340,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/equipment': typeof AuthenticatedEquipmentRoute
   '/_authenticated/equipment-new': typeof AuthenticatedEquipmentNewRoute
+  '/_authenticated/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
   '/_authenticated/other-items': typeof AuthenticatedOtherItemsRoute
   '/_authenticated/parts': typeof AuthenticatedPartsRoute
   '/_authenticated/production': typeof AuthenticatedProductionRoute
@@ -337,6 +356,7 @@ export interface FileRoutesById {
   '/_authenticated/vendors': typeof AuthenticatedVendorsRoute
   '/_authenticated/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/_authenticated/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
+  '/_authenticated/inspection-form/$batchId': typeof AuthenticatedInspectionFormBatchIdRoute
   '/_authenticated/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/_authenticated/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/_authenticated/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
@@ -360,6 +380,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/equipment'
     | '/equipment-new'
+    | '/inspection-form-template'
     | '/other-items'
     | '/parts'
     | '/production'
@@ -375,6 +396,7 @@ export interface FileRouteTypes {
     | '/vendors'
     | '/equipment-detail/$id'
     | '/equipment-edit/$id'
+    | '/inspection-form/$batchId'
     | '/products-bom/$id'
     | '/roles/employees'
     | '/roles/training'
@@ -396,6 +418,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/equipment'
     | '/equipment-new'
+    | '/inspection-form-template'
     | '/other-items'
     | '/parts'
     | '/production'
@@ -411,6 +434,7 @@ export interface FileRouteTypes {
     | '/vendors'
     | '/equipment-detail/$id'
     | '/equipment-edit/$id'
+    | '/inspection-form/$batchId'
     | '/products-bom/$id'
     | '/roles/employees'
     | '/roles/training'
@@ -433,6 +457,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/equipment'
     | '/_authenticated/equipment-new'
+    | '/_authenticated/inspection-form-template'
     | '/_authenticated/other-items'
     | '/_authenticated/parts'
     | '/_authenticated/production'
@@ -448,6 +473,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendors'
     | '/_authenticated/equipment-detail/$id'
     | '/_authenticated/equipment-edit/$id'
+    | '/_authenticated/inspection-form/$batchId'
     | '/_authenticated/products-bom/$id'
     | '/_authenticated/roles/employees'
     | '/_authenticated/roles/training'
@@ -582,6 +608,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOtherItemsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inspection-form-template': {
+      id: '/_authenticated/inspection-form-template'
+      path: '/inspection-form-template'
+      fullPath: '/inspection-form-template'
+      preLoaderRoute: typeof AuthenticatedInspectionFormTemplateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/equipment-new': {
       id: '/_authenticated/equipment-new'
       path: '/equipment-new'
@@ -636,6 +669,13 @@ declare module '@tanstack/react-router' {
       path: '/products-bom/$id'
       fullPath: '/products-bom/$id'
       preLoaderRoute: typeof AuthenticatedProductsBomIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/inspection-form/$batchId': {
+      id: '/_authenticated/inspection-form/$batchId'
+      path: '/inspection-form/$batchId'
+      fullPath: '/inspection-form/$batchId'
+      preLoaderRoute: typeof AuthenticatedInspectionFormBatchIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/equipment-edit/$id': {
@@ -808,6 +848,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEquipmentRoute: typeof AuthenticatedEquipmentRoute
   AuthenticatedEquipmentNewRoute: typeof AuthenticatedEquipmentNewRoute
+  AuthenticatedInspectionFormTemplateRoute: typeof AuthenticatedInspectionFormTemplateRoute
   AuthenticatedOtherItemsRoute: typeof AuthenticatedOtherItemsRoute
   AuthenticatedPartsRoute: typeof AuthenticatedPartsRoute
   AuthenticatedProductionRoute: typeof AuthenticatedProductionRoute
@@ -823,6 +864,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVendorsRoute: typeof AuthenticatedVendorsRoute
   AuthenticatedEquipmentDetailIdRoute: typeof AuthenticatedEquipmentDetailIdRoute
   AuthenticatedEquipmentEditIdRoute: typeof AuthenticatedEquipmentEditIdRoute
+  AuthenticatedInspectionFormBatchIdRoute: typeof AuthenticatedInspectionFormBatchIdRoute
   AuthenticatedProductsBomIdRoute: typeof AuthenticatedProductsBomIdRoute
   AuthenticatedStockHistoryTypeIdRoute: typeof AuthenticatedStockHistoryTypeIdRoute
 }
@@ -833,6 +875,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEquipmentRoute: AuthenticatedEquipmentRoute,
   AuthenticatedEquipmentNewRoute: AuthenticatedEquipmentNewRoute,
+  AuthenticatedInspectionFormTemplateRoute:
+    AuthenticatedInspectionFormTemplateRoute,
   AuthenticatedOtherItemsRoute: AuthenticatedOtherItemsRoute,
   AuthenticatedPartsRoute: AuthenticatedPartsRoute,
   AuthenticatedProductionRoute: AuthenticatedProductionRoute,
@@ -848,6 +892,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVendorsRoute: AuthenticatedVendorsRoute,
   AuthenticatedEquipmentDetailIdRoute: AuthenticatedEquipmentDetailIdRoute,
   AuthenticatedEquipmentEditIdRoute: AuthenticatedEquipmentEditIdRoute,
+  AuthenticatedInspectionFormBatchIdRoute:
+    AuthenticatedInspectionFormBatchIdRoute,
   AuthenticatedProductsBomIdRoute: AuthenticatedProductsBomIdRoute,
   AuthenticatedStockHistoryTypeIdRoute: AuthenticatedStockHistoryTypeIdRoute,
 }
