@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Package, Eye, Ban, CheckCircle, Loader2, Filter } from "lucide-react";
+import { Plus, Package, Eye, Ban, CheckCircle, Loader2, Filter, FileText, Upload, X } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import type {
@@ -64,6 +64,9 @@ const schema = z.object({
   rate_per_kg: z.coerce.number().min(0, "Must be ≥ 0"),
   purchase_date: z.string().min(1, "Required"),
   notes: z.string().optional().or(z.literal("")),
+  coa_number: z.string().optional().or(z.literal("")),
+  po_number: z.string().optional().or(z.literal("")),
+  invoice_number: z.string().optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -115,7 +118,7 @@ function RawMaterialsPage() {
     queryKey: ["raw_materials", "client", "list"],
     queryFn: async () => {
       const res = await fetch(
-        "https://utsfiztqmfskumxacvnn.supabase.co/rest/v1/raw_materials?select=id,batch_number,material_type,vendor_id,initial_quantity_kg,remaining_quantity_kg,rate_per_kg,purchase_date,is_blocked&order=purchase_date.desc",
+        "https://utsfiztqmfskumxacvnn.supabase.co/rest/v1/raw_materials?select=*&order=purchase_date.desc",
         {
           headers: { apikey: "sb_publishable_dl4l1Koj9Nm3Nbs8sHqvIw_QOymr_NG" },
         },
@@ -313,6 +316,70 @@ function RawMaterialsPage() {
   );
 }
 
+type DocEntry = { name: string; type: string; size: number; dataUrl: string };
+
+function DocUpload({
+  label,
+  files,
+  setFiles,
+  readFiles,
+  inputId,
+}: {
+  label: string;
+  files: DocEntry[];
+  setFiles: (fn: (prev: DocEntry[]) => DocEntry[]) => void;
+  readFiles: (fl: FileList | null) => Promise<DocEntry[]>;
+  inputId: string;
+}) {
+  return (
+    <div>
+      <Label className="label-caps">{label}</Label>
+      <div className="flex items-center gap-2 mt-1">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => document.getElementById(inputId)?.click()}
+        >
+          <Upload className="h-3 w-3" /> Upload
+        </Button>
+        <input
+          id={inputId}
+          type="file"
+          multiple
+          className="hidden"
+          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+          onChange={async (e) => {
+            const docs = await readFiles(e.target.files);
+            setFiles((prev) => [...prev, ...docs]);
+            e.target.value = "";
+          }}
+        />
+      </div>
+      {files.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1">
+          {files.map((f, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1 text-xs bg-muted rounded px-2 py-0.5"
+            >
+              <FileText className="h-3 w-3" />
+              {f.name}
+              <button
+                type="button"
+                className="text-destructive ml-0.5"
+                onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AddRawMaterialDialog({
   open,
   onOpenChange,
@@ -323,6 +390,29 @@ function AddRawMaterialDialog({
   vendors: Vendor[];
 }) {
   const qc = useQueryClient();
+  const [coaFiles, setCoaFiles] = useState<DocEntry[]>([]);
+  const [poFiles, setPoFiles] = useState<DocEntry[]>([]);
+  const [invoiceFiles, setInvoiceFiles] = useState<DocEntry[]>([]);
+
+  const readFiles = async (files: FileList | null): Promise<DocEntry[]> => {
+    if (!files?.length) return [];
+    return Promise.all(
+      Array.from(files).map(
+        (f) =>
+          new Promise<DocEntry>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () =>
+              resolve({
+                name: f.name,
+                type: f.type,
+                size: f.size,
+                dataUrl: reader.result as string,
+              });
+            reader.readAsDataURL(f);
+          }),
+      ),
+    );
+  };
   const { data: existing } = useQuery({
     queryKey: ["raw_materials", "client", "list"],
     staleTime: 5 * 60_000,
@@ -344,6 +434,9 @@ function AddRawMaterialDialog({
       rate_per_kg: 0,
       purchase_date: new Date().toISOString().slice(0, 10),
       notes: "",
+      coa_number: "",
+      po_number: "",
+      invoice_number: "",
     },
   });
   const mt = form.watch("material_type");
@@ -351,6 +444,10 @@ function AddRawMaterialDialog({
 
   const save = useMutation({
     mutationFn: async (v: FormValues) => {
+      const uploadDocs = (docs: DocEntry[]) =>
+        docs.length
+          ? JSON.stringify(docs.map(({ name, type, size, dataUrl }) => ({ name, type, size, dataUrl })))
+          : null;
       const { data, error } = await (supabase.from("raw_materials") as any)
         .insert({
           batch_number: "", // auto-generated by DB trigger
@@ -361,6 +458,12 @@ function AddRawMaterialDialog({
           rate_per_kg: v.rate_per_kg,
           purchase_date: v.purchase_date,
           notes: v.notes || null,
+          coa_number: v.coa_number || null,
+          po_number: v.po_number || null,
+          invoice_number: v.invoice_number || null,
+          coa_documents: uploadDocs(coaFiles),
+          po_documents: uploadDocs(poFiles),
+          invoice_documents: uploadDocs(invoiceFiles),
         })
         .select("batch_number")
         .single();
@@ -373,6 +476,9 @@ function AddRawMaterialDialog({
       audit("create", "raw_material", batch);
       onOpenChange(false);
       form.reset();
+      setCoaFiles([]);
+      setPoFiles([]);
+      setInvoiceFiles([]);
     },
     onError: (e: Error) => toast.error(e.message ?? "Failed"),
   });
@@ -460,6 +566,23 @@ function AddRawMaterialDialog({
             <Label className="label-caps">Notes</Label>
             <Textarea rows={2} {...form.register("notes")} className="mt-1" />
           </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label className="label-caps">COA Number</Label>
+              <Input {...form.register("coa_number")} placeholder="COA-001" className="mt-1" />
+            </div>
+            <div>
+              <Label className="label-caps">PO Number</Label>
+              <Input {...form.register("po_number")} placeholder="PO-001" className="mt-1" />
+            </div>
+            <div>
+              <Label className="label-caps">Invoice Number</Label>
+              <Input {...form.register("invoice_number")} placeholder="INV-001" className="mt-1" />
+            </div>
+          </div>
+          <DocUpload label="COA Documents" files={coaFiles} setFiles={setCoaFiles} readFiles={readFiles} inputId="coa-upload" />
+          <DocUpload label="PO Documents" files={poFiles} setFiles={setPoFiles} readFiles={readFiles} inputId="po-upload" />
+          <DocUpload label="Invoice Documents" files={invoiceFiles} setFiles={setInvoiceFiles} readFiles={readFiles} inputId="inv-upload" />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -545,6 +668,16 @@ function ViewRawMaterialDialog({
             value={fmtCurrency(Number(material.initial_quantity_kg) * Number(material.rate_per_kg))}
           />
           <Stat label="Age" value={`${ageDays}d`} />
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <Stat label="COA Number" value={material.coa_number || "—"} />
+          <Stat label="PO Number" value={material.po_number || "—"} />
+          <Stat label="Invoice Number" value={material.invoice_number || "—"} />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <DocList label="COA Documents" json={material.coa_documents} />
+          <DocList label="PO Documents" json={material.po_documents} />
+          <DocList label="Invoice Documents" json={material.invoice_documents} />
         </div>
         <Progress value={pct} className="mb-4" />
         <Tabs defaultValue="usage">
@@ -633,6 +766,46 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="border rounded-md p-2">
       <div className="label-caps">{label}</div>
       <div className="text-sm font-semibold mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+function DocList({ label, json }: { label: string; json: string | null }) {
+  if (!json) {
+    return (
+      <div className="border rounded-md p-2">
+        <div className="label-caps">{label}</div>
+        <div className="text-xs text-muted-foreground mt-1">No documents</div>
+      </div>
+    );
+  }
+  let docs: { name: string; type: string; size: number; dataUrl: string }[];
+  try {
+    docs = JSON.parse(json);
+  } catch {
+    docs = [];
+  }
+  return (
+    <div className="border rounded-md p-2">
+      <div className="label-caps">{label}</div>
+      {docs.length === 0 ? (
+        <div className="text-xs text-muted-foreground mt-1">No documents</div>
+      ) : (
+        <div className="flex flex-col gap-1 mt-1">
+          {docs.map((d, i) => (
+            <a
+              key={i}
+              href={d.dataUrl}
+              download={d.name}
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              <FileText className="h-3 w-3" />
+              {d.name}
+              <span className="text-muted-foreground">({(d.size / 1024).toFixed(0)} KB)</span>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

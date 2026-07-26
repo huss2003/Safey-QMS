@@ -67,6 +67,12 @@ export interface Database {
           purchase_date: string;
           notes: string | null;
           is_blocked: boolean;
+          coa_number: string | null;
+          po_number: string | null;
+          invoice_number: string | null;
+          coa_documents: string | null;
+          po_documents: string | null;
+          invoice_documents: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -80,6 +86,12 @@ export interface Database {
           purchase_date?: string;
           notes?: string | null;
           is_blocked?: boolean;
+          coa_number?: string | null;
+          po_number?: string | null;
+          invoice_number?: string | null;
+          coa_documents?: string | null;
+          po_documents?: string | null;
+          invoice_documents?: string | null;
         };
       };
       parts: {

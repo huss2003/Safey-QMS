@@ -40,6 +40,8 @@ import { Route as AuthenticatedRolesTrainingNewRouteImport } from './routes/_aut
 import { Route as AuthenticatedRolesTrainingIdRouteImport } from './routes/_authenticated/roles.training.$id'
 import { Route as AuthenticatedRolesEmployeesNewRouteImport } from './routes/_authenticated/roles.employees.new'
 import { Route as AuthenticatedRolesEmployeesIdRouteImport } from './routes/_authenticated/roles.employees.$id'
+import { Route as AuthenticatedRolesTrainingPerformanceRecordIdRouteImport } from './routes/_authenticated/roles.training.performance.$recordId'
+import { Route as AuthenticatedRolesTrainingIdPerformanceRouteImport } from './routes/_authenticated/roles.training.$id.performance'
 import { Route as AuthenticatedRolesTrainingIdEditRouteImport } from './routes/_authenticated/roles.training.$id.edit'
 import { Route as AuthenticatedRolesEmployeesIdEditRouteImport } from './routes/_authenticated/roles.employees.$id.edit'
 
@@ -213,6 +215,18 @@ const AuthenticatedRolesEmployeesIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedRolesEmployeesRoute,
   } as any)
+const AuthenticatedRolesTrainingPerformanceRecordIdRoute =
+  AuthenticatedRolesTrainingPerformanceRecordIdRouteImport.update({
+    id: '/performance/$recordId',
+    path: '/performance/$recordId',
+    getParentRoute: () => AuthenticatedRolesTrainingRoute,
+  } as any)
+const AuthenticatedRolesTrainingIdPerformanceRoute =
+  AuthenticatedRolesTrainingIdPerformanceRouteImport.update({
+    id: '/performance',
+    path: '/performance',
+    getParentRoute: () => AuthenticatedRolesTrainingIdRoute,
+  } as any)
 const AuthenticatedRolesTrainingIdEditRoute =
   AuthenticatedRolesTrainingIdEditRouteImport.update({
     id: '/edit',
@@ -259,6 +273,8 @@ export interface FileRoutesByFullPath {
   '/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
   '/roles/employees/$id/edit': typeof AuthenticatedRolesEmployeesIdEditRoute
   '/roles/training/$id/edit': typeof AuthenticatedRolesTrainingIdEditRoute
+  '/roles/training/$id/performance': typeof AuthenticatedRolesTrainingIdPerformanceRoute
+  '/roles/training/performance/$recordId': typeof AuthenticatedRolesTrainingPerformanceRecordIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -293,6 +309,8 @@ export interface FileRoutesByTo {
   '/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
   '/roles/employees/$id/edit': typeof AuthenticatedRolesEmployeesIdEditRoute
   '/roles/training/$id/edit': typeof AuthenticatedRolesTrainingIdEditRoute
+  '/roles/training/$id/performance': typeof AuthenticatedRolesTrainingIdPerformanceRoute
+  '/roles/training/performance/$recordId': typeof AuthenticatedRolesTrainingPerformanceRecordIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -329,6 +347,8 @@ export interface FileRoutesById {
   '/_authenticated/stock-history/$type/$id': typeof AuthenticatedStockHistoryTypeIdRoute
   '/_authenticated/roles/employees/$id/edit': typeof AuthenticatedRolesEmployeesIdEditRoute
   '/_authenticated/roles/training/$id/edit': typeof AuthenticatedRolesTrainingIdEditRoute
+  '/_authenticated/roles/training/$id/performance': typeof AuthenticatedRolesTrainingIdPerformanceRoute
+  '/_authenticated/roles/training/performance/$recordId': typeof AuthenticatedRolesTrainingPerformanceRecordIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -365,6 +385,8 @@ export interface FileRouteTypes {
     | '/stock-history/$type/$id'
     | '/roles/employees/$id/edit'
     | '/roles/training/$id/edit'
+    | '/roles/training/$id/performance'
+    | '/roles/training/performance/$recordId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -399,6 +421,8 @@ export interface FileRouteTypes {
     | '/stock-history/$type/$id'
     | '/roles/employees/$id/edit'
     | '/roles/training/$id/edit'
+    | '/roles/training/$id/performance'
+    | '/roles/training/performance/$recordId'
   id:
     | '__root__'
     | '/'
@@ -434,6 +458,8 @@ export interface FileRouteTypes {
     | '/_authenticated/stock-history/$type/$id'
     | '/_authenticated/roles/employees/$id/edit'
     | '/_authenticated/roles/training/$id/edit'
+    | '/_authenticated/roles/training/$id/performance'
+    | '/_authenticated/roles/training/performance/$recordId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -661,6 +687,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRolesEmployeesIdRouteImport
       parentRoute: typeof AuthenticatedRolesEmployeesRoute
     }
+    '/_authenticated/roles/training/performance/$recordId': {
+      id: '/_authenticated/roles/training/performance/$recordId'
+      path: '/performance/$recordId'
+      fullPath: '/roles/training/performance/$recordId'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingPerformanceRecordIdRouteImport
+      parentRoute: typeof AuthenticatedRolesTrainingRoute
+    }
+    '/_authenticated/roles/training/$id/performance': {
+      id: '/_authenticated/roles/training/$id/performance'
+      path: '/performance'
+      fullPath: '/roles/training/$id/performance'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingIdPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRolesTrainingIdRoute
+    }
     '/_authenticated/roles/training/$id/edit': {
       id: '/_authenticated/roles/training/$id/edit'
       path: '/edit'
@@ -712,12 +752,15 @@ const AuthenticatedRolesEmployeesRouteWithChildren =
 
 interface AuthenticatedRolesTrainingIdRouteChildren {
   AuthenticatedRolesTrainingIdEditRoute: typeof AuthenticatedRolesTrainingIdEditRoute
+  AuthenticatedRolesTrainingIdPerformanceRoute: typeof AuthenticatedRolesTrainingIdPerformanceRoute
 }
 
 const AuthenticatedRolesTrainingIdRouteChildren: AuthenticatedRolesTrainingIdRouteChildren =
   {
     AuthenticatedRolesTrainingIdEditRoute:
       AuthenticatedRolesTrainingIdEditRoute,
+    AuthenticatedRolesTrainingIdPerformanceRoute:
+      AuthenticatedRolesTrainingIdPerformanceRoute,
   }
 
 const AuthenticatedRolesTrainingIdRouteWithChildren =
@@ -728,6 +771,7 @@ const AuthenticatedRolesTrainingIdRouteWithChildren =
 interface AuthenticatedRolesTrainingRouteChildren {
   AuthenticatedRolesTrainingIdRoute: typeof AuthenticatedRolesTrainingIdRouteWithChildren
   AuthenticatedRolesTrainingNewRoute: typeof AuthenticatedRolesTrainingNewRoute
+  AuthenticatedRolesTrainingPerformanceRecordIdRoute: typeof AuthenticatedRolesTrainingPerformanceRecordIdRoute
 }
 
 const AuthenticatedRolesTrainingRouteChildren: AuthenticatedRolesTrainingRouteChildren =
@@ -735,6 +779,8 @@ const AuthenticatedRolesTrainingRouteChildren: AuthenticatedRolesTrainingRouteCh
     AuthenticatedRolesTrainingIdRoute:
       AuthenticatedRolesTrainingIdRouteWithChildren,
     AuthenticatedRolesTrainingNewRoute: AuthenticatedRolesTrainingNewRoute,
+    AuthenticatedRolesTrainingPerformanceRecordIdRoute:
+      AuthenticatedRolesTrainingPerformanceRecordIdRoute,
   }
 
 const AuthenticatedRolesTrainingRouteWithChildren =

@@ -4,6 +4,12 @@ export const EMPLOYEE_ROLES = [
   { value: "supervisor", label: "Supervisor" },
   { value: "qc_inspector", label: "QC Inspector" },
   { value: "production_manager", label: "Production Manager" },
+  { value: "factory_site_manager", label: "Factory Site Manager" },
+  { value: "product_quality_lead", label: "Product Quality Lead" },
+  { value: "head_of_sales", label: "Head of Sales" },
+  { value: "supplier_and_purchase_management", label: "Supplier and Purchase Management" },
+  { value: "injection_moulding_engineer", label: "Injection Moulding Engineer" },
+  { value: "production_executive", label: "Production Executive" },
 ] as const;
 
 export type EmployeeRoleValue = (typeof EMPLOYEE_ROLES)[number]["value"];

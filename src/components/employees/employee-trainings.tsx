@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Eye, Pencil, Plus, Loader2, Upload, X, Download } from "lucide-react";
+import { Eye, Pencil, Plus, Loader2, Upload, X, Download, Medal } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Employee } from "@/integrations/supabase/database.types";
@@ -37,6 +38,24 @@ import { fmtDate } from "@/lib/inventory/format";
 import { cn } from "@/lib/utils";
 
 /* ── Types ─────────────────────────────────────────────────── */
+
+interface EvalDetails {
+  marks: number[];
+  results: string[];
+  total: number;
+  finalResult: string;
+}
+
+function parseEval(marksJson: string | null): EvalDetails | null {
+  if (!marksJson) return null;
+  try {
+    const parsed = JSON.parse(marksJson);
+    if (parsed && typeof parsed === "object" && typeof parsed.total === "number" && typeof parsed.finalResult === "string") {
+      return parsed as EvalDetails;
+    }
+    return null;
+  } catch { return null; }
+}
 
 interface TrainingRecord {
   id: string;
@@ -226,40 +245,53 @@ export function EmployeeTrainings({ employee }: Props) {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50/80 border-b">
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Trainee Name</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Trainee Role</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider">ID</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Trainer</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Training Name</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Performance Date</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Result</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Frequency</TableHead>
                 <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[80px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {records.map((r, i) => (
-                <TableRow key={r.id} className="border-b border-border/40">
-                  <TableCell className="text-[13px] font-medium">{r.trainee_name || employee.employee_name}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-                      {roleLabel(r.trainee_role || employee.employee_role)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-[13px] text-muted-foreground font-mono">{r.record_id || trnId(i)}</TableCell>
-                  <TableCell className="text-[13px] text-muted-foreground">{r.trainer}</TableCell>
-                  <TableCell className="text-[13px] font-medium">{r.training_name}</TableCell>
-                  <TableCell className="text-[13px] text-muted-foreground">{fmtDate(r.performance_date)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewRecord(r)}>
-                        <Eye className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditRecord(r)}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {records.map((r, i) => {
+                const evalData = parseEval(r.evaluation_marks);
+                const resultText = evalData && evalData.total != null
+                  ? `${evalData.total} (${evalData.finalResult})`
+                  : "—";
+                return (
+                  <TableRow key={r.id} className="border-b border-border/40">
+                    <TableCell className="text-[12.5px] text-muted-foreground font-mono">{r.record_id || trnId(i)}</TableCell>
+                    <TableCell className="text-[12.5px] text-muted-foreground">{r.trainer}</TableCell>
+                    <TableCell className="text-[12.5px] font-medium">{r.training_name}</TableCell>
+                    <TableCell className="text-[12.5px] text-muted-foreground">{fmtDate(r.performance_date)}</TableCell>
+                    <TableCell className="text-[12.5px]">
+                      {evalData ? (
+                        <Badge variant={evalData.finalResult === "Pass" ? "default" : "destructive"} className="text-[11px]">
+                          {resultText}
+                        </Badge>
+                      ) : "—"}
+                    </TableCell>
+                    <TableCell className="text-[12.5px] text-muted-foreground">{r.schedule ?? "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewRecord(r)}>
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditRecord(r)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                          <Link to="/roles/training/performance/$recordId" params={{ recordId: r.id }}>
+                            <Medal className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -289,10 +321,20 @@ export function EmployeeTrainings({ employee }: Props) {
                   <SelectContent>
                     {(programs as any[])
                       .filter((p) => {
-                        if (!p.trainees || p.trainees.length === 0) return true;
-                        return p.trainees.some((t: string) =>
-                          t.toLowerCase().includes(employee.employee_role?.toLowerCase() ?? "") ||
-                          employee.employee_role?.toLowerCase().includes(t.toLowerCase())
+                        const trainees = (p.trainees ?? []) as string[];
+                        const empRoleSlug = (employee.employee_role ?? "").toLowerCase();
+                        const empRoleLabel = roleLabel(employee.employee_role).toLowerCase();
+                        if (!trainees.length) return true;
+                        return trainees.some(
+                          (t: string) => {
+                            const tl = t.toLowerCase();
+                            return (
+                              tl === empRoleSlug ||
+                              tl === empRoleLabel ||
+                              empRoleLabel.includes(tl) ||
+                              tl.includes(empRoleLabel)
+                            );
+                          }
                         );
                       })
                       .map((p) => (
