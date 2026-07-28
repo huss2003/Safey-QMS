@@ -211,6 +211,8 @@ function InspectionPicker({ batchId, currentResult }: { batchId: string; current
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const isSubmitted = !!currentResult; // inspection_result exists → form was submitted
+
   const { data: templates = [] } = useQuery({
     queryKey: ["inspection_templates"],
     queryFn: async () => {
@@ -291,10 +293,19 @@ function InspectionPicker({ batchId, currentResult }: { batchId: string; current
     }
   };
 
+  // If already submitted → show disabled checkmark, no popover
+  if (isSubmitted) {
+    return (
+      <span className="inline-flex items-center justify-center h-7 w-7 text-emerald-600 cursor-default" title={`Inspection completed — ${currentResult}`}>
+        <ClipboardCheck className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
+
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); setSearch(""); }}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
+        <Button variant="ghost" size="icon" className="h-7 w-7" title="Start inspection">
           <ClipboardCheck className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
@@ -314,7 +325,7 @@ function InspectionPicker({ batchId, currentResult }: { batchId: string; current
             filtered.map((t) => (
               <button
                 key={t.id}
-                className="w-full text-left px-2 py-1.5 text-[12px] rounded hover:bg-accent transition-colors"
+                className="w-full text-left px-2 py-1.5 text-[12px] rounded hover:bg-blue-50 hover:text-blue-700 transition-colors"
                 onClick={() => select(t)}
               >
                 <span className="font-medium">{t.part_name}</span>
@@ -362,7 +373,7 @@ function PartBatchesRow({ partId }: { partId: string }) {
             </TableHeader>
             <TableBody>
               {data?.map((b) => (
-                <TableRow key={b.id}>
+                <TableRow key={b.id} className={b.is_blocked ? "opacity-50 bg-red-50/30" : ""}>
                   <TableCell className="font-medium">{b.batch_number}</TableCell>
                   <TableCell>{fmtNum(b.quantity)}</TableCell>
                   <TableCell>{b.raw_materials?.batch_number}</TableCell>
@@ -380,7 +391,14 @@ function PartBatchesRow({ partId }: { partId: string }) {
                   </TableCell>
                   <TableCell>
                     {(b as any).inspection_result ? (
-                      <Badge variant={(b as any).inspection_result === "Pass" ? "default" : "destructive"}>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          (b as any).inspection_result === "Pass"
+                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                            : "bg-red-100 text-red-700 border border-red-200"
+                        }
+                      >
                         {(b as any).inspection_result}
                       </Badge>
                     ) : (
