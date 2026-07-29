@@ -1,0 +1,26 @@
+schemaname,table_name,blocks_read,write_tuples,blocks_write,activity_ratio
+public,raw_materials,15,2,-0,Read-Only
+public,wastage_logs,13,3,0.333333333333333,1:39.0 (Read-Heavy)
+public,production_batches,13,4,-0,Read-Only
+public,part_batches,11,2,-0,Read-Only
+public,production_batch_parts,9,2,-0,Read-Only
+public,employees,3,6,6,2.0:1 (Write-Heavy)
+public,employee_trainings,4,13,4.33333333333333,1.1:1 (Write-Heavy)
+public,equipment_calibrations,7,5,-0,Read-Only
+public,parts,4,4,2,0.5:1 (Write-Heavy)
+storage,objects,5,32,-0,Read-Only
+supabase_migrations,schema_migrations,5,38,-0,Read-Only
+public,alerts,5,2,-0,Read-Only
+public,employee_health_records,3,1,1,0.3:1 (Write-Heavy)
+public,equipment,4,4,-0,Read-Only
+public,activity_log,4,11,-0,Read-Only
+public,training_programs,4,34,-0,Read-Only
+realtime,schema_migrations,3,2,0.0253164556962025,1:118.5 (Read-Heavy)
+public,equipment_maintenance,3,1,-0,Read-Only
+public,equipment_adjustments,3,1,-0,Read-Only
+public,equipment_repairs,3,2,-0,Read-Only
+storage,buckets,2,3,-0,Read-Only
+public,employee_interviews,2,3,-0,Read-Only
+public,employee_performance_evaluations,2,3,-0,Read-Only
+public,inspection_form_templates,1,1,-0,Read-Only
+public,inspection_records,1,2,-0,Read-Only

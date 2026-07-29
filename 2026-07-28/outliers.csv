@@ -1,0 +1,333 @@
+total_exec_time,prop_exec_time,ncalls,sync_io_time,query
+00:00:07.562552,51.7%,19,00:00:00,"SELECT
+  e.name,
+  n.nspname AS schema,
+  e.default_version,
+  x.extversion AS installed_version,
+  e.comment,
+  ev.schema AS default_version_schema
+FROM
+  pg_available_extensions e
+  LEFT JOIN pg_extension x ON e.name = x.extname
+  LEFT JOIN pg_namespace n ON x.extnamespace = n.oid
+  LEFT JOIN pg_available_extension_versions ev
+    ON ev.name = e.name AND ev.version = e.default_version"
+00:00:03.726842,25.5%,16,00:00:00,"with f as (
+      
+-- CTE with sane arg_modes, arg_names, and arg_types.
+-- All three are always of the same length.
+-- All three include all args, including OUT and TABLE args.
+with functions as (
+  select
+    *,
+    -- proargmodes is null when all arg modes are IN
+    coalesce(
+      p.proargmodes,
+      array_fill($1::text, array[cardinality(coalesce(p.proallargtypes, p.proargtypes))])
+    ) as arg_modes,
+    -- proargnames is null when all args are unnamed
+    coalesce(
+      p.proargnames,
+      array_fill($2::text, array[cardinality(coalesce(p.proallargtypes, p.proargtypes))])
+    ) as arg_names,
+    -- proallargtypes is null when all arg modes are IN
+    coalesce(p.proallargtypes, p.proargtypes) as arg_types,
+    array_cat(
+      array_fill($3, array[pronargs - pronargdefaults]),
+      array_fill($4, array[pronargdefaults])) as arg_has_defaults
+  from
+    pg_proc as p
+  where
+    p.prokind in ($5, $6)
+)
+select
+  f.oid as id,
+  n.nspname as schema,
+  f.proname as name,
+  l.lanname as language,
+  case f.prokind
+    when $7 then $8
+    when $9 then $10
+    when $11 then $12
+    when $13 then $14
+    else $15
+  end as type,
+  case
+    when l.lanname = $16 then $17
+    else f.prosrc
+  end as definition,
+  case
+    when l.lanname = $18 then f.prosrc
+    else pg_get_functiondef(f.oid)
+  end as complete_statement,
+  coalesce(f_args.args, $19) as args,
+  pg_get_function_arguments(f.oid) as argument_types,
+  pg_get_function_identity_arguments(f.oid) as identity_argument_types,
+  f.prorettype as return_type_id,
+  pg_get_function_result(f.oid) as return_type,
+  nullif(rt.typrelid, $20) as return_type_relation_id,
+  f.proretset as is_set_returning_function,
+  case
+    when f.provolatile = $21 then $22
+    when f.provolatile = $23 then $24
+    when f.provolatile = $25 then $26
+  end as behavior,
+  f.prosecdef as security_definer,
+  f_config.config_params as config_params
+from
+  functions f
+  left join pg_namespace n on f.pronamespace = n.oid
+  left join pg_language l on f.prolang = l.oid
+  left join pg_type rt on rt.oid = f.prorettype
+  left join (
+    select
+      oid,
+      jsonb_object_agg(param, value) filter (where param is not null) as config_params
+    from
+      (
+        select
+          oid,
+          (string_to_array(unnest(proconfig), $27))[$28] as param,
+          (string_to_array(unnest(proconfig), $29))[$30] as value
+        from
+          functions
+      ) as t
+    group by
+      oid
+  ) f_config on f_config.oid = f.oid
+  left join (
+    select
+      oid,
+      jsonb_agg(jsonb_build_object(
+        $31, t2.mode,
+        $32, name,
+        $33, type_id,
+        -- Cast null into false boolean
+        $34, COALESCE(has_default, $35)
+      )) as args
+    from
+      (
+        select
+          oid,
+          unnest(arg_modes) as mode,
+          unnest(arg_names) as name,
+          -- Coming from: coalesce(p.proallargtypes, p.proargtypes) postgres won't automatically assume
+          -- integer, we need to cast it to be properly parsed
+          unnest(arg_types)::int8 as type_id,
+          unnest(arg_has_defaults) as has_default
+        from
+          functions
+      ) as t1,
+      lateral (
+        select
+          case
+            when t1.mode = $36 then $37
+            when t1.mode = $38 then $39
+            when t1.mode = $40 then $41
+            when t1.mode = $42 then $43
+            else $44
+          end as mode
+      ) as t2
+    group by
+      t1.oid
+  ) f_args on f_args.oid = f.oid
+
+    )
+    select
+      f.*
+    from f
+   where schema NOT IN ($45,$46,$47)
+
+-- source: dashboard
+-- user: session:d4354109-a114-48cd-8116-7aa8c6c0b526
+-- date: 2026-07-23T11:25:26.690Z"
+00:00:00.425923,2.9%,16,00:00:00,"SELECT
+    tbl.schemaname,
+    tbl.tablename,
+    tbl.quoted_name,
+    tbl.is_table,
+    json_agg(a) as columns
+  FROM
+    (
+      SELECT
+        n.nspname as schemaname,
+        c.relname as tablename,
+        (quote_ident(n.nspname) || $1 || quote_ident(c.relname)) as quoted_name,
+        $2 as is_table
+      FROM
+        pg_catalog.pg_class c
+        JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      WHERE
+        c.relkind = $3
+        AND n.nspname not in ($4, $5, $6)
+        AND n.nspname not like $7
+        AND n.nspname not like $8
+        AND has_schema_privilege(n.oid, $9) = $10
+        AND has_table_privilege(quote_ident(n.nspname) || $11 || quote_ident(c.relname), $12) = $13
+      union all
+      SELECT
+        n.nspname as schemaname,
+        c.relname as tablename,
+        (quote_ident(n.nspname) || $14 || quote_ident(c.relname)) as quoted_name,
+        $15 as is_table
+      FROM
+        pg_catalog.pg_class c
+        JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      WHERE
+        c.relkind in ($16, $17)
+        AND n.nspname not in ($18, $19, $20)
+        AND n.nspname not like $21
+        AND n.nspname not like $22
+        AND has_schema_privilege(n.oid, $23) = $24
+        AND has_table_privilege(quote_ident(n.nspname) || $25 || quote_ident(c.relname), $26) = $27
+    ) as tbl
+    LEFT JOIN (
+      SELECT
+        attrelid,
+        attname,
+        format_type(atttypid, atttypmod) as data_type,
+        attnum,
+        attisdropped
+      FROM
+        pg_attribute
+    ) as a ON (
+      a.attrelid = tbl.quoted_name::regclass
+      AND a.attnum > $28
+      AND NOT a.attisdropped
+      AND has_column_privilege(tbl.quoted_name, a.attname, $29)
+    )
+  
+  GROUP BY schemaname, tablename, quoted_name, is_table"
+00:00:00.09437,0.6%,35,00:00:00,CREATE SCHEMA IF NOT EXISTS supabase_migrations
+00:00:00.087129,0.6%,1,00:00:00,"COPY (WITH constants AS (
+  SELECT current_setting('block_size')::numeric AS bs, 23 AS hdr, 4 AS ma
+), bloat_info AS (
+  SELECT
+    ma,bs,schemaname,tablename,
+    (datawidth+(hdr+ma-(case when hdr%ma=0 THEN ma ELSE hdr%ma END)))::numeric AS datahdr,
+    (maxfracsum*(nullhdr+ma-(case when nullhdr%ma=0 THEN ma ELSE nullhdr%ma END))) AS nullhdr2
+  FROM (
+    SELECT
+      schemaname, tablename, hdr, ma, bs,
+      SUM((1-null_frac)*avg_width) AS datawidth,
+      MAX(null_frac) AS maxfracsum,
+      hdr+(
+        SELECT 1+count(*)/8
+        FROM pg_stats s2
+        WHERE null_frac<>0 AND s2.schemaname = s.schemaname AND s2.tablename = s.tablename
+      ) AS nullhdr
+    FROM pg_stats s, constants
+    GROUP BY 1,2,3,4,5
+  ) AS foo
+), table_bloat AS (
+  SELECT
+    schemaname, tablename, cc.relpages, bs,
+    CEIL((cc.reltuples*((datahdr+ma-
+      (CASE WHEN datahdr%ma=0 THEN ma ELSE datahdr%ma END))+nullhdr2+4))/(bs-20::float)) AS otta
+  FROM bloat_info
+  JOIN pg_class cc ON cc.relname = bloat_info.tablename
+  JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname = bloat_info.schemaname
+  WHERE NOT nn.nspname LIKE ANY('{information\_schema,pg\_%,\_analytics,\_realtime,\_supavisor,auth,etl,extensions,pgbouncer,realtime,storage,supabase\_functions,supabase\_migrations,cron,dbdev,graphql,graphql\_public,net,pgmq,pgsodium,pgsodium\_masks,pgtle,repack,tiger,tiger\_data,timescaledb\_%,\_timescaledb\_%,topology,vault}'::text[])
+), index_bloat AS (
+  SELECT
+    schemaname, tablename, bs,
+    COALESCE(c2.relname,'?') AS iname, COALESCE(c2.reltuples,0) AS ituples, COALESCE(c2.relpages,0) AS ipages,
+    COALESCE(CEIL((c2.reltuples*(datahdr-12))/(bs-20::float)),0) AS iotta -- very rough approximation, assumes all cols
+  FROM bloat_info
+  JOIN pg_class cc ON cc.relname = bloat_info.tablename
+  JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname = bloat_info.schemaname
+  JOIN pg_index i ON indrelid = cc.oid
+  JOIN pg_class c2 ON c2.oid = i.indexrelid
+  WHERE NOT nn.nspname LIKE ANY('{information\_schema,pg\_%,\_analytics,\_realtime,\_supavisor,auth,etl,extensions,pgbouncer,realtime,storage,supabase\_functions,supabase\_migrations,cron,dbdev,graphql,graphql\_public,net,pgmq,pgsodium,pgsodium\_masks,pgtle,repack,tiger,tiger\_data,timescaledb\_%,\_timescaledb\_%,topology,vault}'::text[])
+), bloat_summary AS (
+  SELECT
+    'table' as type,
+    FORMAT('%I.%I', schemaname, tablename) AS name,
+    ROUND(CASE WHEN otta=0 THEN 0.0 ELSE table_bloat.relpages/otta::numeric END,1) AS bloat,
+    CASE WHEN relpages < otta THEN '0' ELSE (bs*(table_bloat.relpages-otta)::bigint)::bigint END AS raw_waste
+  FROM table_bloat
+    UNION
+  SELECT
+    'index' as type,
+    FORMAT('%I.%I::%I', schemaname, tablename, iname) AS name,
+    ROUND(CASE WHEN iotta=0 OR ipages=0 THEN 0.0 ELSE ipages/iotta::numeric END,1) AS bloat,
+  CASE WHEN ipages < iotta THEN '0' ELSE (bs*(ipages-iotta))::bigint END AS raw_waste
+  FROM index_bloat
+)
+SELECT type, name, bloat, pg_size_pretty(raw_waste) as waste
+FROM bloat_summary
+ORDER BY raw_waste DESC, bloat DESC) TO STDOUT WITH CSV HEADER"
+00:00:00.07151,0.5%,3,00:00:00,"select
+      m->>$1 as version,
+      m->>$2 as name,
+      case
+        when pg_catalog.jsonb_typeof(m->$3) = $4
+        then array(select pg_catalog.jsonb_array_elements_text(m->$5))
+        else $6
+      end as statements
+    from pg_catalog.jsonb_array_elements(
+      coalesce(
+        nullif(pg_catalog.current_setting($7, $8), $9)::pg_catalog.jsonb,
+        $10::pg_catalog.jsonb
+      )
+    ) as m
+    order by m->>'version' desc
+  
+
+-- source: dashboard
+-- user: session:d4354109-a114-48cd-8116-7aa8c6c0b526
+-- date: 2026-07-23T10:36:51.544Z"
+00:00:00.064455,0.4%,1,00:00:00,"-- ========================================================================
+-- Safey-QMS: Employee Records Migration (2026-07-26)
+-- Tables: employee_interviews, employee_trainings,
+--         employee_performance_evaluations, employee_health_records
+-- RLS: public_all policies
+-- Storage: employee-files bucket
+-- ========================================================================
+
+-- ========================================================================
+-- 1. employee_interviews
+-- ========================================================================
+CREATE TABLE IF NOT EXISTS public.employee_interviews (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  employee_id         UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
+  interviewer         TEXT,
+  interview_date      DATE,
+  years_experience    TEXT,
+  education           TEXT,
+  skills              JSONB NOT NULL DEFAULT '[]',
+  total_score         NUMERIC,
+  is_completed        BOOLEAN DEFAULT false,
+  documents           TEXT[] NOT NULL DEFAULT '{}',
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+)"
+00:00:00.063337,0.4%,20,00:00:00,"-- Adapted from information_schema.schemata
+
+select
+  n.oid as id,
+  n.nspname as name,
+  u.rolname as owner,
+   obj_description(n.oid, $1) AS comment
+from
+  pg_namespace n,
+  pg_roles u
+where
+  n.nspowner = u.oid
+  and (
+    pg_has_role(n.nspowner, $2)
+    or has_schema_privilege(n.oid, $3)
+  )
+  and not pg_catalog.starts_with(n.nspname, $4)
+  and not pg_catalog.starts_with(n.nspname, $5)
+ and not (n.nspname in ($6,$7,$8))
+
+-- source: dashboard
+-- user: session:d4354109-a114-48cd-8116-7aa8c6c0b526
+-- date: 2026-07-23T10:36:51.595Z"
+00:00:00.062935,0.4%,35,00:00:00,ALTER TABLE supabase_migrations.schema_migrations ADD COLUMN IF NOT EXISTS statements text[]
+00:00:00.052943,0.4%,1,00:00:00,"CREATE TABLE IF NOT EXISTS public.inspection_records (id UUID DEFAULT gen_random_uuid() PRIMARY KEY, batch_id UUID NOT NULL REFERENCES public.part_batches(id) ON DELETE CASCADE, template_id UUID REFERENCES public.inspection_form_templates(id), form_id TEXT NOT NULL, part_name TEXT NOT NULL, batch_number TEXT NOT NULL, inspection_date DATE NOT NULL DEFAULT CURRENT_DATE, process_equipment_name TEXT, process_engineer_id UUID REFERENCES public.employees(id), process_engineer_name TEXT, process_equipment_id TEXT, equipment_servicing_date DATE, equipment_servicing_due_date DATE, part_id TEXT, mold_id TEXT DEFAULT 'xx001', quantity_parts INTEGER, injection_pressure TEXT, melt_temperature TEXT, mold_temperature TEXT, clamping_force TEXT, holding_time TEXT, screw_barrel_size TEXT, settings_screenshot_attached BOOLEAN DEFAULT false, settings_screenshot_data TEXT, polymer_name TEXT, masterbatch_name TEXT, polymer_batch_id TEXT, masterbatch_batch_id TEXT, polymer_quantity_kg NUMERIC, masterbatch_quantity_kg NUMERIC, drying_time TEXT, drying_temperature TEXT, measuring_equipment_name TEXT, measuring_equipment_id TEXT, measuring_calibration_date DATE, measuring_next_calibration_date DATE, equipment_verified BOOLEAN DEFAULT false, qc_rows JSONB DEFAULT '[]'::jsonb, overall_result TEXT, tolerance NUMERIC, signature_name TEXT, signature_date DATE, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now())
+
+-- source: POST /v1/projects/:ref/database/query
+-- user: pat:2137005
+-- date: 2026-07-26T17:51:05.020Z"

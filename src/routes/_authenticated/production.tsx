@@ -32,9 +32,21 @@ type ProductionBatchJoined = ProductionBatch & {
   inspection_results?: Array<{ overall_result: string | null; batch_id: string }> | null;
 };
 
+interface ProductInspection {
+  id: string;
+  product_id: string;
+  batch_number: string;
+  form_no: string;
+  overall_result: string | null;
+}
+
 function ProductionPage() {
   const [cursor, setCursor] = useState<string | null>(null);
-  const [formDialog, setFormDialog] = useState<{ productId: string; batchId?: string } | null>(null);
+  const [formDialog, setFormDialog] = useState<{
+    productId: string;
+    batchId?: string;
+    inspectionId?: string;
+  } | null>(null);
   const navigate = useNavigate();
 
   const { data, isLoading, isFetching } = useQuery({
@@ -52,46 +64,81 @@ function ProductionPage() {
       if (error) throw error;
 
       // Fetch products separately to avoid join issues
-      const productIds = [...new Set(rows.map((r) => r.product_id).filter(Boolean))];
-      const { data: products } = productIds.length > 0
-        ? await supabase.from("products").select("id, product_name").in("id", productIds)
-        : { data: [] };
+      const productIds = [...new Set(rows.map((r: any) => r.product_id).filter(Boolean))];
+      const { data: products } =
+        productIds.length > 0
+          ? await supabase.from("products").select("id, product_name").in("id", productIds)
+          : { data: [] };
 
-      const productMap = new Map((products ?? []).map((p) => [p.id, p.product_name]));
+      const productMap = new Map((products ?? []).map((p: any) => [p.id, p.product_name]));
 
       // Fetch part_batch_ids for these production batches
-      const batchIds = rows.map((r) => r.id);
+      const batchIds = rows.map((r: any) => r.id);
       const { data: partBatchLinks } = await supabase
         .from("production_batch_parts")
         .select("production_batch_id, part_batch_id")
         .in("production_batch_id", batchIds);
 
       // Fetch inspection results for part batches
-      const partBatchIds = (partBatchLinks ?? []).map((l) => l.part_batch_id);
+      const partBatchIds = (partBatchLinks ?? []).map((l: any) => l.part_batch_id);
       const { data: inspectionData } = await supabase
         .from("inspection_records" as any)
         .select("batch_id, overall_result")
         .in("batch_id", partBatchIds);
 
+      // Fetch product inspections for these production batches
+      const batchNumbers = rows.map((r: any) => r.batch_number);
+      const { data: productInspections } = await supabase
+        .from("product_inspections" as any)
+        .select("id, product_id, batch_number, form_no, overall_result")
+        .in("batch_number", batchNumbers);
+
       // Attach inspection results and product name to each production batch
-      const rowsWithInspection = rows.map((row) => {
+      const rowsWithInspection = rows.map((row: any) => {
         const rowPartBatchIds = (partBatchLinks ?? [])
-          .filter((l) => l.production_batch_id === row.id)
-          .map((l) => l.part_batch_id);
+          .filter((l: any) => l.production_batch_id === row.id)
+          .map((l: any) => l.part_batch_id);
         const partBatchId = rowPartBatchIds[0] ?? null;
-        const inspection = inspectionData?.filter((i: any) => rowPartBatchIds.includes(i.batch_id)) ?? [];
+        const inspection =
+          ((inspectionData as any) ?? []).filter((i: any) =>
+            rowPartBatchIds.includes(i.batch_id),
+          ) ?? [];
+        const productInspection = ((productInspections as any) ?? []).find(
+          (pi: any) => pi.batch_number === row.batch_number,
+        );
+
+        // Determine inspection result
+        let inspectionResult = "Not inspected";
+        let overallResult = null;
+        if (productInspection) {
+          inspectionResult = productInspection.overall_result ?? "Pending";
+          overallResult = productInspection.overall_result;
+        } else if (inspection.length > 0) {
+          inspectionResult = inspection[0]?.overall_result ?? "Pending";
+          overallResult = inspection[0]?.overall_result;
+        }
+
         return {
           ...row,
           inspection_results: inspection,
           part_batch_id: partBatchId,
           part_batch_ids: rowPartBatchIds,
-          products: { product_id: row.product_id, product_name: productMap.get(row.product_id) ?? "" },
+          products: {
+            product_id: row.product_id,
+            product_name: productMap.get(row.product_id) ?? "",
+          },
+          inspection_result: inspectionResult,
+          overall_result: overallResult,
+          product_inspection_id: productInspection?.id,
         };
       });
 
       return rowsWithInspection as unknown as (ProductionBatchJoined & {
         part_batch_id?: string;
         part_batch_ids?: string[];
+        inspection_result?: string;
+        overall_result?: string | null;
+        product_inspection_id?: string;
       })[];
     },
     staleTime: 30_000,
@@ -144,16 +191,16 @@ function ProductionPage() {
               <Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
-                    <TableHead>Batch</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Expected kg</TableHead>
-                    <TableHead>Actual kg</TableHead>
-                    <TableHead>Wastage %</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Inspection Result</TableHead>
-                    <TableHead className="w-[80px]">Action</TableHead>
+                    <TableHead>BATCH</TableHead>
+                    <TableHead>PRODUCT</TableHead>
+                    <TableHead>QUANTITY</TableHead>
+                    <TableHead>EXPECTED KG</TableHead>
+                    <TableHead>ACTUAL KG</TableHead>
+                    <TableHead>WASTAGE %</TableHead>
+                    <TableHead>DATE</TableHead>
+                    <TableHead>STATUS</TableHead>
+                    <TableHead>INSPECTION RESULT</TableHead>
+                    <TableHead className="w-[80px]">ACTION</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -197,19 +244,17 @@ function ProductionPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {r.inspection_results && r.inspection_results.length > 0 ? (
-                            <Badge
-                              variant={
-                                r.inspection_results[0]?.overall_result === "Pass"
+                          <Badge
+                            variant={
+                              r.overall_result === "Failed"
+                                ? "destructive"
+                                : r.overall_result === "Pass"
                                   ? "default"
-                                  : "destructive"
-                              }
-                            >
-                              {r.inspection_results[0]?.overall_result ?? "Pending"}
-                            </Badge>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Not inspected</span>
-                          )}
+                                  : "secondary"
+                            }
+                          >
+                            {r.inspection_result}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <TooltipProvider>
@@ -219,20 +264,36 @@ function ProductionPage() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={() =>
-                                    r.products?.product_id
-                                      ? setFormDialog({ productId: r.products.product_id, batchId: r.id })
-                                      : navigate({
-                                          to: "/inspection-form/$batchId",
-                                          params: { batchId: r.part_batch_id ?? r.id },
-                                        })
-                                  }
+                                  onClick={() => {
+                                    if (r.product_inspection_id) {
+                                      // View existing inspection
+                                      navigate({
+                                        to: "/product-inspection/$productId",
+                                        params: { productId: r.products?.product_id ?? "" },
+                                        search: { inspectionId: r.product_inspection_id } as any,
+                                      });
+                                    } else if (r.products?.product_id) {
+                                      setFormDialog({
+                                        productId: r.products.product_id,
+                                        batchId: r.id,
+                                      });
+                                    } else {
+                                      navigate({
+                                        to: "/inspection-form/$batchId" as any,
+                                        params: { batchId: r.part_batch_id ?? r.id } as any,
+                                      });
+                                    }
+                                  }}
                                 >
                                   <ClipboardCheck className="h-4 w-4" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>View Inspection Form</p>
+                                <p>
+                                  {r.product_inspection_id
+                                    ? "View Inspection Form"
+                                    : "Fill Inspection Form"}
+                                </p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>

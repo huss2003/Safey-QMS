@@ -41,7 +41,10 @@ export function InspectionFormSelectDialog({ open, onOpenChange, productId, batc
       const { data: tmpls } = await supabase
         .from("inspection_form_templates")
         .select("id, part_name, record_id")
-        .in("id", pifs.map((p: any) => p.template_id));
+        .in(
+          "id",
+          pifs.map((p: any) => p.template_id),
+        );
 
       setTemplates((tmpls ?? []) as FormTemplate[]);
       setLoading(false);
@@ -56,7 +59,7 @@ export function InspectionFormSelectDialog({ open, onOpenChange, productId, batc
     navigate({
       to: "/product-inspection/$productId",
       params: { productId },
-      search: searchParams,
+      search: searchParams as any,
     });
     onOpenChange(false);
   };
