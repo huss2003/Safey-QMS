@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedVendorsRouteImport } from './routes/_authenticated/vendors'
+import { Route as AuthenticatedUdiRegistrationRouteImport } from './routes/_authenticated/udi-registration'
 import { Route as AuthenticatedTraceabilityRouteImport } from './routes/_authenticated/traceability'
 import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/stock'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -67,6 +68,12 @@ const AuthenticatedVendorsRoute = AuthenticatedVendorsRouteImport.update({
   path: '/vendors',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUdiRegistrationRoute =
+  AuthenticatedUdiRegistrationRouteImport.update({
+    id: '/udi-registration',
+    path: '/udi-registration',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTraceabilityRoute =
   AuthenticatedTraceabilityRouteImport.update({
     id: '/traceability',
@@ -282,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/stock': typeof AuthenticatedStockRoute
   '/traceability': typeof AuthenticatedTraceabilityRoute
+  '/udi-registration': typeof AuthenticatedUdiRegistrationRoute
   '/vendors': typeof AuthenticatedVendorsRoute
   '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
@@ -321,6 +329,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/stock': typeof AuthenticatedStockRoute
   '/traceability': typeof AuthenticatedTraceabilityRoute
+  '/udi-registration': typeof AuthenticatedUdiRegistrationRoute
   '/vendors': typeof AuthenticatedVendorsRoute
   '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
@@ -362,6 +371,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/stock': typeof AuthenticatedStockRoute
   '/_authenticated/traceability': typeof AuthenticatedTraceabilityRoute
+  '/_authenticated/udi-registration': typeof AuthenticatedUdiRegistrationRoute
   '/_authenticated/vendors': typeof AuthenticatedVendorsRoute
   '/_authenticated/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/_authenticated/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stock'
     | '/traceability'
+    | '/udi-registration'
     | '/vendors'
     | '/equipment-detail/$id'
     | '/equipment-edit/$id'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/stock'
     | '/traceability'
+    | '/udi-registration'
     | '/vendors'
     | '/equipment-detail/$id'
     | '/equipment-edit/$id'
@@ -482,6 +494,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/stock'
     | '/_authenticated/traceability'
+    | '/_authenticated/udi-registration'
     | '/_authenticated/vendors'
     | '/_authenticated/equipment-detail/$id'
     | '/_authenticated/equipment-edit/$id'
@@ -535,6 +548,13 @@ declare module '@tanstack/react-router' {
       path: '/vendors'
       fullPath: '/vendors'
       preLoaderRoute: typeof AuthenticatedVendorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/udi-registration': {
+      id: '/_authenticated/udi-registration'
+      path: '/udi-registration'
+      fullPath: '/udi-registration'
+      preLoaderRoute: typeof AuthenticatedUdiRegistrationRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/traceability': {
@@ -881,6 +901,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStockRoute: typeof AuthenticatedStockRoute
   AuthenticatedTraceabilityRoute: typeof AuthenticatedTraceabilityRoute
+  AuthenticatedUdiRegistrationRoute: typeof AuthenticatedUdiRegistrationRoute
   AuthenticatedVendorsRoute: typeof AuthenticatedVendorsRoute
   AuthenticatedEquipmentDetailIdRoute: typeof AuthenticatedEquipmentDetailIdRoute
   AuthenticatedEquipmentEditIdRoute: typeof AuthenticatedEquipmentEditIdRoute
@@ -910,6 +931,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStockRoute: AuthenticatedStockRoute,
   AuthenticatedTraceabilityRoute: AuthenticatedTraceabilityRoute,
+  AuthenticatedUdiRegistrationRoute: AuthenticatedUdiRegistrationRoute,
   AuthenticatedVendorsRoute: AuthenticatedVendorsRoute,
   AuthenticatedEquipmentDetailIdRoute: AuthenticatedEquipmentDetailIdRoute,
   AuthenticatedEquipmentEditIdRoute: AuthenticatedEquipmentEditIdRoute,

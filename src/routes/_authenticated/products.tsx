@@ -35,6 +35,7 @@ const schema = z.object({
   product_name: z.string().trim().min(1),
   product_code: z.string().trim().min(1),
   description: z.string().optional().or(z.literal("")),
+  gtin: z.string().optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -171,18 +172,19 @@ function ProductForm({
   const qc = useQueryClient();
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { product_name: "", product_code: "", description: "" },
+    defaultValues: { product_name: "", product_code: "", description: "", gtin: "" },
     values: product
       ? {
           product_name: product.product_name,
           product_code: product.product_code ?? "",
           description: product.description ?? "",
+          gtin: product.gtin ?? "",
         }
       : undefined,
   });
   const save = useMutation({
     mutationFn: async (v: FormValues) => {
-      const payload = { ...v, description: v.description || null };
+      const payload = { ...v, description: v.description || null, gtin: v.gtin || null };
       if (product) {
         const { error } = await supabase.from("products").update(payload).eq("id", product.id);
         if (error) throw error;
@@ -218,6 +220,10 @@ function ProductForm({
           <div>
             <Label className="label-caps">Description</Label>
             <Textarea rows={3} {...form.register("description")} className="mt-1" />
+          </div>
+          <div>
+            <Label className="label-caps">GTIN</Label>
+            <Input {...form.register("gtin")} className="mt-1" />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

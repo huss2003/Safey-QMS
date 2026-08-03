@@ -9,6 +9,7 @@ import {
   Factory as FactoryIcon,
   Users as UsersIcon,
   Wrench,
+  Download,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { fmtDate, fmtKg, fmtNum } from "@/lib/inventory/format";
 import { EMPLOYEES, roleLabel } from "@/lib/inventory/employees";
 
@@ -127,45 +137,16 @@ function Traceability() {
     enabled: debouncedQ.length >= 2,
     staleTime: 30_000,
     queryFn: async () => {
-      const [r, p, pr] = await Promise.all([
-        supabase
-          .from("raw_materials")
-          .select("id,batch_number,material_type")
-          .ilike("batch_number", `%${debouncedQ}%`)
-          .limit(6),
-        supabase
-          .from("part_batches")
-          .select("id,batch_number,parts(part_name)")
-          .ilike("batch_number", `%${debouncedQ}%`)
-          .limit(6),
-        supabase
-          .from("production_batches")
-          .select("id,batch_number,products(product_name)")
-          .ilike("batch_number", `%${debouncedQ}%`)
-          .limit(6),
-      ]);
-      const rawList = (r.data ?? []) as unknown as TraceResultRaw[];
-      const partList = (p.data ?? []) as unknown as TraceResultPart[];
-      const prodList = (pr.data ?? []) as unknown as TraceResultPart[];
-      const out: Result[] = [];
-      rawList.forEach((x) =>
-        out.push({ kind: "raw", id: x.id, label: `${x.batch_number} · ${x.material_type} (raw)` }),
-      );
-      partList.forEach((x) =>
-        out.push({
-          kind: "part",
-          id: x.id,
-          label: `${x.batch_number} · ${x.parts?.part_name} (part)`,
-        }),
-      );
-      prodList.forEach((x) =>
-        out.push({
-          kind: "production",
-          id: x.id,
-          label: `${x.batch_number} · ${x.parts?.part_name} (production)`,
-        }),
-      );
-      return out;
+      const { data } = await supabase
+        .from("production_batches")
+        .select("id,batch_number,products(product_name)")
+        .ilike("batch_number", `%${debouncedQ}%`)
+        .limit(12);
+      return (data ?? []).map((x: any) => ({
+        kind: "production" as const,
+        id: x.id,
+        label: `${x.batch_number} · ${x.products?.product_name} (production)`,
+      }));
     },
   });
 
@@ -263,6 +244,7 @@ function TraceView({ result }: { result: Result }) {
   return (
     <div className="space-y-6">
       <TraceTree data={data} />
+      <ProductSummary data={data} />
       <WastageSummary data={data} />
     </div>
   );
@@ -305,22 +287,13 @@ function BackwardTree({ payload }: { payload: TraceBackwardResponse }) {
       status={prod.status}
     >
       {prod.assigned_employee && (
-        <TreeNode
-          icon={UsersIcon}
-          title={`Employee: ${empLabel(prod.assigned_employee)}`}
-        />
+        <TreeNode icon={UsersIcon} title={`Employee: ${empLabel(prod.assigned_employee)}`} />
       )}
       {prod.process_equipment_name && (
-        <TreeNode
-          icon={Wrench}
-          title={`Process: ${prod.process_equipment_name}`}
-        />
+        <TreeNode icon={Wrench} title={`Process: ${prod.process_equipment_name}`} />
       )}
       {prod.measuring_equipment_name && (
-        <TreeNode
-          icon={Wrench}
-          title={`Measuring: ${prod.measuring_equipment_name}`}
-        />
+        <TreeNode icon={Wrench} title={`Measuring: ${prod.measuring_equipment_name}`} />
       )}
       {(payload.parts ?? []).map((p) => (
         <TreeNode
@@ -388,22 +361,13 @@ function ForwardTree({ payload }: { payload: TraceForwardResponse }) {
               status={p.status}
             >
               {p.assigned_employee && (
-                <TreeNode
-                  icon={UsersIcon}
-                  title={`Employee: ${empLabel(p.assigned_employee)}`}
-                />
+                <TreeNode icon={UsersIcon} title={`Employee: ${empLabel(p.assigned_employee)}`} />
               )}
               {p.process_equipment_name && (
-                <TreeNode
-                  icon={Wrench}
-                  title={`Process: ${p.process_equipment_name}`}
-                />
+                <TreeNode icon={Wrench} title={`Process: ${p.process_equipment_name}`} />
               )}
               {p.measuring_equipment_name && (
-                <TreeNode
-                  icon={Wrench}
-                  title={`Measuring: ${p.measuring_equipment_name}`}
-                />
+                <TreeNode icon={Wrench} title={`Measuring: ${p.measuring_equipment_name}`} />
               )}
             </TreeNode>
           ))}
@@ -443,6 +407,129 @@ function TreeNode({
       {subtitle && <div className="text-xs text-muted-foreground ml-6">{subtitle}</div>}
       {children && <div className="mt-1">{children}</div>}
     </div>
+  );
+}
+
+function ProductSummary({
+  data,
+}: {
+  data: { mode: "forward" | "backward"; payload: TraceBackwardResponse | TraceForwardResponse };
+}) {
+  // Only backward mode has production data with GTIN
+  if (data.mode !== "backward") return null;
+  const prod = (data.payload as TraceBackwardResponse).production;
+  if (!prod) return null;
+
+  return <ProductSummaryInner prod={prod} />;
+}
+
+function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse["production"]> }) {
+  const { data: product } = useQuery({
+    queryKey: ["product-gtin", prod.product_name],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("products" as any)
+        .select("gtin")
+        .eq("product_name", prod.product_name)
+        .limit(1)
+        .maybeSingle();
+      return data as { gtin: string | null } | null;
+    },
+  });
+
+  const gtin = product?.gtin ?? "";
+  const qty = Number(prod.quantity_produced) || 1;
+  const batchNum = prod.batch_number;
+
+  // Build rows: one per unit manufactured
+  const rows = Array.from({ length: qty }, (_, i) => {
+    const serial = String(i + 1).padStart(4, "0");
+    const dateStr = prod.production_date?.slice(0, 10) ?? "";
+    // UDI format: GTIN(11)ManufacturingDate(10)BatchNumber(21)BatchNumber-SerialNumber
+    const udi = gtin ? `${gtin}(11)${dateStr}(10)${batchNum}(21)${batchNum}-${serial}` : "—";
+    // DD/MM/YYYY
+    let ddMmYyyy = "—";
+    if (dateStr) {
+      const [y, m, d] = dateStr.split("-");
+      ddMmYyyy = `${d}/${m}/${y}`;
+    }
+    return {
+      dateOfManufacture: ddMmYyyy,
+      gtin: gtin || "—",
+      serialNumber: serial,
+      lotNumber: batchNum,
+      udi,
+      status: "Pending",
+    };
+  });
+
+  const handleDownloadCsv = () => {
+    const header = "Date of Manufacture,GTIN,Serial Number,Lot Number,UDI,Status";
+    const csvRows = rows.map(
+      (r) =>
+        `${r.dateOfManufacture},${r.gtin},${r.serialNumber},${r.lotNumber},${r.udi},${r.status}`,
+    );
+    const csv = [header, ...csvRows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${batchNum}-labels.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2>Product summary</h2>
+          <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
+            <Download className="h-4 w-4 mr-1" /> Label generate
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-2"
+            onClick={() => (window.location.href = "/udi-registration")}
+          >
+            Scan UDi
+          </Button>
+        </div>
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date of Manufacture</TableHead>
+                <TableHead>GTIN</TableHead>
+                <TableHead>Serial Number</TableHead>
+                <TableHead>Lot Number</TableHead>
+                <TableHead>UDI</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((r, i) => (
+                <TableRow key={i}>
+                  <TableCell className="text-[13px] py-2.5">{r.dateOfManufacture}</TableCell>
+                  <TableCell className="text-[13px] py-2.5 font-mono">{r.gtin}</TableCell>
+                  <TableCell className="text-[13px] py-2.5 font-mono">{r.serialNumber}</TableCell>
+                  <TableCell className="text-[13px] py-2.5 font-mono">{r.lotNumber}</TableCell>
+                  <TableCell className="text-[12px] py-2.5 font-mono text-muted-foreground max-w-[400px] break-all">
+                    {r.udi}
+                  </TableCell>
+                  <TableCell className="py-2.5">
+                    <Badge variant="destructive" className="text-[11px]">
+                      {r.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

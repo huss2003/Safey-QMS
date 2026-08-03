@@ -141,8 +141,27 @@ export interface Database {
           product_name: string;
           product_code: string | null;
           description: string | null;
+          gtin: string | null;
           is_active: boolean;
           created_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_name: string;
+          product_code?: string | null;
+          description?: string | null;
+          gtin?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          product_name?: string;
+          product_code?: string | null;
+          description?: string | null;
+          gtin?: string | null;
+          is_active?: boolean;
+          created_at?: string;
         };
       };
       product_bom: {

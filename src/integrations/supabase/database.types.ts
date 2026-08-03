@@ -40,7 +40,8 @@ export type EmployeeInsert = Database["public"]["Tables"]["employees"]["Insert"]
 export type TrainingProgram = Database["public"]["Tables"]["training_programs"]["Row"];
 export type TrainingProgramInsert = Database["public"]["Tables"]["training_programs"]["Insert"];
 
-export type EmployeePerformanceEvaluation = Database["public"]["Tables"]["employee_performance_evaluations"]["Row"];
+export type EmployeePerformanceEvaluation =
+  Database["public"]["Tables"]["employee_performance_evaluations"]["Row"];
 export type EmployeeHealthRecord = Database["public"]["Tables"]["employee_health_records"]["Row"];
 
 export type {
