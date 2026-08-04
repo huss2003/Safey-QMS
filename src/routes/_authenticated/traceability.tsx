@@ -10,6 +10,7 @@ import {
   Users as UsersIcon,
   Wrench,
   Download,
+  ScanLine,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -424,47 +425,101 @@ function ProductSummary({
 }
 
 function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse["production"]> }) {
+  // Query GTIN via the production batch's product FK — more reliable than name lookup
   const { data: product } = useQuery({
-    queryKey: ["product-gtin", prod.product_name],
+    queryKey: ["product-gtin", prod.batch_number],
     queryFn: async () => {
-      const { data } = await supabase
+      // The production batch has product_id → products.gtin
+      // Use the backward RPC data: prod.id is the production batch id
+      const { data: batch } = await supabase
+        .from("production_batches" as any)
+        .select("product_id")
+        .eq("id", prod.id)
+        .maybeSingle();
+      if (!batch?.product_id) return null;
+      const { data: prod_row } = await supabase
         .from("products" as any)
         .select("gtin")
-        .eq("product_name", prod.product_name)
-        .limit(1)
+        .eq("id", batch.product_id)
         .maybeSingle();
-      return data as { gtin: string | null } | null;
+      return prod_row as { gtin: string | null } | null;
     },
   });
 
   const gtin = product?.gtin ?? "";
   const qty = Number(prod.quantity_produced) || 1;
   const batchNum = prod.batch_number;
+  const statusKey = `trace-status-${batchNum}`;
 
-  // Build rows: one per unit manufactured
-  const rows = Array.from({ length: qty }, (_, i) => {
-    const serial = String(i + 1).padStart(4, "0");
-    const dateStr = prod.production_date?.slice(0, 10) ?? "";
-    // UDI format: GTIN(11)ManufacturingDate(10)BatchNumber(21)BatchNumber-SerialNumber
-    const udi = gtin ? `${gtin}(11)${dateStr}(10)${batchNum}(21)${batchNum}-${serial}` : "—";
-    // DD/MM/YYYY
-    let ddMmYyyy = "—";
-    if (dateStr) {
-      const [y, m, d] = dateStr.split("-");
-      ddMmYyyy = `${d}/${m}/${y}`;
-    }
-    return {
-      dateOfManufacture: ddMmYyyy,
-      gtin: gtin || "—",
-      serialNumber: serial,
-      lotNumber: batchNum,
-      udi,
-      status: "Pending",
-    };
+  // ── Mutable rows with status tracking ──
+  const [rows, setRows] = useState(() => {
+    // ponytail: load from localStorage keyed by batch number
+    const saved = (() => {
+      try {
+        return JSON.parse(localStorage.getItem(statusKey) || "[]") as Record<number, string>;
+      } catch {
+        return {};
+      }
+    })();
+    return Array.from({ length: qty }, (_, i) => {
+      const serial = String(i + 1).padStart(4, "0");
+      const dateStr = prod.production_date?.slice(0, 10) ?? "";
+      const udi = gtin ? `${gtin}(11)${dateStr}(10)${batchNum}(21)${batchNum}-${serial}` : "—";
+      let ddMmYyyy = "—";
+      if (dateStr) {
+        const [y, m, d] = dateStr.split("-");
+        ddMmYyyy = `${d}/${m}/${y}`;
+      }
+      return {
+        dateOfManufacture: ddMmYyyy,
+        gtin: gtin || "—",
+        serialNumber: serial,
+        lotNumber: batchNum,
+        udi,
+        status: (saved[i] ?? "Pending") as string,
+      };
+    });
   });
 
+  const updateRowStatus = (index: number, status: string) => {
+    setRows((prev) => {
+      const next = prev.map((r, i) => (i === index ? { ...r, status } : r));
+      // ponytail: persist all statuses to localStorage
+      const map: Record<number, string> = {};
+      next.forEach((r, i) => {
+        map[i] = r.status;
+      });
+      try {
+        localStorage.setItem(statusKey, JSON.stringify(map));
+      } catch {
+        /* quota */
+      }
+      return next;
+    });
+  };
+
+  const updateAllRowStatuses = (status: string) => {
+    setRows((prev) => {
+      const next = prev.map((r) => ({ ...r, status }));
+      const map: Record<number, string> = {};
+      next.forEach((r, i) => {
+        map[i] = r.status;
+      });
+      try {
+        localStorage.setItem(statusKey, JSON.stringify(map));
+      } catch {
+        /* quota */
+      }
+      return next;
+    });
+  };
+
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanInput, setScanInput] = useState("");
+  const [scanError, setScanError] = useState("");
+
   const handleDownloadCsv = () => {
-    const header = "Date of Manufacture,GTIN,Serial Number,Lot Number,UDI,Status";
+    const header = "Date of batch creation,GTIN,Serial Number,Lot Number,UDI,Status";
     const csvRows = rows.map(
       (r) =>
         `${r.dateOfManufacture},${r.gtin},${r.serialNumber},${r.lotNumber},${r.udi},${r.status}`,
@@ -477,6 +532,33 @@ function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse
     a.download = `${batchNum}-labels.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    // After successful download, update all statuses
+    updateAllRowStatuses("Label generated");
+    toast.success("CSV downloaded — status updated to Label generated");
+  };
+
+  const handleScan = () => {
+    const udi = scanInput.trim();
+    setScanError("");
+    if (!udi) {
+      setScanError("Enter a UDI to scan");
+      return;
+    }
+    // Find matching row by UDI
+    const matchIndex = rows.findIndex((r) => r.udi === udi);
+    if (matchIndex === -1) {
+      setScanError("Product not present in this LOT");
+      return;
+    }
+    if (rows[matchIndex].status === "In stock") {
+      setScanError("This product is already in stock");
+      return;
+    }
+    // Mark as In stock
+    updateRowStatus(matchIndex, "In stock");
+    toast.success(`Serial ${rows[matchIndex].serialNumber} marked as In stock`);
+    setScanOpen(false);
+    setScanInput("");
   };
 
   return (
@@ -484,23 +566,61 @@ function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse
       <CardContent className="pt-6">
         <div className="flex items-center justify-between mb-4">
           <h2>Product summary</h2>
-          <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
-            <Download className="h-4 w-4 mr-1" /> Label generate
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-2"
-            onClick={() => (window.location.href = "/udi-registration")}
-          >
-            Scan UDi
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
+              <Download className="h-4 w-4 mr-1" /> Label generate
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setScanInput("");
+                setScanOpen(!scanOpen);
+              }}
+            >
+              <ScanLine className="h-4 w-4 mr-1" /> Scan
+            </Button>
+          </div>
         </div>
+
+        {/* Scan UDI input */}
+        {scanOpen && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <Input
+                value={scanInput}
+                onChange={(e) => {
+                  setScanInput(e.target.value);
+                  setScanError("");
+                }}
+                placeholder="Enter UDI to scan…"
+                className="flex-1 font-mono text-[13px]"
+                onKeyDown={(e) => e.key === "Enter" && handleScan()}
+                autoFocus
+              />
+              <Button size="sm" onClick={handleScan}>
+                Scan
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setScanOpen(false);
+                  setScanError("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+            {scanError && <p className="text-sm text-red-600 mt-1.5">{scanError}</p>}
+          </div>
+        )}
+
         <div className="border rounded-md overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date of Manufacture</TableHead>
+                <TableHead>Date of batch creation</TableHead>
                 <TableHead>GTIN</TableHead>
                 <TableHead>Serial Number</TableHead>
                 <TableHead>Lot Number</TableHead>
@@ -519,7 +639,22 @@ function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse
                     {r.udi}
                   </TableCell>
                   <TableCell className="py-2.5">
-                    <Badge variant="destructive" className="text-[11px]">
+                    <Badge
+                      variant={
+                        r.status === "In stock"
+                          ? "secondary"
+                          : r.status === "Label generated"
+                            ? "destructive"
+                            : "destructive"
+                      }
+                      className={`text-[11px] ${
+                        r.status === "In stock"
+                          ? "bg-green-100 text-green-700 border-green-200"
+                          : r.status === "Label generated"
+                            ? "bg-red-100 text-red-700 border-red-200"
+                            : ""
+                      }`}
+                    >
                       {r.status}
                     </Badge>
                   </TableCell>
