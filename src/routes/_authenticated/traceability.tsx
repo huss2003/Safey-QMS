@@ -425,25 +425,21 @@ function ProductSummary({
 }
 
 function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse["production"]> }) {
-  // Query GTIN via the production batch's product FK — more reliable than name lookup
+  // Fetch GTIN by product name (simple, reliable)
   const { data: product } = useQuery({
-    queryKey: ["product-gtin", prod.batch_number],
+    queryKey: ["product-gtin", prod.product_name],
     queryFn: async () => {
-      // The production batch has product_id → products.gtin
-      // Use the backward RPC data: prod.id is the production batch id
-      const { data: batch } = await supabase
-        .from("production_batches" as any)
-        .select("product_id")
-        .eq("id", prod.id)
-        .maybeSingle();
-      if (!batch?.product_id) return null;
-      const { data: prod_row } = await supabase
+      if (!prod.product_name) return null;
+      const { data, error } = await supabase
         .from("products" as any)
         .select("gtin")
-        .eq("id", batch.product_id)
+        .eq("product_name", prod.product_name)
+        .limit(1)
         .maybeSingle();
-      return prod_row as { gtin: string | null } | null;
+      if (error) console.error("GTIN fetch error:", error);
+      return data as { gtin: string | null } | null;
     },
+    enabled: !!prod.product_name,
   });
 
   const gtin = product?.gtin ?? "";

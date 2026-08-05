@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { Plus, Trash2, ScanLine, ArrowLeft, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Trash2, ScanLine, ArrowLeft, AlertTriangle, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/inventory/page-header";
@@ -46,6 +46,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/register-udi")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    id: search.id as string | undefined,
+  }),
   component: RegisterUdiPage,
 });
 
@@ -59,6 +62,7 @@ type ProductRow = {
   quantity: string;
   gtin: string;
   scannedRows: ScanRow[];
+  isNew: boolean;
 };
 
 type ScanRow = {
@@ -72,6 +76,10 @@ type ScanRow = {
 // ── Page ───────────────────────────────────────────────────────────
 
 function RegisterUdiPage() {
+  const navigate = useNavigate();
+  const { id: searchId } = Route.useSearch();
+  const fetchedIdRef = useRef<string | null>(null);
+
   // Invoice fields
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [customerName, setCustomerName] = useState("");
@@ -100,6 +108,25 @@ function RegisterUdiPage() {
     ri?: number;
   } | null>(null);
 
+  // Helpers
+  const warrantyLabel = (val: string) => {
+    const map: Record<string, string> = {
+      "1_year": "1 Year",
+      "2_year": "2 Years",
+      "3_year": "3 Years",
+      "5_year": "5 Years",
+      lifetime: "Lifetime",
+    };
+    return map[val] ?? val;
+  };
+
+  const isComplete =
+    products.length > 0 &&
+    products.every((p) => {
+      const qty = parseInt(p.quantity, 10) || 0;
+      return qty > 0 && p.scannedRows.length >= qty;
+    });
+
   // Fetch manufactured products
   useEffect(() => {
     (async () => {
@@ -120,12 +147,41 @@ function RegisterUdiPage() {
     })();
   }, []);
 
+  // Load existing record for edit mode
+  useEffect(() => {
+    if (!searchId || fetchedIdRef.current === searchId) return;
+    fetchedIdRef.current = searchId;
+    (async () => {
+      const { data, error } = await supabase
+        .from("udi_registrations" as any)
+        .select("*")
+        .eq("id", searchId)
+        .single();
+      if (error || !data) {
+        toast.error("Failed to load registration");
+        return;
+      }
+      setInvoiceNumber(data.invoice_number ?? "");
+      setCustomerName(data.customer_name ?? "");
+      setDateLogged(data.date_logged ?? "");
+      setInvoiceDate(data.invoice_date ?? "");
+      setCustomerAddress(data.customer_address ?? "");
+      setWarrantyTerm(data.warranty_term ?? "");
+      try {
+        const parsed = JSON.parse(data.products ?? "[]");
+        setProducts(parsed.map((p: any) => ({ ...p, isNew: false })));
+      } catch {
+        /* empty */
+      }
+    })();
+  }, [searchId]);
+
   // ── Product row ops ─────────────────────────────────────────────
 
   const addProductRow = () => {
     setProducts([
       ...products,
-      { productName: "", productId: "", quantity: "", gtin: "", scannedRows: [] },
+      { productName: "", productId: "", quantity: "", gtin: "", scannedRows: [], isNew: true },
     ]);
   };
 
@@ -249,6 +305,34 @@ function RegisterUdiPage() {
     toast.success(`Serial ${serialNum} accepted — marked In stock`);
   };
 
+  // ── CSV ──────────────────────────────────────────────────────
+
+  const generateCsv = () => {
+    const rows: string[] = [];
+    const status = isComplete ? "complete" : "incomplete";
+    const invDate = invoiceDate ? invoiceDate.split("-").reverse().join("-") : "";
+    rows.push(`Invoice Number,${invoiceNumber},,,`);
+    rows.push(`Customer Name,${customerName},,,`);
+    rows.push(`Invoice Date,${invDate},,,`);
+    rows.push(`Warranty Term,${warrantyLabel(warrantyTerm)},,,`);
+    rows.push(`Status,${status},,,`);
+    rows.push(`,,,,`);
+    rows.push(`Product Name,UDI (Raw QR),Serial Number,Mfg. Date,LOT`);
+    for (const p of products) {
+      for (const r of p.scannedRows) {
+        const mfgDate = r.dateOfBatchCreation.replace(/\//g, "-");
+        rows.push(`${p.productName},${r.udi},${r.udi},${mfgDate},${r.lotNumber}`);
+      }
+    }
+    const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `udi-registration-${invoiceNumber || "export"}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // ── Save ───────────────────────────────────────────────────────
 
   const handleSave = async () => {
@@ -281,7 +365,7 @@ function RegisterUdiPage() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("udi_registrations" as any).insert({
+      const payload = {
         invoice_number: invoiceNumber,
         customer_name: customerName,
         date_logged: dateLogged || null,
@@ -289,10 +373,28 @@ function RegisterUdiPage() {
         customer_address: customerAddress || null,
         warranty_term: warrantyTerm || null,
         products: JSON.stringify(products),
-      });
+      };
+      const { error } = searchId
+        ? await supabase
+            .from("udi_registrations" as any)
+            .update(payload)
+            .eq("id", searchId)
+        : await supabase.from("udi_registrations" as any).insert(payload);
       if (error) throw error;
+      if (searchId) {
+        // Edit mode — update existing record
+        const { error } = await supabase
+          .from("udi_registrations" as any)
+          .update(payload)
+          .eq("id", searchId);
+        if (error) throw error;
+      } else {
+        // Create mode — insert new record
+        const { error } = await supabase.from("udi_registrations" as any).insert(payload);
+        if (error) throw error;
+      }
 
-      // ── Update traceability localStorage: "In stock" → "Out for delivery" ──
+      // ── Update traceability localStorage: "In stock" → "Out Stock" ──
       for (const p of products) {
         for (const r of p.scannedRows) {
           const m = r.udi.match(/\(10\)(.+?)\(21\)/);
@@ -305,7 +407,7 @@ function RegisterUdiPage() {
             if (raw) {
               const statuses = JSON.parse(raw) as Record<number, string>;
               if (statuses[serialIndex] === "In stock") {
-                statuses[serialIndex] = "Out for delivery";
+                statuses[serialIndex] = "Out Stock";
                 localStorage.setItem(statusKey, JSON.stringify(statuses));
               }
             }
@@ -316,7 +418,11 @@ function RegisterUdiPage() {
       }
 
       toast.success("UDI registration saved");
-      resetForm();
+      if (searchId) {
+        navigate({ to: "/udi-registration" });
+      } else {
+        resetForm();
+      }
     } catch (e: any) {
       toast.error(e.message ?? "Save failed");
     } finally {
@@ -361,8 +467,12 @@ function RegisterUdiPage() {
           </Button>
         </Link>
         <PageHeader
-          title="Register UDIs"
-          subtitle="Create UDI registrations for production batches"
+          title={searchId ? "Edit UDI Registration" : "Register UDIs"}
+          subtitle={
+            searchId
+              ? "Update existing UDI registration"
+              : "Create UDI registrations for production batches"
+          }
         />
       </div>
 
@@ -371,13 +481,18 @@ function RegisterUdiPage() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold">Invoice Details</h2>
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-primary hover:bg-primary/90"
-            >
-              {saving ? "Saving..." : "Save"}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={generateCsv}>
+                <Download className="h-4 w-4 mr-1" /> Generate CSV
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -474,41 +589,51 @@ function RegisterUdiPage() {
                     <TableRow key={i}>
                       <TableCell className="text-[13px] text-muted-foreground">{i + 1}</TableCell>
                       <TableCell>
-                        <Select value={row.productId} onValueChange={(v) => selectProduct(i, v)}>
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Select product name" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {productOptions.map((opt) => (
-                              <SelectItem key={opt.id} value={opt.id}>
-                                {opt.product_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {row.isNew ? (
+                          <Select value={row.productId} onValueChange={(v) => selectProduct(i, v)}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue placeholder="Select product name" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {productOptions.map((opt) => (
+                                <SelectItem key={opt.id} value={opt.id}>
+                                  {opt.product_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-sm">{row.productName}</span>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <Input
-                          type="number"
-                          value={row.quantity}
-                          onChange={(e) => updateProduct(i, "quantity", e.target.value)}
-                          placeholder="Enter quantity"
-                          className="h-9"
-                          min={1}
-                        />
+                        {row.isNew ? (
+                          <Input
+                            type="number"
+                            value={row.quantity}
+                            onChange={(e) => updateProduct(i, "quantity", e.target.value)}
+                            placeholder="Enter quantity"
+                            className="h-9"
+                            min={1}
+                          />
+                        ) : (
+                          <span className="text-sm">{row.quantity}</span>
+                        )}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => {
-                            setDeleteTarget({ kind: "product", pi: i });
-                            setDeleteConfirmOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {row.isNew && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => {
+                              setDeleteTarget({ kind: "product", pi: i });
+                              setDeleteConfirmOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
@@ -527,7 +652,10 @@ function RegisterUdiPage() {
                   size="sm"
                   onClick={() => {
                     const idx = products.findIndex(
-                      (p) => p.productId && p.scannedRows.length < (parseInt(p.quantity, 10) || 0),
+                      (p) =>
+                        p.isNew &&
+                        p.productId &&
+                        p.scannedRows.length < (parseInt(p.quantity, 10) || 0),
                     );
                     if (idx >= 0) openScan(idx);
                     else toast.info("All products fully scanned");
@@ -570,18 +698,20 @@ function RegisterUdiPage() {
                             {r.udi}
                           </TableCell>
                           <TableCell className="py-2.5">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-destructive"
-                              onClick={() => {
-                                const pi = products.indexOf(p);
-                                setDeleteTarget({ kind: "scan", pi, ri });
-                                setDeleteConfirmOpen(true);
-                              }}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            {p.isNew && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-destructive"
+                                onClick={() => {
+                                  const pi = products.indexOf(p);
+                                  setDeleteTarget({ kind: "scan", pi, ri });
+                                  setDeleteConfirmOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       )),
@@ -594,7 +724,10 @@ function RegisterUdiPage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={generateCsv}>
+          <Download className="h-4 w-4 mr-1" /> Generate CSV
+        </Button>
         <Button onClick={handleSave} disabled={saving} className="px-8">
           {saving ? "Saving..." : "Save"}
         </Button>

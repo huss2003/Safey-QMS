@@ -179,9 +179,11 @@ function UdiDashboard() {
                           </Badge>
                         </TableCell>
                         <TableCell className="py-2.5">
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <Link to="/register-udi" search={{ id: r.id }}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
                         </TableCell>
                       </TableRow>
                     );
