@@ -172,12 +172,12 @@ function NewProductionWizard() {
 
   const productName = products?.find((p: any) => p.id === productId)?.product_name;
 
-  // Auto-calculate when coming from production planning
+  // Auto-calculate when coming from production planning (pre-fill done, need plan data)
   useEffect(() => {
     if (fromPlan && productId && qty > 0) {
-      // Run calculation and skip step 1 — go to step 2
       calculate.mutate();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromPlan]);
 
   // canNext for each step
@@ -226,12 +226,7 @@ function NewProductionWizard() {
     },
     onSuccess: (data) => {
       setPlan(data);
-      if (fromPlan) {
-        // From planning: step 1 done, step 4 auto-checked → go to step 5
-        setStep(5);
-      } else {
-        setStep(2);
-      }
+      setStep(2);
     },
     onError: (e: any) => toast.error(e.message ?? "Calculation failed"),
   });
