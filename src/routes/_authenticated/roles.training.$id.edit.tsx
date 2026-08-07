@@ -58,8 +58,7 @@ function TrainingEditPage() {
 
   // hydrate once data arrives
   const hydrated = name !== null || p === undefined ? true : name !== null;
-  const v = (val: string | null | undefined, fallback: string) =>
-    val === null ? fallback : val;
+  const v = (val: string | null | undefined, fallback: string) => (val === null ? fallback : val);
   const vt = (val: string[] | null | undefined, fallback: string[]) =>
     val === null ? fallback : val;
 
@@ -74,8 +73,7 @@ function TrainingEditPage() {
           trainer: v(trainer, p!.trainer ?? "") || null,
           trainees: vt(trainees, p!.trainees ?? []),
           status: v(status, p!.status),
-          performance_evaluation:
-            v(evaluation, p!.performance_evaluation ?? "") || null,
+          performance_evaluation: v(evaluation, p!.performance_evaluation ?? "") || null,
           schedule: v(schedule, p!.schedule),
           documents: documents.length ? documents : (p!.documents ?? []),
         })
@@ -88,8 +86,7 @@ function TrainingEditPage() {
       qc.invalidateQueries({ queryKey: ["training_program", id] });
       navigate({ to: "/roles/training/$id", params: { id } });
     },
-    onError: (e: any) =>
-      toast.error(e.message ?? "Failed to update training program"),
+    onError: (e: any) => toast.error(e.message ?? "Failed to update training program"),
   });
 
   if (isLoading || !p) {
@@ -108,7 +105,7 @@ function TrainingEditPage() {
           : [...p!.trainees, val]
         : prev.includes(val)
           ? prev.filter((x) => x !== val)
-          : [...prev, val]
+          : [...prev, val],
     );
 
   const canSave =
@@ -121,9 +118,7 @@ function TrainingEditPage() {
     <div>
       <PageHeader
         title="Edit Training Program"
-        description={
-          <span className="font-mono text-[12px]">{p.training_id}</span>
-        }
+        description={<span className="font-mono text-[12px]">{p.training_id}</span>}
         actions={
           <Button
             variant="ghost"
@@ -143,9 +138,7 @@ function TrainingEditPage() {
         <CardContent className="space-y-4 max-w-2xl p-6">
           <div>
             <Label className="label-caps">Training Name</Label>
-            <div className="text-[13px] font-medium py-2 px-1 mt-1">
-              {p.training_name}
-            </div>
+            <div className="text-[13px] font-medium py-2 px-1 mt-1">{p.training_name}</div>
           </div>
           <div className="text-[11px] text-muted-foreground -mt-2">
             Training ID: <span className="font-mono">{p.training_id}</span> (read-only)
@@ -172,10 +165,7 @@ function TrainingEditPage() {
             </div>
             <div>
               <Label className="label-caps">Status</Label>
-              <Select
-                defaultValue={p.status}
-                onValueChange={(val) => setStatus(val)}
-              >
+              <Select defaultValue={p.status} onValueChange={(val) => setStatus(val)}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -189,10 +179,7 @@ function TrainingEditPage() {
 
           <div>
             <Label className="label-caps">Trainer *</Label>
-            <Select
-              defaultValue={p.trainer ?? ""}
-              onValueChange={(val) => setTrainer(val)}
-            >
+            <Select defaultValue={p.trainer ?? ""} onValueChange={(val) => setTrainer(val)}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Choose a trainer" />
               </SelectTrigger>
@@ -229,10 +216,7 @@ function TrainingEditPage() {
 
           <div>
             <Label className="label-caps">Schedule *</Label>
-            <Select
-              defaultValue={p.schedule}
-              onValueChange={(val) => setSchedule(val)}
-            >
+            <Select defaultValue={p.schedule} onValueChange={(val) => setSchedule(val)}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Choose a schedule" />
               </SelectTrigger>

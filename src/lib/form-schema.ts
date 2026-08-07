@@ -7,16 +7,16 @@
 
 /** Field types available in dynamic forms */
 export type FormFieldType =
-  | "text"       // short text input
-  | "number"     // numeric input
-  | "select"     // dropdown / single-choice
-  | "yesno"      // YES / NO toggle
-  | "date"       // date picker
-  | "textarea"   // multi-line text
-  | "signature"  // signature line
-  | "section"    // sub-section header (non-editable)
-  | "table"      // repeating row table (for checklist-type forms)
-  | "image";     // image attachment / screenshot
+  | "text" // short text input
+  | "number" // numeric input
+  | "select" // dropdown / single-choice
+  | "yesno" // YES / NO toggle
+  | "date" // date picker
+  | "textarea" // multi-line text
+  | "signature" // signature line
+  | "section" // sub-section header (non-editable)
+  | "table" // repeating row table (for checklist-type forms)
+  | "image"; // image attachment / screenshot
 
 /** A single form field definition */
 export interface FormField {

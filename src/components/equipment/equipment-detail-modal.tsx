@@ -166,7 +166,10 @@ function MaintenanceDetail({ data }: { data: EquipmentMaintenance }) {
                   const lower = t.toLowerCase();
                   if (lower === "cleaning") {
                     return (
-                      <span key={t} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-600/20 dark:bg-blue-950 dark:text-blue-300">
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-600/20 dark:bg-blue-950 dark:text-blue-300"
+                      >
                         <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                         {t}
                       </span>
@@ -174,14 +177,20 @@ function MaintenanceDetail({ data }: { data: EquipmentMaintenance }) {
                   }
                   if (lower === "oiling") {
                     return (
-                      <span key={t} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 dark:bg-amber-950 dark:text-amber-300">
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 dark:bg-amber-950 dark:text-amber-300"
+                      >
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                         {t}
                       </span>
                     );
                   }
                   return (
-                    <span key={t} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-slate-50 text-slate-700 ring-1 ring-slate-600/20 dark:bg-slate-800 dark:text-slate-300">
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-slate-50 text-slate-700 ring-1 ring-slate-600/20 dark:bg-slate-800 dark:text-slate-300"
+                    >
                       <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                       {t}
                     </span>

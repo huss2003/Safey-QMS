@@ -5,7 +5,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Puzzle, ChevronDown, ChevronRight, Pencil, Loader2, Factory, ClipboardCheck } from "lucide-react";
+import {
+  Plus,
+  Puzzle,
+  ChevronDown,
+  ChevronRight,
+  Pencil,
+  Loader2,
+  Factory,
+  ClipboardCheck,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Part, PartBatch } from "@/integrations/supabase/database.types";
@@ -216,22 +225,34 @@ function InspectionPicker({ batchId, currentResult }: { batchId: string; current
   const { data: templates = [] } = useQuery({
     queryKey: ["inspection_templates"],
     queryFn: async () => {
-      const { data } = await supabase.from("inspection_form_templates").select("id, part_name, record_id, tolerance, field_a, field_b, field_c").order("part_name");
-      return (data ?? []) as { id: string; part_name: string; record_id: string; tolerance: number; field_a: string | null; field_b: string | null; field_c: string | null }[];
+      const { data } = await supabase
+        .from("inspection_form_templates")
+        .select("id, part_name, record_id, tolerance, field_a, field_b, field_c")
+        .order("part_name");
+      return (data ?? []) as {
+        id: string;
+        part_name: string;
+        record_id: string;
+        tolerance: number;
+        field_a: string | null;
+        field_b: string | null;
+        field_c: string | null;
+      }[];
     },
     staleTime: 60_000,
   });
 
-  const filtered = templates.filter((t) =>
-    t.part_name.toLowerCase().includes(search.toLowerCase()) ||
-    t.record_id.toLowerCase().includes(search.toLowerCase())
+  const filtered = templates.filter(
+    (t) =>
+      t.part_name.toLowerCase().includes(search.toLowerCase()) ||
+      t.record_id.toLowerCase().includes(search.toLowerCase()),
   );
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
 
-  const select = async (template: typeof templates[number]) => {
+  const select = async (template: (typeof templates)[number]) => {
     // Check if inspection_record already exists for this batch
     const { data: existing } = await supabase
       .from("inspection_records" as any)
@@ -257,16 +278,16 @@ function InspectionPicker({ batchId, currentResult }: { batchId: string; current
 
     const batchNumber = batch?.batch_number ?? "";
 
-    // Generate 20 empty QC rows
-    const qcRows = Array.from({ length: 20 }, (_, i) => ({
+    // Generate 39 empty QC rows
+    const qcRows = Array.from({ length: 39 }, (_, i) => ({
       part_num: i + 1,
-      a_actual: Number(template.field_a) || 0,
+      a_actual: parseFloat(String(template.field_a).replace(/[^0-9.\-]/g, "")) || 0,
       a_measured: 0,
       a_difference: 0,
-      b_actual: Number(template.field_b) || 0,
+      b_actual: parseFloat(String(template.field_b).replace(/[^0-9.\-]/g, "")) || 0,
       b_measured: 0,
       b_difference: 0,
-      c_actual: Number(template.field_c) || 0,
+      c_actual: parseFloat(String(template.field_c).replace(/[^0-9.\-]/g, "")) || 0,
       c_measured: 0,
       c_difference: 0,
       tolerance: template.tolerance,
@@ -296,21 +317,32 @@ function InspectionPicker({ batchId, currentResult }: { batchId: string; current
   // If already submitted → show disabled checkmark, no popover
   if (isSubmitted) {
     return (
-      <span className="inline-flex items-center justify-center h-7 w-7 text-emerald-600 cursor-default" title={`Inspection completed — ${currentResult}`}>
+      <span
+        className="inline-flex items-center justify-center h-7 w-7 text-emerald-600 cursor-default"
+        title={`Inspection completed — ${currentResult}`}
+      >
         <ClipboardCheck className="h-3.5 w-3.5" />
       </span>
     );
   }
 
   return (
-    <Popover open={open} onOpenChange={(o) => { setOpen(o); setSearch(""); }}>
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        setSearch("");
+      }}
+    >
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="h-7 w-7" title="Start inspection">
           <ClipboardCheck className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-2" align="end">
-        <div className="text-[11px] font-medium text-muted-foreground mb-1 px-1">Select Inspection Form</div>
+        <div className="text-[11px] font-medium text-muted-foreground mb-1 px-1">
+          Select Inspection Form
+        </div>
         <Input
           ref={inputRef}
           placeholder="Search by part name or record ID..."

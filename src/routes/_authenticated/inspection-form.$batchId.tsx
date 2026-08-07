@@ -273,19 +273,19 @@ function InspectionFormPage() {
 
     // Fresh form from template
     if (!template || !batch) return;
-    const numParts = Math.min(batch.quantity ?? 20, 20);
+    const numParts = Math.min(batch.quantity ?? 39, 39);
     const tolerance = template.tolerance;
     const rows: QcRow[] = [];
     for (let i = 1; i <= numParts; i++) {
       rows.push({
         part_num: i,
-        a_actual: Number(template.field_a) || 0,
+        a_actual: parseFloat(String(template.field_a).replace(/[^0-9.\-]/g, "")) || 0,
         a_measured: 0,
         a_difference: 0,
-        b_actual: Number(template.field_b) || 0,
+        b_actual: parseFloat(String(template.field_b).replace(/[^0-9.\-]/g, "")) || 0,
         b_measured: 0,
         b_difference: 0,
-        c_actual: Number(template.field_c) || 0,
+        c_actual: parseFloat(String(template.field_c).replace(/[^0-9.\-]/g, "")) || 0,
         c_measured: 0,
         c_difference: 0,
         tolerance,
@@ -913,9 +913,9 @@ function InspectionFormPage() {
                       onChange={(e) => {
                         const selectedName = e.target.value;
                         const eq = equipmentList.find((eq) => eq.name === selectedName);
-                        const cal = calibrations.find((c) => c.equipment_id === eq?.equipment_id);
+                        const cal = calibrations.find((c) => c.equipment_id === eq?.id);
                         updateMeasuring(idx, "name", selectedName);
-                        updateMeasuring(idx, "id", eq?.equipment_id ?? "");
+                        updateMeasuring(idx, "id", eq?.id ?? "");
                         if (cal) {
                           updateMeasuring(idx, "calDate", cal.calibration_date ?? "");
                           updateMeasuring(idx, "nextCalDate", cal.next_calibration_date ?? "");

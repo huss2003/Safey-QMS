@@ -50,11 +50,18 @@ function parseEval(marksJson: string | null): EvalDetails | null {
   if (!marksJson) return null;
   try {
     const parsed = JSON.parse(marksJson);
-    if (parsed && typeof parsed === "object" && typeof parsed.total === "number" && typeof parsed.finalResult === "string") {
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      typeof parsed.total === "number" &&
+      typeof parsed.finalResult === "string"
+    ) {
       return parsed as EvalDetails;
     }
     return null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 interface TrainingRecord {
@@ -153,9 +160,7 @@ export function EmployeeTrainings({ employee }: Props) {
           .from("equipment-files")
           .upload(path, f.file, { contentType: f.file.type });
         if (upErr) throw upErr;
-        const { data: urlData } = supabase.storage
-          .from("equipment-files")
-          .getPublicUrl(path);
+        const { data: urlData } = supabase.storage.from("equipment-files").getPublicUrl(path);
         docUrls.push(urlData.publicUrl);
       }
 
@@ -245,45 +250,86 @@ export function EmployeeTrainings({ employee }: Props) {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50/80 border-b">
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">ID</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Trainer</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Training Name</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Performance Date</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Result</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">Frequency</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[80px]">Actions</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">
+                  ID
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">
+                  Trainer
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">
+                  Training Name
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">
+                  Performance Date
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">
+                  Result
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider">
+                  Frequency
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[80px]">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.map((r, i) => {
                 const evalData = parseEval(r.evaluation_marks);
-                const resultText = evalData && evalData.total != null
-                  ? `${evalData.total} (${evalData.finalResult})`
-                  : "—";
+                const resultText =
+                  evalData && evalData.total != null
+                    ? `${evalData.total} (${evalData.finalResult})`
+                    : "—";
                 return (
                   <TableRow key={r.id} className="border-b border-border/40">
-                    <TableCell className="text-[12.5px] text-muted-foreground font-mono">{r.record_id || trnId(i)}</TableCell>
-                    <TableCell className="text-[12.5px] text-muted-foreground">{r.trainer}</TableCell>
+                    <TableCell className="text-[12.5px] text-muted-foreground font-mono">
+                      {r.record_id || trnId(i)}
+                    </TableCell>
+                    <TableCell className="text-[12.5px] text-muted-foreground">
+                      {r.trainer}
+                    </TableCell>
                     <TableCell className="text-[12.5px] font-medium">{r.training_name}</TableCell>
-                    <TableCell className="text-[12.5px] text-muted-foreground">{fmtDate(r.performance_date)}</TableCell>
+                    <TableCell className="text-[12.5px] text-muted-foreground">
+                      {fmtDate(r.performance_date)}
+                    </TableCell>
                     <TableCell className="text-[12.5px]">
                       {evalData ? (
-                        <Badge variant={evalData.finalResult === "Pass" ? "default" : "destructive"} className="text-[11px]">
+                        <Badge
+                          variant={evalData.finalResult === "Pass" ? "default" : "destructive"}
+                          className="text-[11px]"
+                        >
                           {resultText}
                         </Badge>
-                      ) : "—"}
+                      ) : (
+                        "—"
+                      )}
                     </TableCell>
-                    <TableCell className="text-[12.5px] text-muted-foreground">{r.schedule ?? "—"}</TableCell>
+                    <TableCell className="text-[12.5px] text-muted-foreground">
+                      {r.schedule ?? "—"}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewRecord(r)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setViewRecord(r)}
+                        >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditRecord(r)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => setEditRecord(r)}
+                        >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                          <Link to="/roles/training/performance/$recordId" params={{ recordId: r.id }}>
+                          <Link
+                            to="/roles/training/performance/$recordId"
+                            params={{ recordId: r.id }}
+                          >
                             <Medal className="h-3.5 w-3.5" />
                           </Link>
                         </Button>
@@ -304,7 +350,10 @@ export function EmployeeTrainings({ employee }: Props) {
             <DialogTitle>Create Training Record</DialogTitle>
             <div className="flex items-center gap-2 pt-2">
               {[1, 2, 3].map((n) => (
-                <div key={n} className={cn("h-1.5 flex-1 rounded-full", step >= n ? "bg-primary" : "bg-muted")} />
+                <div
+                  key={n}
+                  className={cn("h-1.5 flex-1 rounded-full", step >= n ? "bg-primary" : "bg-muted")}
+                />
               ))}
             </div>
             <p className="text-xs text-muted-foreground pt-1">Step {step} of 3</p>
@@ -325,29 +374,31 @@ export function EmployeeTrainings({ employee }: Props) {
                         const empRoleSlug = (employee.employee_role ?? "").toLowerCase();
                         const empRoleLabel = roleLabel(employee.employee_role).toLowerCase();
                         if (!trainees.length) return true;
-                        return trainees.some(
-                          (t: string) => {
-                            const tl = t.toLowerCase();
-                            return (
-                              tl === empRoleSlug ||
-                              tl === empRoleLabel ||
-                              empRoleLabel.includes(tl) ||
-                              tl.includes(empRoleLabel)
-                            );
-                          }
-                        );
+                        return trainees.some((t: string) => {
+                          const tl = t.toLowerCase();
+                          return (
+                            tl === empRoleSlug ||
+                            tl === empRoleLabel ||
+                            empRoleLabel.includes(tl) ||
+                            tl.includes(empRoleLabel)
+                          );
+                        });
                       })
                       .map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.training_name} ({p.training_id})
-                      </SelectItem>
-                    ))}
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.training_name} ({p.training_id})
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={resetCreate}>Cancel</Button>
-                <Button onClick={() => setStep(2)} disabled={!selectedProgramId}>Next</Button>
+                <Button variant="outline" onClick={resetCreate}>
+                  Cancel
+                </Button>
+                <Button onClick={() => setStep(2)} disabled={!selectedProgramId}>
+                  Next
+                </Button>
               </DialogFooter>
             </div>
           )}
@@ -377,7 +428,11 @@ export function EmployeeTrainings({ employee }: Props) {
                 </div>
                 <div>
                   <Label className="label-caps">Duration</Label>
-                  <Input value={selectedProgram.training_duration ?? "—"} disabled className="mt-1" />
+                  <Input
+                    value={selectedProgram.training_duration ?? "—"}
+                    disabled
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <Label className="label-caps">Schedule</Label>
@@ -386,10 +441,17 @@ export function EmployeeTrainings({ employee }: Props) {
               </div>
               <div>
                 <Label className="label-caps">Performance Evaluation Factors</Label>
-                <Textarea value={selectedProgram.performance_evaluation ?? "—"} readOnly className="mt-1" rows={3} />
+                <Textarea
+                  value={selectedProgram.performance_evaluation ?? "—"}
+                  readOnly
+                  className="mt-1"
+                  rows={3}
+                />
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
                 <Button onClick={() => setStep(3)}>Next</Button>
               </DialogFooter>
             </div>
@@ -400,11 +462,21 @@ export function EmployeeTrainings({ employee }: Props) {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="label-caps">Performance Date *</Label>
-                  <Input type="date" value={performanceDate} onChange={(e) => setPerformanceDate(e.target.value)} className="mt-1" />
+                  <Input
+                    type="date"
+                    value={performanceDate}
+                    onChange={(e) => setPerformanceDate(e.target.value)}
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <Label className="label-caps">Evaluation Marks</Label>
-                  <Input value={evaluationMarks} onChange={(e) => setEvaluationMarks(e.target.value)} className="mt-1" placeholder="e.g. 85/100" />
+                  <Input
+                    value={evaluationMarks}
+                    onChange={(e) => setEvaluationMarks(e.target.value)}
+                    className="mt-1"
+                    placeholder="e.g. 85/100"
+                  />
                 </div>
               </div>
 
@@ -423,8 +495,13 @@ export function EmployeeTrainings({ employee }: Props) {
                   <ul className="mt-2 space-y-1">
                     {files.map((f, i) => (
                       <li key={i} className="flex items-center gap-2 text-sm">
-                        <span className="text-muted-foreground truncate max-w-[300px]">{f.file.name}</span>
-                        <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive">
+                        <span className="text-muted-foreground truncate max-w-[300px]">
+                          {f.file.name}
+                        </span>
+                        <button
+                          onClick={() => removeFile(i)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
                           <X className="h-3.5 w-3.5" />
                         </button>
                       </li>
@@ -434,7 +511,9 @@ export function EmployeeTrainings({ employee }: Props) {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
+                <Button variant="outline" onClick={() => setStep(2)}>
+                  Back
+                </Button>
                 <Button
                   onClick={() => createMutation.mutate()}
                   disabled={createMutation.isPending || !performanceDate}
@@ -449,7 +528,12 @@ export function EmployeeTrainings({ employee }: Props) {
       </Dialog>
 
       {/* ── View Detail Dialog ── */}
-      <Dialog open={!!viewRecord} onOpenChange={(o) => { if (!o) setViewRecord(null); }}>
+      <Dialog
+        open={!!viewRecord}
+        onOpenChange={(o) => {
+          if (!o) setViewRecord(null);
+        }}
+      >
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Training Detail</DialogTitle>
@@ -467,11 +551,19 @@ export function EmployeeTrainings({ employee }: Props) {
                 </div>
                 <div>
                   <Label className="label-caps">Trainee Name</Label>
-                  <Input value={viewRecord.trainee_name || employee.employee_name} disabled className="mt-1" />
+                  <Input
+                    value={viewRecord.trainee_name || employee.employee_name}
+                    disabled
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <Label className="label-caps">Trainee Role</Label>
-                  <Input value={roleLabel(viewRecord.trainee_role || employee.employee_role)} disabled className="mt-1" />
+                  <Input
+                    value={roleLabel(viewRecord.trainee_role || employee.employee_role)}
+                    disabled
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <Label className="label-caps">Trainer</Label>
@@ -497,7 +589,12 @@ export function EmployeeTrainings({ employee }: Props) {
               {viewRecord.performance_evaluation && (
                 <div>
                   <Label className="label-caps">Performance Evaluation Factors</Label>
-                  <Textarea value={viewRecord.performance_evaluation} readOnly className="mt-1" rows={3} />
+                  <Textarea
+                    value={viewRecord.performance_evaluation}
+                    readOnly
+                    className="mt-1"
+                    rows={3}
+                  />
                 </div>
               )}
               {viewRecord.documents && viewRecord.documents.length > 0 && (
@@ -523,13 +620,20 @@ export function EmployeeTrainings({ employee }: Props) {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setViewRecord(null)}>Close</Button>
+            <Button variant="outline" onClick={() => setViewRecord(null)}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ── Edit Dialog ── */}
-      <Dialog open={!!editRecord} onOpenChange={(o) => { if (!o) setEditRecord(null); }}>
+      <Dialog
+        open={!!editRecord}
+        onOpenChange={(o) => {
+          if (!o) setEditRecord(null);
+        }}
+      >
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Training Record</DialogTitle>
@@ -605,11 +709,21 @@ function EditForm({
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <Label className="label-caps">Performance Date</Label>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mt-1" />
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="mt-1"
+          />
         </div>
         <div>
           <Label className="label-caps">Evaluation Marks</Label>
-          <Input value={marks} onChange={(e) => setMarks(e.target.value)} className="mt-1" placeholder="e.g. 85/100" />
+          <Input
+            value={marks}
+            onChange={(e) => setMarks(e.target.value)}
+            className="mt-1"
+            placeholder="e.g. 85/100"
+          />
         </div>
       </div>
 
@@ -635,7 +749,12 @@ function EditForm({
             {record.documents.map((url, i) => (
               <li key={i} className="flex items-center gap-2 text-sm">
                 <Download className="h-3 w-3 text-muted-foreground" />
-                <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate max-w-[300px]">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline truncate max-w-[300px]"
+                >
                   {url.split("/").pop()}
                 </a>
               </li>
@@ -647,7 +766,10 @@ function EditForm({
             {files.map((f, i) => (
               <li key={i} className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground truncate max-w-[300px]">{f.file.name}</span>
-                <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive">
+                <button
+                  onClick={() => removeFile(i)}
+                  className="text-muted-foreground hover:text-destructive"
+                >
                   <X className="h-3.5 w-3.5" />
                 </button>
               </li>
@@ -657,8 +779,15 @@ function EditForm({
       </div>
 
       <DialogFooter>
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={() => onSave({ performance_date: date || null, evaluation_marks: marks || null })} disabled={saving}>
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button
+          onClick={() =>
+            onSave({ performance_date: date || null, evaluation_marks: marks || null })
+          }
+          disabled={saving}
+        >
           {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           Save Changes
         </Button>

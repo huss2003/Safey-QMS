@@ -48,9 +48,7 @@ function TrainingListPage() {
         meta={
           <span className="text-[12px] text-muted-foreground">
             Total{" "}
-            <span className="text-foreground num font-medium ml-1">
-              {programs?.length ?? 0}
-            </span>
+            <span className="text-foreground num font-medium ml-1">{programs?.length ?? 0}</span>
           </span>
         }
         actions={
@@ -101,13 +99,9 @@ function TrainingListPage() {
                   <TableCell className="text-[12.5px] text-muted-foreground py-2.5">
                     {p.training_id}
                   </TableCell>
-                  <TableCell className="text-[12.5px] py-2.5">
-                    {p.trainer}
-                  </TableCell>
+                  <TableCell className="text-[12.5px] py-2.5">{p.trainer}</TableCell>
                   <TableCell className="text-[12.5px] text-muted-foreground py-2.5 max-w-[200px] truncate">
-                    {Array.isArray(p.trainees) && p.trainees.length
-                      ? p.trainees.join(", ")
-                      : "—"}
+                    {Array.isArray(p.trainees) && p.trainees.length ? p.trainees.join(", ") : "—"}
                   </TableCell>
                   <TableCell className="py-2.5">
                     <Badge

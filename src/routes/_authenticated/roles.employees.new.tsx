@@ -7,12 +7,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/inventory/page-header";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -136,16 +131,10 @@ function EmployeesNewPage() {
           </div>
 
           <div className="flex justify-between pt-2 max-w-xl">
-            <Button
-              variant="outline"
-              onClick={() => navigate({ to: "/roles/employees" })}
-            >
+            <Button variant="outline" onClick={() => navigate({ to: "/roles/employees" })}>
               Cancel
             </Button>
-            <Button
-              onClick={() => mutate()}
-              disabled={!name || !role || isPending}
-            >
+            <Button onClick={() => mutate()} disabled={!name || !role || isPending}>
               {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Save Employee
             </Button>

@@ -19,6 +19,7 @@ import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedRegisterUdiRouteImport } from './routes/_authenticated/register-udi'
 import { Route as AuthenticatedRawMaterialsRouteImport } from './routes/_authenticated/raw-materials'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedProductionPlanningRouteImport } from './routes/_authenticated/production-planning'
@@ -29,6 +30,7 @@ import { Route as AuthenticatedOtherItemsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedInspectionFormTemplateRouteImport } from './routes/_authenticated/inspection-form-template'
 import { Route as AuthenticatedEquipmentNewRouteImport } from './routes/_authenticated/equipment-new'
 import { Route as AuthenticatedEquipmentRouteImport } from './routes/_authenticated/equipment'
+import { Route as AuthenticatedEnquireSerialRouteImport } from './routes/_authenticated/enquire-serial'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBatchRecallRouteImport } from './routes/_authenticated/batch-recall'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
@@ -100,6 +102,12 @@ const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRegisterUdiRoute =
+  AuthenticatedRegisterUdiRouteImport.update({
+    id: '/register-udi',
+    path: '/register-udi',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRawMaterialsRoute =
   AuthenticatedRawMaterialsRouteImport.update({
     id: '/raw-materials',
@@ -155,6 +163,12 @@ const AuthenticatedEquipmentRoute = AuthenticatedEquipmentRouteImport.update({
   path: '/equipment',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEnquireSerialRoute =
+  AuthenticatedEnquireSerialRouteImport.update({
+    id: '/enquire-serial',
+    path: '/enquire-serial',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -274,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/equipment': typeof AuthenticatedEquipmentRoute
   '/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
@@ -284,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/production-planning': typeof AuthenticatedProductionPlanningRoute
   '/products': typeof AuthenticatedProductsRoute
   '/raw-materials': typeof AuthenticatedRawMaterialsRoute
+  '/register-udi': typeof AuthenticatedRegisterUdiRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/roles': typeof AuthenticatedRolesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
@@ -314,6 +330,7 @@ export interface FileRoutesByTo {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/equipment': typeof AuthenticatedEquipmentRoute
   '/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
@@ -324,6 +341,7 @@ export interface FileRoutesByTo {
   '/production-planning': typeof AuthenticatedProductionPlanningRoute
   '/products': typeof AuthenticatedProductsRoute
   '/raw-materials': typeof AuthenticatedRawMaterialsRoute
+  '/register-udi': typeof AuthenticatedRegisterUdiRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/roles': typeof AuthenticatedRolesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
@@ -356,6 +374,7 @@ export interface FileRoutesById {
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/_authenticated/equipment': typeof AuthenticatedEquipmentRoute
   '/_authenticated/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/_authenticated/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
@@ -366,6 +385,7 @@ export interface FileRoutesById {
   '/_authenticated/production-planning': typeof AuthenticatedProductionPlanningRoute
   '/_authenticated/products': typeof AuthenticatedProductsRoute
   '/_authenticated/raw-materials': typeof AuthenticatedRawMaterialsRoute
+  '/_authenticated/register-udi': typeof AuthenticatedRegisterUdiRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/roles': typeof AuthenticatedRolesRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -398,6 +418,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/batch-recall'
     | '/dashboard'
+    | '/enquire-serial'
     | '/equipment'
     | '/equipment-new'
     | '/inspection-form-template'
@@ -408,6 +429,7 @@ export interface FileRouteTypes {
     | '/production-planning'
     | '/products'
     | '/raw-materials'
+    | '/register-udi'
     | '/reports'
     | '/roles'
     | '/settings'
@@ -438,6 +460,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/batch-recall'
     | '/dashboard'
+    | '/enquire-serial'
     | '/equipment'
     | '/equipment-new'
     | '/inspection-form-template'
@@ -448,6 +471,7 @@ export interface FileRouteTypes {
     | '/production-planning'
     | '/products'
     | '/raw-materials'
+    | '/register-udi'
     | '/reports'
     | '/roles'
     | '/settings'
@@ -479,6 +503,7 @@ export interface FileRouteTypes {
     | '/_authenticated/alerts'
     | '/_authenticated/batch-recall'
     | '/_authenticated/dashboard'
+    | '/_authenticated/enquire-serial'
     | '/_authenticated/equipment'
     | '/_authenticated/equipment-new'
     | '/_authenticated/inspection-form-template'
@@ -489,6 +514,7 @@ export interface FileRouteTypes {
     | '/_authenticated/production-planning'
     | '/_authenticated/products'
     | '/_authenticated/raw-materials'
+    | '/_authenticated/register-udi'
     | '/_authenticated/reports'
     | '/_authenticated/roles'
     | '/_authenticated/settings'
@@ -592,6 +618,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/register-udi': {
+      id: '/_authenticated/register-udi'
+      path: '/register-udi'
+      fullPath: '/register-udi'
+      preLoaderRoute: typeof AuthenticatedRegisterUdiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/raw-materials': {
       id: '/_authenticated/raw-materials'
       path: '/raw-materials'
@@ -660,6 +693,13 @@ declare module '@tanstack/react-router' {
       path: '/equipment'
       fullPath: '/equipment'
       preLoaderRoute: typeof AuthenticatedEquipmentRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/enquire-serial': {
+      id: '/_authenticated/enquire-serial'
+      path: '/enquire-serial'
+      fullPath: '/enquire-serial'
+      preLoaderRoute: typeof AuthenticatedEnquireSerialRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -886,6 +926,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedBatchRecallRoute: typeof AuthenticatedBatchRecallRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEnquireSerialRoute: typeof AuthenticatedEnquireSerialRoute
   AuthenticatedEquipmentRoute: typeof AuthenticatedEquipmentRoute
   AuthenticatedEquipmentNewRoute: typeof AuthenticatedEquipmentNewRoute
   AuthenticatedInspectionFormTemplateRoute: typeof AuthenticatedInspectionFormTemplateRoute
@@ -896,6 +937,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProductionPlanningRoute: typeof AuthenticatedProductionPlanningRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
   AuthenticatedRawMaterialsRoute: typeof AuthenticatedRawMaterialsRoute
+  AuthenticatedRegisterUdiRoute: typeof AuthenticatedRegisterUdiRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedRolesRoute: typeof AuthenticatedRolesRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -915,6 +957,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedBatchRecallRoute: AuthenticatedBatchRecallRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEnquireSerialRoute: AuthenticatedEnquireSerialRoute,
   AuthenticatedEquipmentRoute: AuthenticatedEquipmentRoute,
   AuthenticatedEquipmentNewRoute: AuthenticatedEquipmentNewRoute,
   AuthenticatedInspectionFormTemplateRoute:
@@ -926,6 +969,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductionPlanningRoute: AuthenticatedProductionPlanningRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRoute,
   AuthenticatedRawMaterialsRoute: AuthenticatedRawMaterialsRoute,
+  AuthenticatedRegisterUdiRoute: AuthenticatedRegisterUdiRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedRolesRoute: AuthenticatedRolesRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

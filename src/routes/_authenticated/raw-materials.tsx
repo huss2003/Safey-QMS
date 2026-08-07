@@ -5,7 +5,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Package, Eye, Ban, CheckCircle, Loader2, Filter, FileText, Upload, X } from "lucide-react";
+import {
+  Plus,
+  Package,
+  Eye,
+  Ban,
+  CheckCircle,
+  Loader2,
+  Filter,
+  FileText,
+  Upload,
+  X,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import type {
@@ -446,7 +457,9 @@ function AddRawMaterialDialog({
     mutationFn: async (v: FormValues) => {
       const uploadDocs = (docs: DocEntry[]) =>
         docs.length
-          ? JSON.stringify(docs.map(({ name, type, size, dataUrl }) => ({ name, type, size, dataUrl })))
+          ? JSON.stringify(
+              docs.map(({ name, type, size, dataUrl }) => ({ name, type, size, dataUrl })),
+            )
           : null;
       const { data, error } = await (supabase.from("raw_materials") as any)
         .insert({
@@ -580,9 +593,27 @@ function AddRawMaterialDialog({
               <Input {...form.register("invoice_number")} placeholder="INV-001" className="mt-1" />
             </div>
           </div>
-          <DocUpload label="COA Documents" files={coaFiles} setFiles={setCoaFiles} readFiles={readFiles} inputId="coa-upload" />
-          <DocUpload label="PO Documents" files={poFiles} setFiles={setPoFiles} readFiles={readFiles} inputId="po-upload" />
-          <DocUpload label="Invoice Documents" files={invoiceFiles} setFiles={setInvoiceFiles} readFiles={readFiles} inputId="inv-upload" />
+          <DocUpload
+            label="COA Documents"
+            files={coaFiles}
+            setFiles={setCoaFiles}
+            readFiles={readFiles}
+            inputId="coa-upload"
+          />
+          <DocUpload
+            label="PO Documents"
+            files={poFiles}
+            setFiles={setPoFiles}
+            readFiles={readFiles}
+            inputId="po-upload"
+          />
+          <DocUpload
+            label="Invoice Documents"
+            files={invoiceFiles}
+            setFiles={setInvoiceFiles}
+            readFiles={readFiles}
+            inputId="inv-upload"
+          />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel

@@ -32,6 +32,20 @@ type UdiReg = {
   created_at: string;
 };
 
+// Safely parse products — handles both string (from API) and already-parsed object
+function parseProducts(raw: any): any[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
 function UdiDashboard() {
   const [search, setSearch] = useState("");
 
@@ -59,7 +73,7 @@ function UdiDashboard() {
   const totalCount = registrations.length;
   const incompleteCount = registrations.filter((r) => {
     try {
-      const prods = JSON.parse(r.products ?? "[]");
+      const prods = parseProducts(r.products);
       return prods.some((p: any) => {
         const scanned = p.scannedRows?.length ?? 0;
         const qty = parseInt(p.quantity, 10) || 0;
@@ -75,9 +89,11 @@ function UdiDashboard() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" disabled>
-            <Search className="h-4 w-4 mr-1" /> Enquire Serial Number
-          </Button>
+          <Link to="/enquire-serial">
+            <Button variant="outline" size="sm">
+              <Search className="h-4 w-4 mr-1" /> Enquire Serial Number
+            </Button>
+          </Link>
           <Link to="/register-udi">
             <Button size="sm">
               <Plus className="h-4 w-4 mr-1" /> Register UDIs
@@ -141,7 +157,7 @@ function UdiDashboard() {
                   {filtered.map((r) => {
                     const isIncomplete = (() => {
                       try {
-                        const prods = JSON.parse(r.products ?? "[]");
+                        const prods = parseProducts(r.products);
                         return prods.some((p: any) => {
                           const scanned = p.scannedRows?.length ?? 0;
                           const qty = parseInt(p.quantity, 10) || 0;

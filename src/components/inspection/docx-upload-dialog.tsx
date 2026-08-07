@@ -26,9 +26,16 @@ interface Props {
 }
 
 const typeBadgeVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  text: "secondary", number: "default", select: "outline", yesno: "secondary",
-  date: "outline", textarea: "secondary", signature: "outline", section: "default",
-  table: "destructive", image: "outline",
+  text: "secondary",
+  number: "default",
+  select: "outline",
+  yesno: "secondary",
+  date: "outline",
+  textarea: "secondary",
+  signature: "outline",
+  section: "default",
+  table: "destructive",
+  image: "outline",
 };
 
 export function DocxUploadDialog({ open, onOpenChange }: Props) {
@@ -64,7 +71,9 @@ export function DocxUploadDialog({ open, onOpenChange }: Props) {
       // Generate record_id
       let recordId = editedSchema.form_number ?? editedSchema.form_title;
       if (recordPrefix) {
-        const { data } = await (supabase.rpc("next_record_number") as any)({ p_prefix: recordPrefix });
+        const { data } = await (supabase.rpc("next_record_number") as any)({
+          p_prefix: recordPrefix,
+        });
         const n = (data ?? 0) as number;
         recordId = `${recordPrefix}${String(n).padStart(3, "0")}`;
       }
@@ -77,7 +86,9 @@ export function DocxUploadDialog({ open, onOpenChange }: Props) {
         form_schema: editedSchema,
         source_doc_url: "",
         is_ai_generated: true,
-        field_a: null, field_b: null, field_c: null,
+        field_a: null,
+        field_b: null,
+        field_c: null,
       });
       if (error) throw error;
     },
@@ -151,7 +162,10 @@ export function DocxUploadDialog({ open, onOpenChange }: Props) {
           ? "border-primary bg-primary/5"
           : "border-muted-foreground/25 hover:border-muted-foreground/50"
       }`}
-      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragOver(true);
+      }}
       onDragLeave={() => setDragOver(false)}
       onDrop={onDrop}
     >
@@ -160,17 +174,28 @@ export function DocxUploadDialog({ open, onOpenChange }: Props) {
         <p className="text-sm font-medium">Drop your .docx file here</p>
         <p className="text-xs text-muted-foreground mt-1">or click to browse</p>
       </div>
-      <input type="file" accept=".docx" className="absolute inset-0 cursor-pointer opacity-0" onChange={onFileSelect} />
+      <input
+        type="file"
+        accept=".docx"
+        className="absolute inset-0 cursor-pointer opacity-0"
+        onChange={onFileSelect}
+      />
     </div>
   );
 
   const renderProgress = () => (
     <div className="flex flex-col items-center gap-4 py-12">
       {status === "uploading" && (
-        <><Loader2 className="h-8 w-8 animate-spin text-primary" /><p className="text-sm text-muted-foreground">Extracting document…</p></>
+        <>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Extracting document…</p>
+        </>
       )}
       {status === "processing" && (
-        <><Wand2 className="h-8 w-8 animate-pulse text-primary" /><p className="text-sm text-muted-foreground">AI is analyzing your document…</p></>
+        <>
+          <Wand2 className="h-8 w-8 animate-pulse text-primary" />
+          <p className="text-sm text-muted-foreground">AI is analyzing your document…</p>
+        </>
       )}
     </div>
   );
@@ -181,31 +206,62 @@ export function DocxUploadDialog({ open, onOpenChange }: Props) {
       <div className="space-y-4">
         <div>
           <Label className="label-caps">Form Title</Label>
-          <Input value={editedSchema.form_title} onChange={(e) => updateSchema({ form_title: e.target.value })} className="mt-1" />
+          <Input
+            value={editedSchema.form_title}
+            onChange={(e) => updateSchema({ form_title: e.target.value })}
+            className="mt-1"
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="label-caps">Record ID Prefix</Label>
-            <Input value={recordPrefix} onChange={(e) => setRecordPrefix(e.target.value)} placeholder="e.g. FORM_PSP_QI_" className="mt-1 font-mono" />
-            <p className="text-[10px] text-muted-foreground mt-1">Number will auto-generate (001, 002…)</p>
+            <Input
+              value={recordPrefix}
+              onChange={(e) => setRecordPrefix(e.target.value)}
+              placeholder="e.g. FORM_PSP_QI_"
+              className="mt-1 font-mono"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Number will auto-generate (001, 002…)
+            </p>
           </div>
           <div>
             <Label className="label-caps">Revision</Label>
-            <Input value={editedSchema.revision ?? ""} onChange={(e) => updateSchema({ revision: e.target.value })} className="mt-1" />
+            <Input
+              value={editedSchema.revision ?? ""}
+              onChange={(e) => updateSchema({ revision: e.target.value })}
+              className="mt-1"
+            />
           </div>
         </div>
         <div className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
           {editedSchema.sections.map((section, si) => (
             <Card key={si}>
               <CardContent className="p-3 space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{section.title}</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {section.title}
+                </p>
                 <div className="space-y-1.5">
                   {section.fields.map((field, fi) => (
                     <div key={fi} className="flex items-center gap-2 text-xs">
                       <span className="font-medium truncate min-w-0 flex-1">{field.label}</span>
-                      <Badge variant={typeBadgeVariant[field.type] ?? "outline"} className="shrink-0 text-[10px] px-1.5 py-0">{field.type}</Badge>
-                      {field.required && <Badge variant="outline" className="shrink-0 text-[10px] border-amber-500/50 text-amber-400 px-1.5 py-0">req</Badge>}
-                      <code className="text-[10px] text-muted-foreground shrink-0 font-mono">{field.key}</code>
+                      <Badge
+                        variant={typeBadgeVariant[field.type] ?? "outline"}
+                        className="shrink-0 text-[10px] px-1.5 py-0"
+                      >
+                        {field.type}
+                      </Badge>
+                      {field.required && (
+                        <Badge
+                          variant="outline"
+                          className="shrink-0 text-[10px] border-amber-500/50 text-amber-400 px-1.5 py-0"
+                        >
+                          req
+                        </Badge>
+                      )}
+                      <code className="text-[10px] text-muted-foreground shrink-0 font-mono">
+                        {field.key}
+                      </code>
                     </div>
                   ))}
                 </div>
@@ -215,9 +271,14 @@ export function DocxUploadDialog({ open, onOpenChange }: Props) {
         </div>
         <div>
           <Label className="label-caps">Raw JSON</Label>
-          <Textarea className="mt-1 font-mono text-xs min-h-[140px]"
+          <Textarea
+            className="mt-1 font-mono text-xs min-h-[140px]"
             value={JSON.stringify(editedSchema, null, 2)}
-            onChange={(e) => { try { setEditedSchema(JSON.parse(e.target.value)); } catch {} }}
+            onChange={(e) => {
+              try {
+                setEditedSchema(JSON.parse(e.target.value));
+              } catch {}
+            }}
           />
         </div>
       </div>
@@ -228,12 +289,20 @@ export function DocxUploadDialog({ open, onOpenChange }: Props) {
     <div className="flex flex-col items-center gap-3 py-8">
       <AlertCircle className="h-8 w-8 text-destructive" />
       <p className="text-sm text-muted-foreground">Something went wrong.</p>
-      <Button variant="outline" size="sm" onClick={reset}>Try again</Button>
+      <Button variant="outline" size="sm" onClick={reset}>
+        Try again
+      </Button>
     </div>
   );
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) reset();
+        onOpenChange(v);
+      }}
+    >
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -252,8 +321,16 @@ export function DocxUploadDialog({ open, onOpenChange }: Props) {
         {status === "error" && renderError()}
         {status === "preview" && (
           <DialogFooter className="gap-2 pt-2">
-            <Button variant="outline" onClick={reset}>Cancel</Button>
-            <Button onClick={() => { setStatus("saving"); saveMutation.mutate(); }} disabled={saveMutation.isPending}>
+            <Button variant="outline" onClick={reset}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setStatus("saving");
+                saveMutation.mutate();
+              }}
+              disabled={saveMutation.isPending}
+            >
               {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Save Template
             </Button>

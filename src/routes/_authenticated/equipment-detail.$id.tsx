@@ -322,24 +322,41 @@ function EquipmentDetailPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-border">
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Date</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Managed By</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Lab Name</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Next Calibration</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Status</TableHead>
-                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Actions</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Managed By
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Lab Name
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Next Calibration
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Status
+                    </TableHead>
+                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {calibrations?.map((c, i) => (
-                    <TableRow key={c.id} className="row-rule group border-b border-border/40 last:border-0">
+                    <TableRow
+                      key={c.id}
+                      className="row-rule group border-b border-border/40 last:border-0"
+                    >
                       <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">
                         {fmtDate(c.calibration_date)}
                       </TableCell>
                       <TableCell className="py-3.5 text-[13px] text-slate-600">
                         {employeeLabel(c.calibration_managed_by)}
                       </TableCell>
-                      <TableCell className="py-3.5 text-[13px] text-slate-600">{c.lab_name}</TableCell>
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">
+                        {c.lab_name}
+                      </TableCell>
                       <TableCell className="py-3.5 text-[13px] text-slate-600">
                         {fmtDate(c.next_calibration_date)}
                       </TableCell>
@@ -395,18 +412,35 @@ function EquipmentDetailPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-border">
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Date</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Managed By</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Notes</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Before</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">After</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Company</TableHead>
-                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Actions</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Managed By
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Notes
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Before
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      After
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Company
+                    </TableHead>
+                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {adjustments?.map((a) => (
-                    <TableRow key={a.id} className="row-rule group border-b border-border/40 last:border-0">
+                    <TableRow
+                      key={a.id}
+                      className="row-rule group border-b border-border/40 last:border-0"
+                    >
                       <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">
                         {fmtDate(a.adjustment_date)}
                       </TableCell>
@@ -422,7 +456,9 @@ function EquipmentDetailPage() {
                       <TableCell className="py-3.5">
                         <MeasurementBadge value={a.measurements_after} />
                       </TableCell>
-                      <TableCell className="py-3.5 text-[13px] text-slate-600">{a.company_name}</TableCell>
+                      <TableCell className="py-3.5 text-[13px] text-slate-600">
+                        {a.company_name}
+                      </TableCell>
                       <TableCell className="py-3.5">
                         <Button
                           variant="ghost"
@@ -461,18 +497,35 @@ function EquipmentDetailPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-border">
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Date</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Repaired By</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Notes</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Test Run</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Tested By</TableHead>
-                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Actions</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Repaired By
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Notes
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Test Run
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Tested By
+                    </TableHead>
+                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {repairs?.map((r) => (
-                    <TableRow key={r.id} className="row-rule group border-b border-border/40 last:border-0">
-                      <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">{fmtDate(r.repair_date)}</TableCell>
+                    <TableRow
+                      key={r.id}
+                      className="row-rule group border-b border-border/40 last:border-0"
+                    >
+                      <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">
+                        {fmtDate(r.repair_date)}
+                      </TableCell>
                       <TableCell className="py-3.5 text-[13px] text-slate-600">
                         {employeeLabel(r.repaired_by)}
                       </TableCell>
@@ -533,15 +586,26 @@ function EquipmentDetailPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-border">
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Date</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Done By</TableHead>
-                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Maintenance Types</TableHead>
-                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">Actions</TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Date
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Done By
+                    </TableHead>
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Maintenance Types
+                    </TableHead>
+                    <TableHead className="w-[70px] text-[11px] font-semibold uppercase tracking-wider text-slate-500 py-3">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {maintenance?.map((m) => (
-                    <TableRow key={m.id} className="row-rule group border-b border-border/40 last:border-0">
+                    <TableRow
+                      key={m.id}
+                      className="row-rule group border-b border-border/40 last:border-0"
+                    >
                       <TableCell className="py-3.5 text-[13px] font-medium text-slate-900">
                         {fmtDate(m.maintenance_date)}
                       </TableCell>

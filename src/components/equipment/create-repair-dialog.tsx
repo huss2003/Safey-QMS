@@ -293,9 +293,7 @@ export function CreateRepairDialog({
                 Choose File
               </Button>
             )}
-            <p className="text-[11px] text-muted-foreground mt-1">
-              PDF, JPEG, or PNG — max 10 MB
-            </p>
+            <p className="text-[11px] text-muted-foreground mt-1">PDF, JPEG, or PNG — max 10 MB</p>
           </div>
 
           <DialogFooter>

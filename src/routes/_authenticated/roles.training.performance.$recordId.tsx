@@ -47,9 +47,7 @@ import {
 import { TableSkeleton } from "@/components/inventory/skeletons";
 import { fmtDate } from "@/lib/inventory/format";
 
-export const Route = createFileRoute(
-  "/_authenticated/roles/training/performance/$recordId"
-)({
+export const Route = createFileRoute("/_authenticated/roles/training/performance/$recordId")({
   ssr: false,
   component: TrainingPerformancePage,
 });
@@ -84,7 +82,12 @@ function parseEval(marksJson: string | null): EvalDetails | null {
   if (!marksJson) return null;
   try {
     const parsed = JSON.parse(marksJson);
-    if (parsed && typeof parsed === "object" && typeof parsed.total === "number" && typeof parsed.finalResult === "string") {
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      typeof parsed.total === "number" &&
+      typeof parsed.finalResult === "string"
+    ) {
       return parsed as EvalDetails;
     }
     return null;
@@ -151,7 +154,7 @@ function TrainingPerformancePage() {
         .split(/\.\s*/)
         .map((s) => s.trim())
         .filter(Boolean),
-    [program?.performance_evaluation]
+    [program?.performance_evaluation],
   );
 
   // All evaluations for this training_program_id
@@ -160,7 +163,9 @@ function TrainingPerformancePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("employee_trainings")
-        .select("id, training_id, evaluation_marks, performance_date, trainee_name, documents, created_at")
+        .select(
+          "id, training_id, evaluation_marks, performance_date, trainee_name, documents, created_at",
+        )
         .eq("training_program_id", record!.training_program_id)
         .not("evaluation_marks", "is", null)
         .order("performance_date", { ascending: false });
@@ -214,11 +219,15 @@ function TrainingPerformancePage() {
   const editTotal = editMarks.reduce((s, m) => s + (parseInt(m) || 0), 0);
   const maxMarks = criteria.length * 100;
 
-  const finalResult = (t: number) =>
-    t >= 85 ? "Pass" : t > 0 ? "Fail" : "—";
+  const finalResult = (t: number) => (t >= 85 ? "Pass" : t > 0 ? "Fail" : "—");
 
   const saveMutation = useMutation({
-    mutationFn: async (payload: { marks: string[]; results: string[]; date: string; id?: string }) => {
+    mutationFn: async (payload: {
+      marks: string[];
+      results: string[];
+      date: string;
+      id?: string;
+    }) => {
       const details: EvalDetails = {
         marks: payload.marks.map(Number),
         results: payload.results,
@@ -251,11 +260,17 @@ function TrainingPerformancePage() {
   });
 
   if (isLoading) {
-    return <div className="p-4"><TableSkeleton /></div>;
+    return (
+      <div className="p-4">
+        <TableSkeleton />
+      </div>
+    );
   }
 
   if (!record) {
-    return <div className="py-12 text-center text-muted-foreground">Training record not found.</div>;
+    return (
+      <div className="py-12 text-center text-muted-foreground">Training record not found.</div>
+    );
   }
 
   const schedule = record.schedule ?? program?.schedule ?? "Every 6 Months";
@@ -303,14 +318,23 @@ function TrainingPerformancePage() {
                 <TableRow>
                   <TableCell className="font-medium text-[13px]">{record.trainee_name}</TableCell>
                   <TableCell className="text-[12.5px]">
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                    <Badge
+                      variant="secondary"
+                      className="bg-primary/10 text-primary border-primary/20"
+                    >
                       {record.trainee_role}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-[12.5px] font-mono text-muted-foreground">{record.training_id}</TableCell>
+                  <TableCell className="text-[12.5px] font-mono text-muted-foreground">
+                    {record.training_id}
+                  </TableCell>
                   <TableCell className="text-[12.5px]">{record.trainer}</TableCell>
-                  <TableCell className="text-[12.5px] font-medium">{record.training_name}</TableCell>
-                  <TableCell className="text-[12.5px] text-muted-foreground">{fmtDate(record.performance_date)}</TableCell>
+                  <TableCell className="text-[12.5px] font-medium">
+                    {record.training_name}
+                  </TableCell>
+                  <TableCell className="text-[12.5px] text-muted-foreground">
+                    {fmtDate(record.performance_date)}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -349,10 +373,20 @@ function TrainingPerformancePage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openView(e)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => openView(e)}
+                            >
                               <Eye className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(e)}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => openEdit(e)}
+                            >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
                           </div>
@@ -401,7 +435,18 @@ function TrainingPerformancePage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right align-middle">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={openCreate} disabled={hasFailedEval} title={hasFailedEval ? "Cannot create — previous evaluation failed" : "Create evaluation"}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={openCreate}
+                      disabled={hasFailedEval}
+                      title={
+                        hasFailedEval
+                          ? "Cannot create — previous evaluation failed"
+                          : "Create evaluation"
+                      }
+                    >
                       <FilePlus2 className="h-3.5 w-3.5" />
                     </Button>
                   </TableCell>
@@ -422,7 +467,12 @@ function TrainingPerformancePage() {
           <div className="space-y-4">
             <div>
               <Label className="label-caps">Evaluation Date *</Label>
-              <Input type="date" value={evalDate} onChange={(e) => setEvalDate(e.target.value)} className="mt-1 max-w-[200px]" />
+              <Input
+                type="date"
+                value={evalDate}
+                onChange={(e) => setEvalDate(e.target.value)}
+                className="mt-1 max-w-[200px]"
+              />
             </div>
             <div className="overflow-x-auto border border-border/60 rounded-lg">
               <Table>
@@ -438,11 +488,32 @@ function TrainingPerformancePage() {
                     <TableRow key={i}>
                       <TableCell className="text-[13px]">{c}</TableCell>
                       <TableCell>
-                        <Input type="number" min={0} max={100} value={marks[i] ?? ""} onChange={(e) => { const n = [...marks]; n[i] = e.target.value; setMarks(n); }} className="h-8 text-[13px]" placeholder="0" />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={marks[i] ?? ""}
+                          onChange={(e) => {
+                            const n = [...marks];
+                            n[i] = e.target.value;
+                            setMarks(n);
+                          }}
+                          className="h-8 text-[13px]"
+                          placeholder="0"
+                        />
                       </TableCell>
                       <TableCell>
-                        <Select value={results[i] ?? ""} onValueChange={(v) => { const n = [...results]; n[i] = v; setResults(n); }}>
-                          <SelectTrigger className="h-8 text-[13px]"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <Select
+                          value={results[i] ?? ""}
+                          onValueChange={(v) => {
+                            const n = [...results];
+                            n[i] = v;
+                            setResults(n);
+                          }}
+                        >
+                          <SelectTrigger className="h-8 text-[13px]">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Satisfactory">Satisfactory</SelectItem>
                             <SelectItem value="Not Satisfactory">Not Satisfactory</SelectItem>
@@ -456,18 +527,39 @@ function TrainingPerformancePage() {
               </Table>
             </div>
             <div className="flex items-center justify-between text-[13px]">
-              <span>Total: <span className="font-semibold">{totalMarks}/{maxMarks}</span></span>
-              <span>Final Result: <Badge variant={totalMarks >= 85 ? "default" : "destructive"} className="text-[11px]">{finalResult(totalMarks)}</Badge></span>
+              <span>
+                Total:{" "}
+                <span className="font-semibold">
+                  {totalMarks}/{maxMarks}
+                </span>
+              </span>
+              <span>
+                Final Result:{" "}
+                <Badge
+                  variant={totalMarks >= 85 ? "default" : "destructive"}
+                  className="text-[11px]"
+                >
+                  {finalResult(totalMarks)}
+                </Badge>
+              </span>
             </div>
             <div>
               <Label className="label-caps">Attach Documents</Label>
-              <Button variant="outline" size="sm" className="mt-1 text-[13px]"><Upload className="h-3.5 w-3.5 mr-1" /> Upload</Button>
+              <Button variant="outline" size="sm" className="mt-1 text-[13px]">
+                <Upload className="h-3.5 w-3.5 mr-1" /> Upload
+              </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEvalOpen(false)}>Back</Button>
-            <Button onClick={() => saveMutation.mutate({ marks, results, date: evalDate })} disabled={!evalDate || saveMutation.isPending}>
-              {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save Evaluation
+            <Button variant="outline" onClick={() => setEvalOpen(false)}>
+              Back
+            </Button>
+            <Button
+              onClick={() => saveMutation.mutate({ marks, results, date: evalDate })}
+              disabled={!evalDate || saveMutation.isPending}
+            >
+              {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save
+              Evaluation
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -504,16 +596,33 @@ function TrainingPerformancePage() {
                     {criteria.map((c, i) => (
                       <TableRow key={i}>
                         <TableCell className="text-[13px]">{c}</TableCell>
-                        <TableCell className="text-[13px] font-medium">{viewEval.marks?.[i] ?? "—"}</TableCell>
-                        <TableCell className="text-[13px]">{viewEval.results?.[i] ?? "—"}</TableCell>
+                        <TableCell className="text-[13px] font-medium">
+                          {viewEval.marks?.[i] ?? "—"}
+                        </TableCell>
+                        <TableCell className="text-[13px]">
+                          {viewEval.results?.[i] ?? "—"}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
               <div className="flex items-center gap-4 text-[13px]">
-                <span>Total: <span className="font-semibold">{viewEval.total}/{maxMarks}</span></span>
-                <span>Final Result: <Badge variant={viewEval.finalResult === "Pass" ? "default" : "destructive"} className="text-[11px]">{viewEval.finalResult}</Badge></span>
+                <span>
+                  Total:{" "}
+                  <span className="font-semibold">
+                    {viewEval.total}/{maxMarks}
+                  </span>
+                </span>
+                <span>
+                  Final Result:{" "}
+                  <Badge
+                    variant={viewEval.finalResult === "Pass" ? "default" : "destructive"}
+                    className="text-[11px]"
+                  >
+                    {viewEval.finalResult}
+                  </Badge>
+                </span>
               </div>
               <div>
                 <span className="text-[13px] text-muted-foreground">Documents:</span>
@@ -534,7 +643,12 @@ function TrainingPerformancePage() {
           <div className="space-y-4">
             <div>
               <Label className="label-caps">Evaluation Date *</Label>
-              <Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="mt-1 max-w-[200px]" />
+              <Input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+                className="mt-1 max-w-[200px]"
+              />
             </div>
             <div className="overflow-x-auto border border-border/60 rounded-lg">
               <Table>
@@ -550,11 +664,31 @@ function TrainingPerformancePage() {
                     <TableRow key={i}>
                       <TableCell className="text-[13px]">{c}</TableCell>
                       <TableCell>
-                        <Input type="number" min={0} max={100} value={editMarks[i] ?? ""} onChange={(e) => { const n = [...editMarks]; n[i] = e.target.value; setEditMarks(n); }} className="h-8 text-[13px]" />
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={editMarks[i] ?? ""}
+                          onChange={(e) => {
+                            const n = [...editMarks];
+                            n[i] = e.target.value;
+                            setEditMarks(n);
+                          }}
+                          className="h-8 text-[13px]"
+                        />
                       </TableCell>
                       <TableCell>
-                        <Select value={editResults[i] ?? ""} onValueChange={(v) => { const n = [...editResults]; n[i] = v; setEditResults(n); }}>
-                          <SelectTrigger className="h-8 text-[13px]"><SelectValue placeholder="Select" /></SelectTrigger>
+                        <Select
+                          value={editResults[i] ?? ""}
+                          onValueChange={(v) => {
+                            const n = [...editResults];
+                            n[i] = v;
+                            setEditResults(n);
+                          }}
+                        >
+                          <SelectTrigger className="h-8 text-[13px]">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Satisfactory">Satisfactory</SelectItem>
                             <SelectItem value="Not Satisfactory">Not Satisfactory</SelectItem>
@@ -568,18 +702,47 @@ function TrainingPerformancePage() {
               </Table>
             </div>
             <div className="flex items-center justify-between text-[13px]">
-              <span>Total: <span className="font-semibold">{editTotal}/{maxMarks}</span></span>
-              <span>Final Result: <Badge variant={editTotal >= 85 ? "default" : "destructive"} className="text-[11px]">{finalResult(editTotal)}</Badge></span>
+              <span>
+                Total:{" "}
+                <span className="font-semibold">
+                  {editTotal}/{maxMarks}
+                </span>
+              </span>
+              <span>
+                Final Result:{" "}
+                <Badge
+                  variant={editTotal >= 85 ? "default" : "destructive"}
+                  className="text-[11px]"
+                >
+                  {finalResult(editTotal)}
+                </Badge>
+              </span>
             </div>
             <div>
               <Label className="label-caps">Attach Documents</Label>
-              <Button variant="outline" size="sm" className="mt-1 text-[13px]"><Upload className="h-3.5 w-3.5 mr-1" /> Upload</Button>
+              <Button variant="outline" size="sm" className="mt-1 text-[13px]">
+                <Upload className="h-3.5 w-3.5 mr-1" /> Upload
+              </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button onClick={() => editRecord && saveMutation.mutate({ marks: editMarks, results: editResults, date: editDate, id: editRecord.id })} disabled={!editDate || saveMutation.isPending}>
-              {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Update Evaluation
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() =>
+                editRecord &&
+                saveMutation.mutate({
+                  marks: editMarks,
+                  results: editResults,
+                  date: editDate,
+                  id: editRecord.id,
+                })
+              }
+              disabled={!editDate || saveMutation.isPending}
+            >
+              {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Update
+              Evaluation
             </Button>
           </DialogFooter>
         </DialogContent>

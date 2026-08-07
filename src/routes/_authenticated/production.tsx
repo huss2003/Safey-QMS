@@ -45,6 +45,7 @@ function ProductionPage() {
   const [formDialog, setFormDialog] = useState<{
     productId: string;
     batchId?: string;
+    batchNumber?: string;
     inspectionId?: string;
   } | null>(null);
   const navigate = useNavigate();
@@ -103,19 +104,32 @@ function ProductionPage() {
           ((inspectionData as any) ?? []).filter((i: any) =>
             rowPartBatchIds.includes(i.batch_id),
           ) ?? [];
-        const productInspection = ((productInspections as any) ?? []).find(
+        const productInspectionsForBatch = ((productInspections as any) ?? []).filter(
           (pi: any) => pi.batch_number === row.batch_number,
         );
+        const productInspection = productInspectionsForBatch[0] ?? null;
 
-        // Determine inspection result
+        // Determine inspection result — ANY fail => Failed, ALL pass => Passed
         let inspectionResult = "Not inspected";
         let overallResult = null;
-        if (productInspection) {
+        const allInspectionResults = [
+          ...productInspectionsForBatch.map((pi: any) => pi.overall_result),
+          ...inspection.map((i: any) => i.overall_result),
+        ].filter(Boolean);
+        if (allInspectionResults.length > 0) {
+          if (allInspectionResults.includes("Failed") || allInspectionResults.includes("Fail")) {
+            inspectionResult = "Failed";
+            overallResult = "Failed";
+          } else if (allInspectionResults.every((r) => r === "Pass" || r === "Passed")) {
+            inspectionResult = "Passed";
+            overallResult = "Passed";
+          } else {
+            inspectionResult = "Pending";
+            overallResult = "Pending";
+          }
+        } else if (productInspection) {
           inspectionResult = productInspection.overall_result ?? "Pending";
           overallResult = productInspection.overall_result;
-        } else if (inspection.length > 0) {
-          inspectionResult = inspection[0]?.overall_result ?? "Pending";
-          overallResult = inspection[0]?.overall_result;
         }
 
         return {
@@ -246,9 +260,9 @@ function ProductionPage() {
                         <TableCell>
                           <Badge
                             variant={
-                              r.overall_result === "Failed"
+                              r.overall_result === "Failed" || r.overall_result === "Fail"
                                 ? "destructive"
-                                : r.overall_result === "Pass"
+                                : r.overall_result === "Pass" || r.overall_result === "Passed"
                                   ? "default"
                                   : "secondary"
                             }
@@ -265,17 +279,11 @@ function ProductionPage() {
                                   size="icon"
                                   className="h-8 w-8"
                                   onClick={() => {
-                                    if (r.product_inspection_id) {
-                                      // View existing inspection
-                                      navigate({
-                                        to: "/product-inspection/$productId",
-                                        params: { productId: r.products?.product_id ?? "" },
-                                        search: { inspectionId: r.product_inspection_id } as any,
-                                      });
-                                    } else if (r.products?.product_id) {
+                                    if (r.products?.product_id) {
                                       setFormDialog({
                                         productId: r.products.product_id,
                                         batchId: r.id,
+                                        batchNumber: r.batch_number,
                                       });
                                     } else {
                                       navigate({
@@ -326,6 +334,7 @@ function ProductionPage() {
         }}
         productId={formDialog?.productId ?? ""}
         batchId={formDialog?.batchId}
+        batchNumber={formDialog?.batchNumber}
       />
     </div>
   );

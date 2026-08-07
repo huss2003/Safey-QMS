@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, ScanLine, ArrowLeft, AlertTriangle, Download } from "lucide-react";
+import { Plus, Trash2, ScanLine, ArrowLeft, AlertTriangle, Download, FileText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { generateAllCOAs, type COAProduct } from "@/lib/generateCOA";
 
 export const Route = createFileRoute("/_authenticated/register-udi")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -102,6 +103,7 @@ function RegisterUdiPage() {
 
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [incompleteConfirmOpen, setIncompleteConfirmOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
     kind: "product" | "scan";
     pi: number;
@@ -333,6 +335,32 @@ function RegisterUdiPage() {
     URL.revokeObjectURL(url);
   };
 
+  // ── Generate COA PDFs ──
+  const handleGenerateCOA = () => {
+    if (products.length === 0) {
+      toast.error("Add at least one product to generate COA");
+      return;
+    }
+    const coaProducts: COAProduct[] = products.map((p) => {
+      // Group scanned rows by lotNumber to get unique batches
+      const batchMap = new Map<string, { lotNumber: string; dateOfManufacturing: string }>();
+      for (const row of p.scannedRows) {
+        if (!batchMap.has(row.lotNumber)) {
+          batchMap.set(row.lotNumber, {
+            lotNumber: row.lotNumber,
+            dateOfManufacturing: row.dateOfBatchCreation || "",
+          });
+        }
+      }
+      return {
+        productName: p.productName,
+        batches: Array.from(batchMap.values()),
+      };
+    });
+    generateAllCOAs(coaProducts);
+    toast.success(`Generated ${coaProducts.length} COA PDF(s)`);
+  };
+
   // ── Save ───────────────────────────────────────────────────────
 
   const handleSave = async () => {
@@ -355,79 +383,21 @@ function RegisterUdiPage() {
         toast.error(`${p.productName}: quantity must be at least 1`);
         return;
       }
-      if (p.scannedRows.length !== qty) {
-        toast.error(
-          `${p.productName}: quantity is ${qty} but scanned rows are ${p.scannedRows.length}. Scan all units first.`,
-        );
-        return;
-      }
     }
 
-    setSaving(true);
-    try {
-      const payload = {
-        invoice_number: invoiceNumber,
-        customer_name: customerName,
-        date_logged: dateLogged || null,
-        invoice_date: invoiceDate || null,
-        customer_address: customerAddress || null,
-        warranty_term: warrantyTerm || null,
-        products: JSON.stringify(products),
-      };
-      const { error } = searchId
-        ? await supabase
-            .from("udi_registrations" as any)
-            .update(payload)
-            .eq("id", searchId)
-        : await supabase.from("udi_registrations" as any).insert(payload);
-      if (error) throw error;
-      if (searchId) {
-        // Edit mode — update existing record
-        const { error } = await supabase
-          .from("udi_registrations" as any)
-          .update(payload)
-          .eq("id", searchId);
-        if (error) throw error;
-      } else {
-        // Create mode — insert new record
-        const { error } = await supabase.from("udi_registrations" as any).insert(payload);
-        if (error) throw error;
-      }
+    // Check if incomplete
+    const hasIncomplete = products.some((p) => {
+      const qty = parseInt(p.quantity, 10) || 0;
+      return p.scannedRows.length < qty;
+    });
 
-      // ── Update traceability localStorage: "In stock" → "Out Stock" ──
-      for (const p of products) {
-        for (const r of p.scannedRows) {
-          const m = r.udi.match(/\(10\)(.+?)\(21\)/);
-          if (!m) continue;
-          const lotNumber = m[1];
-          const serialIndex = parseInt(r.serialNumber, 10) - 1;
-          const statusKey = `trace-status-${lotNumber}`;
-          try {
-            const raw = localStorage.getItem(statusKey);
-            if (raw) {
-              const statuses = JSON.parse(raw) as Record<number, string>;
-              if (statuses[serialIndex] === "In stock") {
-                statuses[serialIndex] = "Out Stock";
-                localStorage.setItem(statusKey, JSON.stringify(statuses));
-              }
-            }
-          } catch {
-            /* empty */
-          }
-        }
-      }
-
-      toast.success("UDI registration saved");
-      if (searchId) {
-        navigate({ to: "/udi-registration" });
-      } else {
-        resetForm();
-      }
-    } catch (e: any) {
-      toast.error(e.message ?? "Save failed");
-    } finally {
-      setSaving(false);
+    if (hasIncomplete) {
+      setIncompleteConfirmOpen(true);
+      return;
     }
+
+    // Complete — save directly
+    doSave();
   };
 
   const resetForm = () => {
@@ -454,6 +424,65 @@ function RegisterUdiPage() {
     }
     setDeleteTarget(null);
     setDeleteConfirmOpen(false);
+  };
+
+  // ── Save incomplete (after confirmation) ──
+  const doSave = async () => {
+    setIncompleteConfirmOpen(false);
+    setSaving(true);
+    try {
+      const payload = {
+        invoice_number: invoiceNumber,
+        customer_name: customerName,
+        date_logged: dateLogged || null,
+        invoice_date: invoiceDate || null,
+        customer_address: customerAddress || null,
+        warranty_term: warrantyTerm || null,
+        products: JSON.stringify(products.map((p) => ({ ...p, isNew: undefined }))),
+      };
+      if (searchId) {
+        const { error } = await supabase
+          .from("udi_registrations" as any)
+          .update(payload)
+          .eq("id", searchId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("udi_registrations" as any).insert(payload);
+        if (error) throw error;
+      }
+      // ── Update traceability localStorage: "In stock" → "Out Stock" ──
+      for (const p of products) {
+        for (const r of p.scannedRows) {
+          const m = r.udi.match(/\(10\)(.+?)\(21\)/);
+          if (!m) continue;
+          const lotNumber = m[1];
+          const serialIndex = parseInt(r.serialNumber, 10) - 1;
+          const statusKey = `trace-status-${lotNumber}`;
+          try {
+            const raw = localStorage.getItem(statusKey);
+            if (raw) {
+              const statuses = JSON.parse(raw) as Record<number, string>;
+              if (statuses[serialIndex] === "In stock") {
+                statuses[serialIndex] = "Out Stock";
+                localStorage.setItem(statusKey, JSON.stringify(statuses));
+              }
+            }
+          } catch {
+            /* empty */
+          }
+        }
+      }
+      toast.success("UDI registration saved");
+      if (searchId) {
+        navigate({ to: "/udi-registration" });
+      } else {
+        resetForm();
+      }
+    } catch (e: any) {
+      toast.error(e.message ?? "Save failed");
+    } finally {
+      setSaving(false);
+    }
   };
 
   // ── Render ──────────────────────────────────────────────────────
@@ -485,6 +514,9 @@ function RegisterUdiPage() {
               <Button variant="outline" onClick={generateCsv}>
                 <Download className="h-4 w-4 mr-1" /> Generate CSV
               </Button>
+              <Button variant="outline" onClick={handleGenerateCOA}>
+                <FileText className="h-4 w-4 mr-1" /> Generate COA
+              </Button>
               <Button
                 onClick={handleSave}
                 disabled={saving}
@@ -501,6 +533,8 @@ function RegisterUdiPage() {
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
                 placeholder="INV-XXXXXX"
+                disabled={!!searchId}
+                className={searchId ? "opacity-60 cursor-not-allowed" : ""}
               />
             </div>
             <div className="space-y-1.5">
@@ -728,6 +762,9 @@ function RegisterUdiPage() {
         <Button variant="outline" onClick={generateCsv}>
           <Download className="h-4 w-4 mr-1" /> Generate CSV
         </Button>
+        <Button variant="outline" onClick={handleGenerateCOA}>
+          <FileText className="h-4 w-4 mr-1" /> Generate COA
+        </Button>
         <Button onClick={handleSave} disabled={saving} className="px-8">
           {saving ? "Saving..." : "Save"}
         </Button>
@@ -818,6 +855,31 @@ function RegisterUdiPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Incomplete Save Confirmation */}
+      <AlertDialog open={incompleteConfirmOpen} onOpenChange={setIncompleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Save Incomplete Invoice?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Some products have scanned quantities less than the declared quantity. Do you want to
+              save this invoice as incomplete?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={doSave}
+              className="bg-orange-500 text-white hover:bg-orange-600"
+            >
+              Save Incomplete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

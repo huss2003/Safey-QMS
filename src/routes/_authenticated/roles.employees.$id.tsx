@@ -5,7 +5,11 @@ import { toast } from "sonner";
 import { ArrowLeft, Pencil, Plus, Eye, Loader2 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Employee, EmployeePerformanceEvaluation, EmployeeHealthRecord } from "@/integrations/supabase/database.types";
+import type {
+  Employee,
+  EmployeePerformanceEvaluation,
+  EmployeeHealthRecord,
+} from "@/integrations/supabase/database.types";
 import { PageHeader } from "@/components/inventory/page-header";
 import { TableSkeleton } from "@/components/inventory/skeletons";
 import { Button } from "@/components/ui/button";
@@ -52,11 +56,7 @@ function EmployeeDetailPage() {
   const { data: employee, isLoading } = useQuery({
     queryKey: ["employee", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await supabase.from("employees").select("*").eq("id", id).single();
       if (error) throw error;
       return data as Employee;
     },
@@ -118,10 +118,7 @@ function EmployeeDetailPage() {
               </div>
               <div>
                 <div className="label-caps">Employee Role</div>
-                <Badge
-                  variant="secondary"
-                  className="bg-primary/10 text-primary border-primary/20"
-                >
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
                   {roleLabel(employee.employee_role)}
                 </Badge>
               </div>

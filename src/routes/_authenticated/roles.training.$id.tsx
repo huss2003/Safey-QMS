@@ -1,6 +1,16 @@
 import { createFileRoute, Link, useParams, Outlet, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, GraduationCap, Loader2, Pencil, Target, Users, Clock, CalendarCheck, CheckCircle2 } from "lucide-react";
+import {
+  ArrowLeft,
+  GraduationCap,
+  Loader2,
+  Pencil,
+  Target,
+  Users,
+  Clock,
+  CalendarCheck,
+  CheckCircle2,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { TrainingProgram } from "@/integrations/supabase/database.types";
@@ -56,9 +66,7 @@ function TrainingDetailPage() {
     );
   }
   if (!p) {
-    return (
-      <div className="py-12 text-muted-foreground">Training program not found.</div>
-    );
+    return <div className="py-12 text-muted-foreground">Training program not found.</div>;
   }
 
   const trainees = Array.isArray(p.trainees) && p.trainees.length ? p.trainees : [];
@@ -68,9 +76,7 @@ function TrainingDetailPage() {
       {/* Header */}
       <PageHeader
         title={p.training_name}
-        description={
-          <span className="text-muted-foreground">{p.training_id}</span>
-        }
+        description={<span className="text-muted-foreground">{p.training_id}</span>}
         meta={
           <Badge
             variant="secondary"
@@ -103,7 +109,11 @@ function TrainingDetailPage() {
       <Card className="mb-5">
         <CardContent className="p-5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Stat icon={Clock} label="Duration" value={p.training_duration ? `${p.training_duration} day(s)` : "—"} />
+            <Stat
+              icon={Clock}
+              label="Duration"
+              value={p.training_duration ? `${p.training_duration} day(s)` : "—"}
+            />
             <Stat icon={GraduationCap} label="Trainer" value={p.trainer || "—"} />
             <Stat icon={Users} label="Trainees" value={`${trainees.length} person(s)`} />
             <Stat icon={CalendarCheck} label="Schedule" value={p.schedule || "—"} />
@@ -116,7 +126,9 @@ function TrainingDetailPage() {
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <Target className="h-4 w-4 text-primary" />
-            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-foreground">Training Objectives</h3>
+            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-foreground">
+              Training Objectives
+            </h3>
           </div>
           <Separator className="mb-4" />
           {p.training_objectives ? (
@@ -134,7 +146,9 @@ function TrainingDetailPage() {
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <CheckCircle2 className="h-4 w-4 text-primary" />
-            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-foreground">Performance Evaluation Key Factors</h3>
+            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-foreground">
+              Performance Evaluation Key Factors
+            </h3>
           </div>
           <Separator className="mb-4" />
           {p.performance_evaluation ? (
@@ -142,7 +156,9 @@ function TrainingDetailPage() {
               {p.performance_evaluation}
             </div>
           ) : (
-            <div className="text-[13px] text-muted-foreground italic">No evaluation criteria specified</div>
+            <div className="text-[13px] text-muted-foreground italic">
+              No evaluation criteria specified
+            </div>
           )}
         </CardContent>
       </Card>
@@ -152,7 +168,9 @@ function TrainingDetailPage() {
         <CardContent className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <Users className="h-4 w-4 text-primary" />
-            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-foreground">Trainees</h3>
+            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-foreground">
+              Trainees
+            </h3>
           </div>
           <Separator className="mb-4" />
           {trainees.length > 0 ? (

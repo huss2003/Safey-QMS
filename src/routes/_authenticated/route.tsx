@@ -30,6 +30,7 @@ import {
   ClipboardCheck,
   Search,
   ChevronRight,
+  ChevronDown,
   Home,
   ScanLine,
 } from "lucide-react";
@@ -92,15 +93,28 @@ type NavItem = {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   group: "ops" | "insight" | "system" | "hr" | "qa";
+  children?: NavItem[];
 };
 
 const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, group: "ops" },
-  { to: "/vendors", label: "Vendors", icon: Users, group: "ops" },
-  { to: "/raw-materials", label: "Raw materials", icon: Package, group: "ops" },
-  { to: "/parts", label: "Parts", icon: Puzzle, group: "ops" },
-  { to: "/products", label: "Products", icon: Boxes, group: "ops" },
-  { to: "/production", label: "Production", icon: Factory, group: "ops" },
+  {
+    to: "/vendors",
+    label: "Vendors",
+    icon: Users,
+    group: "ops",
+    children: [{ to: "/raw-materials", label: "Raw materials", icon: Package, group: "ops" }],
+  },
+  {
+    to: "/production",
+    label: "Production",
+    icon: Factory,
+    group: "ops",
+    children: [
+      { to: "/parts", label: "Set up Part", icon: Puzzle, group: "ops" },
+      { to: "/products", label: "Set up Product", icon: Boxes, group: "ops" },
+    ],
+  },
   { to: "/equipment", label: "Equipment", icon: Wrench, group: "ops" },
   { to: "/other-items", label: "Other items", icon: Archive, group: "ops" },
   {
@@ -199,6 +213,9 @@ function AuthenticatedLayout() {
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const unread = useUnreadAlertsCount();
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (key: string) => setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const grouped = (["ops", "insight", "system", "hr", "qa"] as const).map((g) => ({
     group: g,
@@ -238,6 +255,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               </div>
               <div className="space-y-px">
                 {items.map((item) => {
+                  const isExpanded = expanded[item.to] ?? false;
+                  const hasChildren = item.children && item.children.length > 0;
                   const active =
                     item.to === "/"
                       ? path === "/"
@@ -246,6 +265,65 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                           path.length <= item.to.length ||
                           path[item.to.length] === "/" ||
                           path[item.to.length] === undefined);
+
+                  if (hasChildren) {
+                    return (
+                      <div key={item.to}>
+                        <div
+                          className={cn(
+                            "relative flex items-center gap-2.5 px-2 h-8 rounded-[6px] text-[13px] transition-all duration-150",
+                            active
+                              ? "bg-sidebar-accent text-foreground font-medium"
+                              : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60",
+                          )}
+                        >
+                          <Link
+                            to={item.to}
+                            onClick={onNavigate}
+                            className="flex items-center gap-2.5 flex-1 min-w-0"
+                          >
+                            <item.icon className="h-4 w-4 shrink-0" />
+                            <span className="truncate">{item.label}</span>
+                          </Link>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleExpand(item.to);
+                            }}
+                            className="p-1 rounded hover:bg-sidebar-accent/60 shrink-0"
+                          >
+                            <ChevronRight
+                              className={cn(
+                                "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
+                                isExpanded && "rotate-90",
+                              )}
+                            />
+                          </button>
+                        </div>
+                        {isExpanded && (
+                          <div className="ml-5 space-y-px">
+                            {item.children!.map((child) => {
+                              const childActive =
+                                path.startsWith(child.to) &&
+                                (path.length <= child.to.length ||
+                                  path[child.to.length] === "/" ||
+                                  path[child.to.length] === undefined);
+                              return (
+                                <NavLink
+                                  key={child.to}
+                                  item={child}
+                                  active={childActive}
+                                  onNavigate={onNavigate}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
                   return (
                     <NavLink
                       key={item.to}

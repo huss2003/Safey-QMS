@@ -113,7 +113,9 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
   const [yearsExp, setYearsExp] = useState(interview?.years_of_experience ?? "");
   const [education, setEducation] = useState(interview?.education ?? "");
   const [skillResults, setSkillResults] = useState<SkillResult[]>(
-    () => interview?.skills ?? questions.map((q) => ({ skill: q.skill, passFail: "", notes: "", score: 0 })),
+    () =>
+      interview?.skills ??
+      questions.map((q) => ({ skill: q.skill, passFail: "", notes: "", score: 0 })),
   );
   const [uploading, setUploading] = useState(false);
 
@@ -230,7 +232,13 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
             <div>
               <Label className="label-caps">Interviewer</Label>
               {isReadOnly ? (
-                <Input value={INTERVIEWER_OPTIONS.find((o) => o.value === interviewer)?.label ?? interviewer} disabled className="mt-1" />
+                <Input
+                  value={
+                    INTERVIEWER_OPTIONS.find((o) => o.value === interviewer)?.label ?? interviewer
+                  }
+                  disabled
+                  className="mt-1"
+                />
               ) : (
                 <Select value={interviewer} onValueChange={setInterviewer}>
                   <SelectTrigger className="mt-1">
@@ -251,7 +259,12 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
               {isReadOnly ? (
                 <Input value={interviewDate} disabled className="mt-1" />
               ) : (
-                <Input type="date" value={interviewDate} onChange={(e) => setInterviewDate(e.target.value)} className="mt-1" />
+                <Input
+                  type="date"
+                  value={interviewDate}
+                  onChange={(e) => setInterviewDate(e.target.value)}
+                  className="mt-1"
+                />
               )}
             </div>
             <div>
@@ -259,7 +272,11 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
               {isReadOnly ? (
                 <Input value={yearsExp} disabled className="mt-1" />
               ) : (
-                <Input value={yearsExp} onChange={(e) => setYearsExp(e.target.value)} className="mt-1" />
+                <Input
+                  value={yearsExp}
+                  onChange={(e) => setYearsExp(e.target.value)}
+                  className="mt-1"
+                />
               )}
             </div>
             <div className="sm:col-span-2">
@@ -267,7 +284,12 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
               {isReadOnly ? (
                 <Input value={education} disabled className="mt-1" />
               ) : (
-                <Textarea value={education} onChange={(e) => setEducation(e.target.value)} className="mt-1" rows={2} />
+                <Textarea
+                  value={education}
+                  onChange={(e) => setEducation(e.target.value)}
+                  className="mt-1"
+                  rows={2}
+                />
               )}
             </div>
           </div>
@@ -278,17 +300,29 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 px-6 py-4 border-b">
           <h3 className="text-sm font-semibold text-foreground">Skill Assessment</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Evaluation of candidate competencies</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Evaluation of candidate competencies
+          </p>
         </div>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border/60">
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50 w-[40px]">#</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50 w-[200px]">Skill</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50 w-[120px]">Result</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50">Notes</TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50 w-[90px] text-right">Score</TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50 w-[40px]">
+                  #
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50 w-[200px]">
+                  Skill
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50 w-[120px]">
+                  Result
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50">
+                  Notes
+                </TableHead>
+                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-slate-50/50 dark:bg-slate-800/50 w-[90px] text-right">
+                  Score
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -296,7 +330,10 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
                 const isPass = sr.passFail === "pass";
                 const isFail = sr.passFail === "fail";
                 return (
-                  <TableRow key={sr.skill} className={`border-b border-border/30 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30 ${isPass ? "bg-emerald-50/30 dark:bg-emerald-950/10" : isFail ? "bg-red-50/30 dark:bg-red-950/10" : ""}`}>
+                  <TableRow
+                    key={sr.skill}
+                    className={`border-b border-border/30 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30 ${isPass ? "bg-emerald-50/30 dark:bg-emerald-950/10" : isFail ? "bg-red-50/30 dark:bg-red-950/10" : ""}`}
+                  >
                     <TableCell className="py-3 text-center">
                       <span className="text-xs text-muted-foreground font-medium">{i + 1}</span>
                     </TableCell>
@@ -316,7 +353,9 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
                             Fail
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground italic">Not evaluated</span>
+                          <span className="text-xs text-muted-foreground italic">
+                            Not evaluated
+                          </span>
                         )
                       ) : (
                         <RadioGroup
@@ -325,19 +364,39 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
                           className="flex gap-4"
                         >
                           <div className="flex items-center gap-1.5">
-                            <RadioGroupItem value="pass" id={`pf-${i}-pass`} className="border-emerald-500 text-emerald-600" />
-                            <Label htmlFor={`pf-${i}-pass`} className="text-xs cursor-pointer text-emerald-700 dark:text-emerald-400">Pass</Label>
+                            <RadioGroupItem
+                              value="pass"
+                              id={`pf-${i}-pass`}
+                              className="border-emerald-500 text-emerald-600"
+                            />
+                            <Label
+                              htmlFor={`pf-${i}-pass`}
+                              className="text-xs cursor-pointer text-emerald-700 dark:text-emerald-400"
+                            >
+                              Pass
+                            </Label>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <RadioGroupItem value="fail" id={`pf-${i}-fail`} className="border-red-500 text-red-600" />
-                            <Label htmlFor={`pf-${i}-fail`} className="text-xs cursor-pointer text-red-700 dark:text-red-400">Fail</Label>
+                            <RadioGroupItem
+                              value="fail"
+                              id={`pf-${i}-fail`}
+                              className="border-red-500 text-red-600"
+                            />
+                            <Label
+                              htmlFor={`pf-${i}-fail`}
+                              className="text-xs cursor-pointer text-red-700 dark:text-red-400"
+                            >
+                              Fail
+                            </Label>
                           </div>
                         </RadioGroup>
                       )}
                     </TableCell>
                     <TableCell className="py-3">
                       {isReadOnly ? (
-                        <span className="text-[13px] text-muted-foreground">{sr.notes || <span className="italic text-xs">No notes</span>}</span>
+                        <span className="text-[13px] text-muted-foreground">
+                          {sr.notes || <span className="italic text-xs">No notes</span>}
+                        </span>
                       ) : (
                         <Input
                           value={sr.notes}
@@ -349,7 +408,9 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
                     </TableCell>
                     <TableCell className="py-3 text-right">
                       {isReadOnly ? (
-                        <span className={`inline-flex items-center justify-center min-w-[48px] px-2.5 py-1 rounded-md text-[13px] font-bold ${sr.score >= 80 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : sr.score >= 50 ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" : sr.score > 0 ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}>
+                        <span
+                          className={`inline-flex items-center justify-center min-w-[48px] px-2.5 py-1 rounded-md text-[13px] font-bold ${sr.score >= 80 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : sr.score >= 50 ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" : sr.score > 0 ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}
+                        >
                           {sr.score}
                         </span>
                       ) : (
@@ -373,16 +434,24 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
 
       {/* Total Score */}
       <div className="flex justify-end">
-        <div className={`px-6 py-4 rounded-xl border-2 ${totalScore >= 700 ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800" : totalScore >= 400 ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800" : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700"}`}>
+        <div
+          className={`px-6 py-4 rounded-xl border-2 ${totalScore >= 700 ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800" : totalScore >= 400 ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800" : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700"}`}
+        >
           <div className="label-caps text-[10px] mb-1">Total Score</div>
-          <div className={`text-2xl font-bold ${totalScore >= 700 ? "text-emerald-700 dark:text-emerald-300" : totalScore >= 400 ? "text-amber-700 dark:text-amber-300" : "text-foreground"}`}>
+          <div
+            className={`text-2xl font-bold ${totalScore >= 700 ? "text-emerald-700 dark:text-emerald-300" : totalScore >= 400 ? "text-amber-700 dark:text-amber-300" : "text-foreground"}`}
+          >
             {totalScore}
-            <span className="text-sm font-normal text-muted-foreground ml-1">/ {skillResults.length * 100}</span>
+            <span className="text-sm font-normal text-muted-foreground ml-1">
+              / {skillResults.length * 100}
+            </span>
           </div>
           <div className="mt-2 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${totalScore >= 700 ? "bg-emerald-500" : totalScore >= 400 ? "bg-amber-500" : "bg-red-500"}`}
-              style={{ width: `${Math.min((totalScore / (skillResults.length * 100)) * 100, 100)}%` }}
+              style={{
+                width: `${Math.min((totalScore / (skillResults.length * 100)) * 100, 100)}%`,
+              }}
             />
           </div>
         </div>
@@ -406,7 +475,13 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
               <span>Supporting Documents</span>
               {!isReadOnly && (
                 <label className="cursor-pointer">
-                  <Button variant="outline" size="sm" className="text-[13px]" disabled={uploading} asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-[13px]"
+                    disabled={uploading}
+                    asChild
+                  >
                     <span>
                       {uploading ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
@@ -422,7 +497,7 @@ export function InterviewSheet({ employee }: InterviewSheetProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {(!documents || documents.length === 0) ? (
+            {!documents || documents.length === 0 ? (
               <p className="text-sm text-muted-foreground">No documents attached.</p>
             ) : (
               <ul className="space-y-2">

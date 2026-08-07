@@ -11,12 +11,10 @@ export async function uploadFormDocx(
 ): Promise<{ url: string; path: string }> {
   const path = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
+  const { data, error } = await supabase.storage.from(BUCKET).upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+  });
 
   if (error) throw new Error(`Upload failed: ${error.message}`);
   if (!data) throw new Error("Upload returned no data");

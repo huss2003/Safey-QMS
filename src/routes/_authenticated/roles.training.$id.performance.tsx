@@ -19,9 +19,7 @@ import {
 import { TableSkeleton } from "@/components/inventory/skeletons";
 import { fmtDate } from "@/lib/inventory/format";
 
-export const Route = createFileRoute(
-  "/_authenticated/roles/training/$id/performance"
-)({
+export const Route = createFileRoute("/_authenticated/roles/training/$id/performance")({
   ssr: false,
   component: TrainingPerformancePage,
 });
@@ -87,9 +85,7 @@ function TrainingPerformancePage() {
 
   if (!program) {
     return (
-      <div className="py-12 text-center text-muted-foreground">
-        Training program not found.
-      </div>
+      <div className="py-12 text-center text-muted-foreground">Training program not found.</div>
     );
   }
 
@@ -126,15 +122,9 @@ function TrainingPerformancePage() {
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="font-medium text-[13px]">
-                    {program.training_name}
-                  </TableCell>
-                  <TableCell className="text-[12.5px] font-mono">
-                    {program.training_id}
-                  </TableCell>
-                  <TableCell className="text-[12.5px]">
-                    {program.trainer}
-                  </TableCell>
+                  <TableCell className="font-medium text-[13px]">{program.training_name}</TableCell>
+                  <TableCell className="text-[12.5px] font-mono">{program.training_id}</TableCell>
+                  <TableCell className="text-[12.5px]">{program.trainer}</TableCell>
                   <TableCell className="text-[12.5px]">
                     {Array.isArray(program.trainees) && program.trainees.length
                       ? program.trainees.join(", ")
@@ -143,9 +133,7 @@ function TrainingPerformancePage() {
                   <TableCell className="text-[12.5px]">
                     {program.training_duration || "—"}
                   </TableCell>
-                  <TableCell className="text-[12.5px]">
-                    {program.schedule}
-                  </TableCell>
+                  <TableCell className="text-[12.5px]">{program.schedule}</TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
@@ -168,9 +156,7 @@ function TrainingPerformancePage() {
               <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">
                 Objectives
               </div>
-              <p className="text-[13px] leading-relaxed">
-                {program.training_objectives}
-              </p>
+              <p className="text-[13px] leading-relaxed">{program.training_objectives}</p>
             </div>
           )}
 
@@ -179,9 +165,7 @@ function TrainingPerformancePage() {
               <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">
                 Performance Evaluation Key Factors
               </div>
-              <p className="text-[13px] leading-relaxed">
-                {program.performance_evaluation}
-              </p>
+              <p className="text-[13px] leading-relaxed">{program.performance_evaluation}</p>
             </div>
           )}
         </CardContent>
@@ -216,21 +200,11 @@ function TrainingPerformancePage() {
               <TableBody>
                 {records.map((r) => (
                   <TableRow key={r.id}>
-                    <TableCell className="text-[13px] font-medium">
-                      {r.trainee_name}
-                    </TableCell>
-                    <TableCell className="text-[12.5px]">
-                      {r.trainee_role}
-                    </TableCell>
-                    <TableCell className="text-[12.5px]">
-                      {r.trainer}
-                    </TableCell>
-                    <TableCell className="text-[12.5px]">
-                      {fmtDate(r.performance_date)}
-                    </TableCell>
-                    <TableCell className="text-[12.5px]">
-                      {r.evaluation_marks || "—"}
-                    </TableCell>
+                    <TableCell className="text-[13px] font-medium">{r.trainee_name}</TableCell>
+                    <TableCell className="text-[12.5px]">{r.trainee_role}</TableCell>
+                    <TableCell className="text-[12.5px]">{r.trainer}</TableCell>
+                    <TableCell className="text-[12.5px]">{fmtDate(r.performance_date)}</TableCell>
+                    <TableCell className="text-[12.5px]">{r.evaluation_marks || "—"}</TableCell>
                     <TableCell className="text-[12.5px]">
                       {r.documents?.length ? (
                         <span className="text-primary">

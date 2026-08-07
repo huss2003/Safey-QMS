@@ -1,8 +1,16 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, CheckCircle2, AlertTriangle, PackagePlus, Users, Settings2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
+  PackagePlus,
+  Users,
+  Settings2,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/inventory/page-header";
@@ -58,6 +66,11 @@ import {
 
 export const Route = createFileRoute("/_authenticated/production-new")({
   component: NewProductionWizard,
+  validateSearch: (search: Record<string, unknown>) => ({
+    planId: (search.planId as string) || undefined,
+    productId: (search.productId as string) || undefined,
+    qty: search.qty ? Number(search.qty) : undefined,
+  }),
 });
 
 type BatchAvail = {
@@ -83,9 +96,11 @@ const TOTAL_STEPS = 7;
 function NewProductionWizard() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [step, setStep] = useState(1);
-  const [productId, setProductId] = useState<string>("");
-  const [qty, setQty] = useState<number>(100);
+  const { planId, productId: planProductId, qty: planQty } = Route.useSearch() as any;
+  const fromPlan = !!planId;
+  const [step, setStep] = useState(fromPlan ? 2 : 1);
+  const [productId, setProductId] = useState<string>(planProductId ?? "");
+  const [qty, setQty] = useState<number>(planQty ?? 100);
   const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
   const [plan, setPlan] = useState<PartPlan[]>([]);
@@ -108,10 +123,7 @@ function NewProductionWizard() {
   useEffect(() => {
     if (employeesForRole.length === 1) {
       setSelectedEmployee(employeesForRole[0].value);
-    } else if (
-      selectedEmployee &&
-      !employeesForRole.find((e) => e.value === selectedEmployee)
-    ) {
+    } else if (selectedEmployee && !employeesForRole.find((e) => e.value === selectedEmployee)) {
       // Clear selection if current employee no longer matches the role
       setSelectedEmployee("");
     }
@@ -160,6 +172,14 @@ function NewProductionWizard() {
 
   const productName = products?.find((p: any) => p.id === productId)?.product_name;
 
+  // Auto-calculate when coming from production planning
+  useEffect(() => {
+    if (fromPlan && productId && qty > 0) {
+      // Run calculation and skip step 1 — go to step 2
+      calculate.mutate();
+    }
+  }, [fromPlan]);
+
   // canNext for each step
   const canNext = useMemo(() => {
     if (step === 1) return !!productId && qty > 0;
@@ -206,7 +226,12 @@ function NewProductionWizard() {
     },
     onSuccess: (data) => {
       setPlan(data);
-      setStep(2);
+      if (fromPlan) {
+        // From planning: step 1 done, step 4 auto-checked → go to step 5
+        setStep(5);
+      } else {
+        setStep(2);
+      }
     },
     onError: (e: any) => toast.error(e.message ?? "Calculation failed"),
   });
@@ -371,7 +396,13 @@ function NewProductionWizard() {
           <CardContent className="space-y-4 max-w-xl">
             <div>
               <Label className="label-caps">Select role *</Label>
-              <Select value={selectedRole} onValueChange={(v) => { setSelectedRole(v); setSelectedEmployee(""); }}>
+              <Select
+                value={selectedRole}
+                onValueChange={(v) => {
+                  setSelectedRole(v);
+                  setSelectedEmployee("");
+                }}
+              >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Choose a role" />
                 </SelectTrigger>
@@ -413,7 +444,10 @@ function NewProductionWizard() {
               </div>
             )}
             <div className="flex justify-between pt-2">
-              <Button variant="outline" onClick={() => setStep(1)}>
+              <Button
+                variant="outline"
+                onClick={() => (fromPlan ? navigate({ to: "/production-planning" }) : setStep(1))}
+              >
                 Back
               </Button>
               <Button onClick={() => setStep(3)} disabled={!canNext}>
@@ -437,7 +471,13 @@ function NewProductionWizard() {
               <Label className="label-caps">Process equipment</Label>
               <Select value={processEquipmentId} onValueChange={setProcessEquipmentId}>
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={processEquipment?.length ? "Select process equipment" : "No active process equipment"} />
+                  <SelectValue
+                    placeholder={
+                      processEquipment?.length
+                        ? "Select process equipment"
+                        : "No active process equipment"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {(processEquipment ?? []).map((e: any) => (
@@ -452,7 +492,13 @@ function NewProductionWizard() {
               <Label className="label-caps">Measuring equipment</Label>
               <Select value={measuringEquipmentId} onValueChange={setMeasuringEquipmentId}>
                 <SelectTrigger className="mt-1">
-                  <SelectValue placeholder={measuringEquipment?.length ? "Select measuring equipment" : "No active measuring equipment"} />
+                  <SelectValue
+                    placeholder={
+                      measuringEquipment?.length
+                        ? "Select measuring equipment"
+                        : "No active measuring equipment"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {(measuringEquipment ?? []).map((e: any) => (
@@ -467,9 +513,7 @@ function NewProductionWizard() {
               <Button variant="outline" onClick={() => setStep(2)}>
                 Back
               </Button>
-              <Button onClick={() => setStep(4)}>
-                Next: availability check
-              </Button>
+              <Button onClick={() => setStep(fromPlan ? 5 : 4)}>Next: availability check</Button>
             </div>
           </CardContent>
         </Card>
@@ -678,7 +722,7 @@ function NewProductionWizard() {
               );
             })}
             <div className="flex justify-between pt-2">
-              <Button variant="outline" onClick={() => setStep(4)}>
+              <Button variant="outline" onClick={() => setStep(fromPlan ? 3 : 4)}>
                 Back
               </Button>
               <Button onClick={() => setStep(6)} disabled={!canNext}>
@@ -741,19 +785,35 @@ function NewProductionWizard() {
               {selectedRole && selectedEmployee && (
                 <div>
                   <span className="text-muted-foreground">Assigned:</span>{" "}
-                  <strong>{roleLabel(selectedRole)} — {employeeLabel(selectedEmployee)}</strong>
+                  <strong>
+                    {roleLabel(selectedRole)} — {employeeLabel(selectedEmployee)}
+                  </strong>
                 </div>
               )}
               {processEquipmentId && (
                 <div>
                   <span className="text-muted-foreground">Process equipment:</span>{" "}
-                  <strong>{(processEquipment ?? []).find((e: any) => e.id === processEquipmentId)?.name ?? "—"} ({(processEquipment ?? []).find((e: any) => e.id === processEquipmentId)?.equipment_id ?? "—"})</strong>
+                  <strong>
+                    {(processEquipment ?? []).find((e: any) => e.id === processEquipmentId)?.name ??
+                      "—"}{" "}
+                    (
+                    {(processEquipment ?? []).find((e: any) => e.id === processEquipmentId)
+                      ?.equipment_id ?? "—"}
+                    )
+                  </strong>
                 </div>
               )}
               {measuringEquipmentId && (
                 <div>
                   <span className="text-muted-foreground">Measuring equipment:</span>{" "}
-                  <strong>{(measuringEquipment ?? []).find((e: any) => e.id === measuringEquipmentId)?.name ?? "—"} ({(measuringEquipment ?? []).find((e: any) => e.id === measuringEquipmentId)?.equipment_id ?? "—"})</strong>
+                  <strong>
+                    {(measuringEquipment ?? []).find((e: any) => e.id === measuringEquipmentId)
+                      ?.name ?? "—"}{" "}
+                    (
+                    {(measuringEquipment ?? []).find((e: any) => e.id === measuringEquipmentId)
+                      ?.equipment_id ?? "—"}
+                    )
+                  </strong>
                 </div>
               )}
               <div>

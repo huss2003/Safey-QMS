@@ -57,10 +57,17 @@ export function FileUpload({
     <div className="space-y-2">
       <div className="flex flex-wrap gap-2">
         {urls.map((url, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-[12px] bg-muted rounded px-2 py-1 max-w-[200px]">
+          <div
+            key={i}
+            className="flex items-center gap-1.5 text-[12px] bg-muted rounded px-2 py-1 max-w-[200px]"
+          >
             <FileText className="h-3 w-3 shrink-0" />
             <span className="truncate">{url.split("/").pop()}</span>
-            <button type="button" onClick={() => remove(i)} className="shrink-0 hover:text-destructive">
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="shrink-0 hover:text-destructive"
+            >
               <X className="h-3 w-3" />
             </button>
           </div>
@@ -74,18 +81,16 @@ export function FileUpload({
             disabled={uploading}
             onClick={() => inputRef.current?.click()}
           >
-            {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+            {uploading ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Upload className="h-3 w-3" />
+            )}
             <span className="ml-1">{uploading ? "Uploading…" : "Upload"}</span>
           </Button>
         )}
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        className="hidden"
-        onChange={handleFile}
-      />
+      <input ref={inputRef} type="file" accept={accept} className="hidden" onChange={handleFile} />
       {urls.length > 0 && (
         <p className="text-[11px] text-muted-foreground">{urls.length} file(s) uploaded</p>
       )}
@@ -94,7 +99,8 @@ export function FileUpload({
 }
 
 export function FileList({ urls }: { urls: string[] | null | undefined }) {
-  if (!urls || urls.length === 0) return <span className="text-muted-foreground text-[12px]">—</span>;
+  if (!urls || urls.length === 0)
+    return <span className="text-muted-foreground text-[12px]">—</span>;
   return (
     <div className="flex flex-wrap gap-1.5">
       {urls.map((url, i) => (

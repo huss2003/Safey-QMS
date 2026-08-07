@@ -61,14 +61,11 @@ function TrainingNewPage() {
       qc.invalidateQueries({ queryKey: ["training_programs"] });
       navigate({ to: "/roles/training" });
     },
-    onError: (e: any) =>
-      toast.error(e.message ?? "Failed to create training program"),
+    onError: (e: any) => toast.error(e.message ?? "Failed to create training program"),
   });
 
   const toggleTrainee = (v: string) =>
-    setTrainees((prev) =>
-      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]
-    );
+    setTrainees((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
 
   const canSave = name && trainer && schedule && trainees.length > 0;
 
@@ -158,10 +155,7 @@ function TrainingNewPage() {
             <Label className="label-caps">Trainees * (multiple)</Label>
             <div className="mt-2 grid grid-cols-2 gap-2 rounded border border-border p-3 max-h-48 overflow-y-auto">
               {TRAINING_PERSONNEL.map((p) => (
-                <label
-                  key={p.value}
-                  className="flex items-center gap-2 text-[13px] cursor-pointer"
-                >
+                <label key={p.value} className="flex items-center gap-2 text-[13px] cursor-pointer">
                   <Checkbox
                     checked={trainees.includes(p.value)}
                     onCheckedChange={() => toggleTrainee(p.value)}
@@ -208,10 +202,7 @@ function TrainingNewPage() {
           </div>
 
           <div className="flex justify-between pt-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate({ to: "/roles/training" })}
-            >
+            <Button variant="outline" onClick={() => navigate({ to: "/roles/training" })}>
               Cancel
             </Button>
             <Button onClick={() => mutate()} disabled={!canSave || isPending}>

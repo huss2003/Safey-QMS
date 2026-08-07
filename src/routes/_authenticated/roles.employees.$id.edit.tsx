@@ -34,11 +34,7 @@ function EmployeeEditPage() {
   const { data: emp, isLoading } = useQuery({
     queryKey: ["employee", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await supabase.from("employees").select("*").eq("id", id).single();
       if (error) throw error;
       return data as Employee;
     },
@@ -50,8 +46,7 @@ function EmployeeEditPage() {
   const [recruited, setRecruited] = useState<string | null>(null);
   const [documents, setDocuments] = useState<string[]>([]);
 
-  const v = (val: string | null | undefined, fallback: string) =>
-    val === null ? fallback : val;
+  const v = (val: string | null | undefined, fallback: string) => (val === null ? fallback : val);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
@@ -73,8 +68,7 @@ function EmployeeEditPage() {
       qc.invalidateQueries({ queryKey: ["employee", id] });
       navigate({ to: "/roles/employees" });
     },
-    onError: (e: any) =>
-      toast.error(e.message ?? "Failed to update employee"),
+    onError: (e: any) => toast.error(e.message ?? "Failed to update employee"),
   });
 
   if (isLoading || !emp) {
@@ -86,16 +80,13 @@ function EmployeeEditPage() {
   }
 
   const canSave =
-    (name !== null ? name : emp.employee_name) &&
-    (role !== null ? role : emp.employee_role);
+    (name !== null ? name : emp.employee_name) && (role !== null ? role : emp.employee_role);
 
   return (
     <div>
       <PageHeader
         title="Edit Employee"
-        description={
-          <span className="font-mono text-[12px]">{emp.employee_name}</span>
-        }
+        description={<span className="font-mono text-[12px]">{emp.employee_name}</span>}
         actions={
           <Button
             variant="ghost"
@@ -124,10 +115,7 @@ function EmployeeEditPage() {
 
           <div>
             <Label className="label-caps">Employee Role *</Label>
-            <Select
-              defaultValue={emp.employee_role}
-              onValueChange={(val) => setRole(val)}
-            >
+            <Select defaultValue={emp.employee_role} onValueChange={(val) => setRole(val)}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Choose a role" />
               </SelectTrigger>
@@ -177,10 +165,7 @@ function EmployeeEditPage() {
           </div>
 
           <div className="flex justify-between pt-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate({ to: "/roles/employees" })}
-            >
+            <Button variant="outline" onClick={() => navigate({ to: "/roles/employees" })}>
               Cancel
             </Button>
             <Button onClick={() => mutate()} disabled={!canSave || isPending}>

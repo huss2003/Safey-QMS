@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   PackagePlus,
+  PlayCircle,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -56,6 +57,7 @@ type RmReq = {
 };
 
 function PlanningPage() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [productId, setProductId] = useState("");
   const [qty, setQty] = useState(100);
@@ -82,7 +84,9 @@ function PlanningPage() {
       (
         await supabase
           .from("production_plans")
-          .select("id,plan_number,planned_quantity,planned_date,status,products(product_name)")
+          .select(
+            "id,plan_number,product_id,planned_quantity,planned_date,status,products(product_name)",
+          )
           .order("created_at", { ascending: false })
           .limit(50)
       ).data ?? [],
@@ -401,6 +405,7 @@ function PlanningPage() {
                   <TableHead className="text-right">Qty</TableHead>
                   <TableHead>Planned</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="w-20">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -412,6 +417,27 @@ function PlanningPage() {
                     <TableCell>{fmtDate(p.planned_date)}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{p.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {p.status === "planned" && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-[#1E3A8A] hover:bg-[#E0E7FF]"
+                          onClick={() =>
+                            navigate({
+                              to: "/production-new",
+                              search: {
+                                planId: p.id,
+                                productId: p.product_id,
+                                qty: p.planned_quantity,
+                              } as any,
+                            })
+                          }
+                        >
+                          <PlayCircle className="h-4 w-4 mr-1" /> Execute
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

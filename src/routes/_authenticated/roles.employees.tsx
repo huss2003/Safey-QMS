@@ -37,10 +37,7 @@ function EmployeesPage() {
     queryKey: ["employees"],
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("*")
-        .order("employee_name");
+      const { data, error } = await supabase.from("employees").select("*").order("employee_name");
       if (error) throw error;
       return (data ?? []) as Employee[];
     },
@@ -54,9 +51,7 @@ function EmployeesPage() {
         meta={
           <span className="text-[12px] text-muted-foreground">
             Total{" "}
-            <span className="text-foreground num font-medium ml-1">
-              {employees?.length ?? 0}
-            </span>
+            <span className="text-foreground num font-medium ml-1">{employees?.length ?? 0}</span>
           </span>
         }
         actions={

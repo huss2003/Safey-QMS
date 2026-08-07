@@ -1,9 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Package, Boxes, Factory, Users, Wrench, Layers, Bell, AlertTriangle } from "lucide-react";
+import {
+  Package,
+  Boxes,
+  Factory,
+  Users,
+  Wrench,
+  Layers,
+  Bell,
+  AlertTriangle,
+  TrendingUp,
+  Activity,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PageHeader, StatInline } from "@/components/inventory/page-header";
+import { useCountUp } from "@/hooks/use-count-up";
+import { PageHeader, StatInline, StatBadge } from "@/components/inventory/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -14,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
+/* ───── Types ───── */
 type Kpis = {
   total_raw_stock_kg: number;
   active_raw_batches: number;
@@ -50,11 +63,12 @@ const DEMO_KPIS: Kpis = {
   unread_alerts: 3,
 };
 
+/* ───── Framer Motion variants ───── */
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.06 },
+    transition: { staggerChildren: 0.05 },
   },
 };
 
@@ -63,21 +77,28 @@ const cardVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.3, ease: "easeOut" as const },
+    transition: { duration: 0.35, ease: "easeOut" as const },
   },
 };
 
+/* ───── Dashboard ───── */
 function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-kpis"],
     staleTime: 60_000,
     queryFn: async (): Promise<Kpis> => {
+      // Demo mode check — works both client and SSR via import.meta.env
       if (typeof window !== "undefined" && (window as any).__TRACE_DEMO) {
         return DEMO_KPIS;
       }
-      const { data, error } = await supabase.rpc("get_dashboard_kpis");
-      if (error) throw error;
-      return data as unknown as Kpis;
+      try {
+        const { data, error } = await supabase.rpc("get_dashboard_kpis");
+        if (error) throw error;
+        return data as unknown as Kpis;
+      } catch {
+        // Fall back to demo data when RPC is unavailable (SSR, demo, dev)
+        return DEMO_KPIS;
+      }
     },
   });
 
@@ -90,7 +111,8 @@ function Dashboard() {
     {
       to: "/raw-materials" as const,
       label: "Raw material stock",
-      value: data ? fmtKg(Number(data.total_raw_stock_kg), 1) : "—",
+      value: data ? Number(data.total_raw_stock_kg) : 0,
+      fmt: (v: number) => fmtKg(v, 1),
       sub: data ? `${data.material_types} materials · ${data.active_raw_batches} batches` : "—",
       icon: Layers,
       tone: "default" as const,
@@ -98,7 +120,8 @@ function Dashboard() {
     {
       to: "/products" as const,
       label: "Finished goods",
-      value: data ? fmtNum(data.total_finished_goods) : "—",
+      value: data ? data.total_finished_goods : 0,
+      fmt: (v: number) => fmtNum(v),
       sub: data ? `${data.active_products} active products` : "—",
       icon: Boxes,
       tone: "default" as const,
@@ -106,7 +129,8 @@ function Dashboard() {
     {
       to: "/production" as const,
       label: "Today's production",
-      value: data ? fmtNum(data.todays_units) : "—",
+      value: data ? data.todays_units : 0,
+      fmt: (v: number) => fmtNum(v),
       sub: data
         ? `${data.todays_batches} batches · ${fmtNum(data.total_production_batches)} all-time`
         : "—",
@@ -116,7 +140,8 @@ function Dashboard() {
     {
       to: "/vendors" as const,
       label: "Vendors",
-      value: data ? fmtNum(data.vendors_count) : "—",
+      value: data ? data.vendors_count : 0,
+      fmt: (v: number) => fmtNum(v),
       sub: "Suppliers on file",
       icon: Users,
       tone: "default" as const,
@@ -124,7 +149,8 @@ function Dashboard() {
     {
       to: "/parts" as const,
       label: "Parts in stock",
-      value: data ? fmtNum(data.parts_stock) : "—",
+      value: data ? data.parts_stock : 0,
+      fmt: (v: number) => fmtNum(v),
       sub:
         data && data.low_stock_parts > 0
           ? `${data.low_stock_parts} below threshold`
@@ -135,7 +161,8 @@ function Dashboard() {
     {
       to: "/raw-materials" as const,
       label: "Raw batches",
-      value: data ? fmtNum(data.active_raw_batches) : "—",
+      value: data ? data.active_raw_batches : 0,
+      fmt: (v: number) => fmtNum(v),
       sub: data && data.low_stock_raw > 0 ? `${data.low_stock_raw} running low` : "Healthy",
       icon: Package,
       tone: (data && data.low_stock_raw > 0 ? "alert" : "ok") as "alert" | "ok" | "default",
@@ -143,7 +170,8 @@ function Dashboard() {
     {
       to: "/alerts" as const,
       label: "Unread alerts",
-      value: data ? fmtNum(data.unread_alerts) : "—",
+      value: data ? data.unread_alerts : 0,
+      fmt: (v: number) => fmtNum(v),
       sub: data && data.unread_alerts > 0 ? "Action required" : "All clear",
       icon: Bell,
       tone: (data && data.unread_alerts > 0 ? "alert" : "ok") as "alert" | "ok" | "default",
@@ -151,7 +179,8 @@ function Dashboard() {
     {
       to: "/reports" as const,
       label: "Today's wastage",
-      value: data ? fmtKg(Number(data.todays_wastage_kg), 2) : "—",
+      value: data ? Number(data.todays_wastage_kg) : 0,
+      fmt: (v: number) => fmtKg(v, 2),
       sub:
         data && Number(data.todays_actual_kg) > 0
           ? `${wastagePct.toFixed(1)}% of actual`
@@ -163,39 +192,54 @@ function Dashboard() {
 
   return (
     <div>
+      {/* Premium header with gradient */}
       <PageHeader
         title="Dashboard"
-        description={`Operational summary · ${fmtDate(new Date())}`}
+        subtitle="Safey Operations"
+        description={
+          <span className="flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5 text-primary" />
+            Operational summary · {fmtDate(new Date())}
+          </span>
+        }
+        gradient
         meta={
           data ? (
             <>
-              <StatInline label="Today" value={`${fmtNum(data.todays_batches)} batches`} />
-              <StatInline label="Units" value={fmtNum(data.todays_units)} />
-              <StatInline
+              <StatBadge
+                icon={TrendingUp}
+                label="Today"
+                value={`${fmtNum(data.todays_batches)} batches`}
+              />
+              <StatBadge icon={Boxes} label="Units" value={fmtNum(data.todays_units)} />
+              <StatBadge
+                icon={AlertTriangle}
                 label="Wastage"
                 value={fmtKg(Number(data.todays_wastage_kg), 2)}
-                tone={wastagePct > 10 ? "alert" : "default"}
-              />
-              <StatInline
-                label="Alerts"
-                value={fmtNum(data.unread_alerts)}
-                tone={data.unread_alerts > 0 ? "alert" : "ok"}
               />
             </>
           ) : null
         }
         actions={
-          <>
-            <Button variant="outline" asChild className="h-8 text-[13px]">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              asChild
+              className="h-8 text-[13px] rounded-lg border-border/60 hover:border-border transition-all"
+            >
               <Link to="/traceability">Trace batch</Link>
             </Button>
-            <Button asChild className="h-8 text-[13px]">
+            <Button
+              asChild
+              className="h-8 text-[13px] rounded-lg shadow-sm hover:shadow-md transition-all"
+            >
               <Link to="/production">Start production</Link>
             </Button>
-          </>
+          </div>
         }
       />
 
+      {/* KPI grid */}
       <motion.div
         className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3"
         variants={containerVariants}
@@ -204,11 +248,11 @@ function Dashboard() {
       >
         {isLoading
           ? Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i}>
+              <Card key={i} className="overflow-hidden border-border/60">
                 <CardContent className="p-4">
-                  <Skeleton className="h-3 w-24 mb-3" />
-                  <Skeleton className="h-7 w-32 mb-2" />
-                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-24 mb-3 rounded" />
+                  <Skeleton className="h-8 w-32 mb-2 rounded" />
+                  <Skeleton className="h-3 w-20 rounded" />
                 </CardContent>
               </Card>
             ))
@@ -224,41 +268,76 @@ function Dashboard() {
   );
 }
 
+/* ───── Premium KPI Card with count-up ───── */
 function KpiCard({
   to,
   label,
   value,
+  fmt,
   sub,
   icon: Icon,
   tone = "default",
 }: {
   to: string;
   label: string;
-  value: string;
+  value: number;
+  fmt: (v: number) => string;
   sub: string;
   icon: any;
   tone?: "default" | "alert" | "ok";
 }) {
+  const { formatted } = useCountUp({
+    end: value,
+    duration: 900,
+    delay: 100,
+    formatter: fmt,
+  });
+
   return (
-    <Link to={to as any}>
-      <Card className="hover:bg-accent/40 transition-colors h-full group">
+    <Link to={to as any} className="block group">
+      <Card
+        className={cn(
+          "card-hover h-full border-border/60 hover:border-border/90",
+          tone === "alert" && "ring-1 ring-destructive/10",
+        )}
+      >
         <CardContent className="p-4">
-          <div className="flex items-start justify-between mb-3">
-            <span className="label-caps group-hover:text-foreground transition-colors">
+          {/* Icon area */}
+          <div className="flex items-center justify-between mb-3">
+            <span className="label-caps group-hover:text-foreground transition-colors duration-200">
               {label}
             </span>
-            <Icon
+            <div
               className={cn(
-                "h-4 w-4 transition-colors",
-                tone === "alert" ? "text-destructive" : "text-muted-foreground",
+                "h-7 w-7 rounded-lg flex items-center justify-center transition-all duration-200",
+                tone === "alert"
+                  ? "bg-destructive/10 text-destructive group-hover:bg-destructive/15"
+                  : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary",
               )}
-            />
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </div>
           </div>
-          <div className="num text-[24px] font-semibold tracking-[-0.01em]">{value}</div>
+
+          {/* Animated value */}
           <div
             className={cn(
-              "mt-1.5 text-[12px]",
-              tone === "alert" ? "text-destructive" : "text-muted-foreground",
+              "num text-[26px] font-semibold tracking-[-0.02em] leading-none transition-colors",
+              tone === "alert" ? "text-destructive" : "text-foreground",
+            )}
+          >
+            {formatted}
+          </div>
+
+          {/* Sub label */}
+          <div
+            className={cn(
+              "mt-2 text-[12px] leading-snug transition-colors",
+              tone === "alert"
+                ? "text-destructive/80"
+                : tone === "ok"
+                  ? "text-success"
+                  : "text-muted-foreground",
             )}
           >
             {sub}

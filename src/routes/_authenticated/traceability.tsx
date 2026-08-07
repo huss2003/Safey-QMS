@@ -1,6 +1,6 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   GitBranch,
@@ -425,19 +425,29 @@ function ProductSummary({
 }
 
 function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse["production"]> }) {
-  // Fetch GTIN by product name (simple, reliable)
-  const { data: product } = useQuery({
+  // Fetch GTIN — direct query, no maybeSingle
+  const {
+    data: product,
+    isLoading,
+    error: gtinErr,
+  } = useQuery({
     queryKey: ["product-gtin", prod.product_name],
     queryFn: async () => {
-      if (!prod.product_name) return null;
+      console.log("[GTIN] Fetching for:", prod.product_name);
+      if (!prod.product_name) {
+        console.log("[GTIN] No product_name");
+        return null;
+      }
       const { data, error } = await supabase
         .from("products" as any)
         .select("gtin")
         .eq("product_name", prod.product_name)
-        .limit(1)
-        .maybeSingle();
-      if (error) console.error("GTIN fetch error:", error);
-      return data as { gtin: string | null } | null;
+        .limit(1);
+      console.log("[GTIN] Raw response:", JSON.stringify(data), "error:", error);
+      if (error) return null;
+      const result = (data as any[])?.[0] ?? null;
+      console.log("[GTIN] Final result:", result);
+      return result;
     },
     enabled: !!prod.product_name,
   });
@@ -448,19 +458,20 @@ function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse
   const statusKey = `trace-status-${batchNum}`;
 
   // ── Mutable rows with status tracking ──
-  const [rows, setRows] = useState(() => {
-    // ponytail: load from localStorage keyed by batch number
+  const buildRows = (gtinVal: string) => {
     const saved = (() => {
       try {
         return JSON.parse(localStorage.getItem(statusKey) || "[]") as Record<number, string>;
       } catch {
-        return {};
+        return {} as Record<number, string>;
       }
     })();
     return Array.from({ length: qty }, (_, i) => {
       const serial = String(i + 1).padStart(4, "0");
       const dateStr = prod.production_date?.slice(0, 10) ?? "";
-      const udi = gtin ? `${gtin}(11)${dateStr}(10)${batchNum}(21)${batchNum}-${serial}` : "—";
+      const udi = gtinVal
+        ? `${gtinVal}(11)${dateStr}(10)${batchNum}(21)${batchNum}-${serial}`
+        : "—";
       let ddMmYyyy = "—";
       if (dateStr) {
         const [y, m, d] = dateStr.split("-");
@@ -468,14 +479,28 @@ function ProductSummaryInner({ prod }: { prod: NonNullable<TraceBackwardResponse
       }
       return {
         dateOfManufacture: ddMmYyyy,
-        gtin: gtin || "—",
+        gtin: gtinVal || "—",
         serialNumber: serial,
         lotNumber: batchNum,
         udi,
         status: (saved[i] ?? "Pending") as string,
       };
     });
-  });
+  };
+
+  const [rows, setRows] = useState(() => buildRows(gtin));
+
+  // Rebuild rows when GTIN query completes
+  useEffect(() => {
+    if (gtin) {
+      setRows((prev) => {
+        // Only update if rows still have empty gtin (first load)
+        const needsUpdate = prev.some((r) => r.gtin === "—");
+        if (!needsUpdate) return prev;
+        return buildRows(gtin);
+      });
+    }
+  }, [gtin]);
 
   const updateRowStatus = (index: number, status: string) => {
     setRows((prev) => {

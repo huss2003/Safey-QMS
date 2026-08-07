@@ -8,10 +8,15 @@ interface Props {
 }
 
 function FieldRenderer({
-  field, value, onChange, readOnly,
+  field,
+  value,
+  onChange,
+  readOnly,
 }: {
-  field: FormField; value?: string | number | boolean;
-  onChange?: (v: string | number | boolean) => void; readOnly?: boolean;
+  field: FormField;
+  value?: string | number | boolean;
+  onChange?: (v: string | number | boolean) => void;
+  readOnly?: boolean;
 }) {
   const displayValue = value !== undefined ? String(value) : "";
   const isPrefilled = !!field.prefill_from_template;
@@ -22,10 +27,15 @@ function FieldRenderer({
     const selected = effectiveValue || field.default_value?.toString() || "";
     return (
       <div>
-        <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1.5">{field.label}</span>
+        <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1.5">
+          {field.label}
+        </span>
         <div className="flex gap-2">
           {["YES", "NO"].map((opt) => (
-            <button key={opt} type="button" disabled={readOnly}
+            <button
+              key={opt}
+              type="button"
+              disabled={readOnly}
               onClick={() => onChange?.(opt)}
               className={`px-5 py-1.5 rounded text-[11px] font-semibold border-2 transition-all ${
                 selected === opt
@@ -34,7 +44,9 @@ function FieldRenderer({
                     : "bg-red-600 text-white border-red-600 shadow-sm"
                   : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
               } ${readOnly ? "cursor-default" : "cursor-pointer hover:shadow"}`}
-            >{opt}</button>
+            >
+              {opt}
+            </button>
           ))}
         </div>
       </div>
@@ -44,8 +56,12 @@ function FieldRenderer({
   if (field.type === "date") {
     return (
       <div>
-        <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1.5">{field.label}</span>
-        <input type="date" value={effectiveValue}
+        <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1.5">
+          {field.label}
+        </span>
+        <input
+          type="date"
+          value={effectiveValue}
           readOnly={!canEdit}
           onChange={(e) => onChange?.(e.target.value)}
           className={`w-full h-9 px-3 text-[12px] border-b-2 ${
@@ -61,8 +77,12 @@ function FieldRenderer({
   if (field.type === "textarea") {
     return (
       <div>
-        <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1.5">{field.label}</span>
-        <textarea value={effectiveValue} readOnly={!canEdit}
+        <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1.5">
+          {field.label}
+        </span>
+        <textarea
+          value={effectiveValue}
+          readOnly={!canEdit}
           onChange={(e) => onChange?.(e.target.value)}
           className={`w-full h-16 px-3 py-1.5 text-[12px] border-b-2 resize-none ${
             canEdit
@@ -77,7 +97,9 @@ function FieldRenderer({
   if (field.type === "signature") {
     return (
       <div>
-        <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1">{field.label}</span>
+        <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1">
+          {field.label}
+        </span>
         <div className="border-b-2 border-slate-300 h-8" />
       </div>
     );
@@ -94,14 +116,17 @@ function FieldRenderer({
         type={field.type === "number" ? "number" : "text"}
         value={effectiveValue}
         readOnly={!canEdit}
-        onChange={(e) => onChange?.(field.type === "number" ? Number(e.target.value) : e.target.value)}
+        onChange={(e) =>
+          onChange?.(field.type === "number" ? Number(e.target.value) : e.target.value)
+        }
         className={`w-full h-9 px-3 text-[12px] border-b-2 ${
           canEdit
             ? "bg-white border-slate-300 focus:border-blue-500 focus:outline-none"
             : "bg-slate-50 border-slate-200 text-slate-500"
         }`}
         placeholder={canEdit ? field.placeholder || "" : ""}
-        min={field.min} max={field.max}
+        min={field.min}
+        max={field.max}
       />
     </div>
   );
@@ -152,7 +177,9 @@ export function FormSchemaRenderer({ schema, values = {}, onChange, readOnly = f
               </span>
               <h2 className="text-[11px] font-bold uppercase tracking-[0.06em]">{section.title}</h2>
               {section.description && (
-                <span className="text-[10px] text-slate-300 ml-auto italic">{section.description}</span>
+                <span className="text-[10px] text-slate-300 ml-auto italic">
+                  {section.description}
+                </span>
               )}
             </div>
 
@@ -160,9 +187,18 @@ export function FormSchemaRenderer({ schema, values = {}, onChange, readOnly = f
             <div className="px-6 py-4 bg-white">
               <div className="grid grid-cols-2 gap-x-8 gap-y-4">
                 {section.fields.map((field, fi) => (
-                  <div key={fi} className={field.type === "textarea" || field.type === "table" ? "col-span-2" : ""}>
-                    <FieldRenderer field={field} value={values[field.key]}
-                      onChange={onChange ? (v) => onChange(field.key, v) : undefined} readOnly={readOnly} />
+                  <div
+                    key={fi}
+                    className={
+                      field.type === "textarea" || field.type === "table" ? "col-span-2" : ""
+                    }
+                  >
+                    <FieldRenderer
+                      field={field}
+                      value={values[field.key]}
+                      onChange={onChange ? (v) => onChange(field.key, v) : undefined}
+                      readOnly={readOnly}
+                    />
                   </div>
                 ))}
               </div>
@@ -175,15 +211,21 @@ export function FormSchemaRenderer({ schema, values = {}, onChange, readOnly = f
       <div className="bg-slate-50 border-t-2 border-slate-300 px-6 py-4">
         <div className="grid grid-cols-3 gap-8">
           <div>
-            <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1">Performed By</span>
+            <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1">
+              Performed By
+            </span>
             <div className="border-b-2 border-slate-300 h-8" />
           </div>
           <div>
-            <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1">Signature</span>
+            <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1">
+              Signature
+            </span>
             <div className="border-b-2 border-slate-300 h-8" />
           </div>
           <div>
-            <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1">Date</span>
+            <span className="block text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500 mb-1">
+              Date
+            </span>
             <div className="border-b-2 border-slate-300 h-8" />
           </div>
         </div>

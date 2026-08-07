@@ -2,11 +2,21 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import { X, Save, Loader2, ChevronDown, Eye } from "lucide-react";
+import { X, Save, Loader2, ChevronDown, Eye, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/product-inspection/$productId")({
   component: ProductInspectionPage,
@@ -91,6 +101,8 @@ function ProductInspectionPage() {
   const qc = useQueryClient();
 
   const isViewMode = !!inspectionId;
+  const [passFailDialogOpen, setPassFailDialogOpen] = useState(false);
+  const [passFailResult, setPassFailResult] = useState<string | null>(null);
 
   // Fetch template
   const { data: template } = useQuery({
@@ -302,7 +314,7 @@ function ProductInspectionPage() {
 
   // Save mutation
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (result: string) => {
       const recordData = {
         product_id: productId,
         template_id: templateId ?? null,
@@ -335,7 +347,7 @@ function ProductInspectionPage() {
         eoo_rbi_verification: eooRbiVerification,
         performed_by: performedBy || null,
         signature_date: signatureDate,
-        overall_result: overallResult,
+        overall_result: result,
       };
 
       const { error } = await supabase.from("product_inspections").insert(recordData as any);
@@ -358,309 +370,343 @@ function ProductInspectionPage() {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#F8FAFC] z-50 overflow-auto">
-      {/* Header */}
-      <div className="bg-[#1E3A8A] text-white p-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="text-center flex-1">
-          <h1 className="text-xl font-bold">{formNo || "FORM_PSP_QI_10"}</h1>
-          <p className="text-sm text-blue-200">{template?.record_id ?? "FORM_PSP_QI_10"}</p>
+    <>
+      <div className="fixed inset-0 bg-[#F8FAFC] z-50 overflow-auto">
+        {/* Header */}
+        <div className="bg-[#1E3A8A] text-white p-4 flex items-center justify-between sticky top-0 z-10">
+          <div className="text-center flex-1">
+            <h1 className="text-xl font-bold">{formNo || "FORM_PSP_QI_10"}</h1>
+            <p className="text-sm text-blue-200">{template?.record_id ?? "FORM_PSP_QI_10"}</p>
+          </div>
+          {isViewMode && (
+            <div className="flex items-center gap-2 mr-4">
+              <Eye className="h-5 w-5 text-green-400" />
+              <span className="text-sm text-green-400 font-medium">VIEW MODE</span>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-white/10"
+            onClick={() => navigate({ to: "/production" })}
+          >
+            <X className="h-5 w-5" />
+          </Button>
         </div>
-        {isViewMode && (
-          <div className="flex items-center gap-2 mr-4">
-            <Eye className="h-5 w-5 text-green-400" />
-            <span className="text-sm text-green-400 font-medium">VIEW MODE</span>
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-white/10"
-          onClick={() => navigate({ to: "/production" })}
-        >
-          <X className="h-5 w-5" />
-        </Button>
-      </div>
 
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        {/* Section 1: Header */}
-        <Section number={1} title="HEADER">
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="PART" value={partName} onChange={setPartName} readOnly={isViewMode} />
-            <Field label="FORM NO" value={formNo} onChange={setFormNo} readOnly />
-            <Field label="DATE" type="date" value={date} onChange={setDate} readOnly={isViewMode} />
-            <Field label="FCR VAR" value={fcrVar} onChange={setFcrVar} readOnly={isViewMode} />
-            <Field label="BATCH NUMBER" value={batchNumber} onChange={setBatchNumber} readOnly />
-          </div>
-        </Section>
-
-        {/* Section 2: Operator Details */}
-        <Section number={2} title="OPERATOR DETAILS">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                NAME OF OPERATOR
-              </Label>
-              <div className="relative mt-1">
-                <select
-                  value={operatorName}
-                  onChange={(e) => handleOperatorSelect(e.target.value)}
-                  disabled={isViewMode}
-                  className="w-full h-10 px-3 pr-8 rounded-md border border-[#CBD5E1] bg-white text-[#0F172A] text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 appearance-none disabled:bg-gray-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">Select operator...</option>
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.employee_name}>
-                      {emp.employee_name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] pointer-events-none" />
-              </div>
-            </div>
-            <Field label="OPERATOR ID" value={operatorId} onChange={setOperatorId} readOnly />
-          </div>
-        </Section>
-
-        {/* Section 3: Equipment Details */}
-        <Section number={3} title="EQUIPMENT DETAILS">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                EQUIPMENT NAME
-              </Label>
-              <div className="relative mt-1">
-                <select
-                  value={equipmentName}
-                  onChange={(e) => handleEquipmentSelect(e.target.value)}
-                  disabled={isViewMode}
-                  className="w-full h-10 px-3 pr-8 rounded-md border border-[#CBD5E1] bg-white text-[#0F172A] text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 appearance-none disabled:bg-gray-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">Select equipment...</option>
-                  {equipmentList.map((eq) => (
-                    <option key={eq.id} value={eq.name}>
-                      {eq.name} ({eq.equipment_id})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] pointer-events-none" />
-              </div>
-            </div>
-            <Field label="EQUIPMENT ID" value={equipmentId} onChange={setEquipmentId} readOnly />
-            <div className="col-span-2">
-              <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                IS DEVICE VALIDATED?
-              </Label>
-              <div className="flex gap-2 mt-2">
-                <ChoiceButton
-                  selected={isDeviceValidated === true}
-                  onClick={() => !isViewMode && setIsDeviceValidated(true)}
-                  label="YES"
-                  variant="success"
-                  disabled={isViewMode}
-                />
-                <ChoiceButton
-                  selected={isDeviceValidated === false}
-                  onClick={() => !isViewMode && setIsDeviceValidated(false)}
-                  label="NO"
-                  variant="danger"
-                  disabled={isViewMode}
-                />
-              </div>
-            </div>
-          </div>
-        </Section>
-
-        {/* Section 4: Part Details */}
-        <Section number={4} title="PART DETAILS">
-          <div className="grid grid-cols-2 gap-4">
-            <Field
-              label="QUANTITY OF DEVICE X (PCS)"
-              type="number"
-              value={quantityOfDeviceX}
-              onChange={setQuantityOfDeviceX}
-              readOnly
-            />
-            <Field label="DEVICE TYPE" value={deviceType} onChange={setDeviceType} readOnly />
-            <div className="col-span-2">
-              <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                CHECK IF THE DEVICE HAS BEEN PROPERLY LABELLED AT ALL SIDES
-              </Label>
-              <div className="flex gap-2 mt-2">
-                <ChoiceButton
-                  selected={labelledAtAllSides === true}
-                  onClick={() => !isViewMode && setLabelledAtAllSides(true)}
-                  label="YES"
-                  variant="success"
-                  disabled={isViewMode}
-                />
-                <ChoiceButton
-                  selected={labelledAtAllSides === false}
-                  onClick={() => !isViewMode && setLabelledAtAllSides(false)}
-                  label="NO"
-                  variant="danger"
-                  disabled={isViewMode}
-                />
-              </div>
-            </div>
-          </div>
-        </Section>
-
-        {/* Section 5: Process Details */}
-        <Section number={5} title="PROCESS DETAILS">
-          <div className="grid grid-cols-2 gap-4">
-            <Field
-              label="NUMBER OF CONFORMING DEVICES (PCS)"
-              type="number"
-              value={numberOfConformingDevices}
-              onChange={setNumberOfConformingDevices}
-              readOnly={isViewMode}
-            />
-            <Field
-              label="NUMBER OF NON-CONFORMING DEVICES (PCS)"
-              type="number"
-              value={numberOfNonConformingDevices}
-              onChange={setNumberOfNonConformingDevices}
-              readOnly={isViewMode}
-            />
-            <Field
-              label="PULL TEST (X 20-100 N TENSILE FORCE) (X)"
-              value={pullTest}
-              onChange={setPullTest}
-              readOnly={isViewMode}
-            />
-            <Field
-              label="SHEAR TEST (X 20-10 N SHEAR FORCE) (X)"
-              value={shearTest}
-              onChange={setShearTest}
-              readOnly={isViewMode}
-            />
-            <Field
-              label="WELD SEAM"
-              value={weldSeam}
-              onChange={setWeldSeam}
-              readOnly={isViewMode}
-            />
-            <Field
-              label="DROP TEST (HEIGHT 1.5 M) (X)"
-              value={dropTest}
-              onChange={setDropTest}
-              readOnly={isViewMode}
-            />
-            <Field
-              label="OVERALL USE OF JOB (YES)"
-              value={overallUseOfJob}
-              onChange={setOverallUseOfJob}
-              readOnly={isViewMode}
-            />
-            <Field
-              label="USE OF JOB (YES)"
-              value={useOfJob1}
-              onChange={setUseOfJob1}
-              readOnly={isViewMode}
-            />
-            <Field
-              label="USE OF JOB (YES)"
-              value={useOfJob2}
-              onChange={setUseOfJob2}
-              readOnly={isViewMode}
-            />
-            <div className="col-span-2">
-              <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
-                WERE THE EOQ-RBI VERIFICATION AND VALIDATION RECORDS CHECKED?
-              </Label>
-              <div className="flex gap-2 mt-2">
-                <ChoiceButton
-                  selected={eooRbiVerification === true}
-                  onClick={() => !isViewMode && setEooRbiVerification(true)}
-                  label="YES"
-                  variant="success"
-                  disabled={isViewMode}
-                />
-                <ChoiceButton
-                  selected={eooRbiVerification === false}
-                  onClick={() => !isViewMode && setEooRbiVerification(false)}
-                  label="NO"
-                  variant="danger"
-                  disabled={isViewMode}
-                />
-              </div>
-            </div>
-            <div className="col-span-2">
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+          {/* Section 1: Header */}
+          <Section number={1} title="HEADER">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="PART" value={partName} onChange={setPartName} readOnly={isViewMode} />
+              <Field label="FORM NO" value={formNo} onChange={setFormNo} readOnly />
               <Field
-                label="SIGNATURE OF FACTORY DATA MEMBER"
-                value={performedBy}
-                onChange={setPerformedBy}
+                label="DATE"
+                type="date"
+                value={date}
+                onChange={setDate}
                 readOnly={isViewMode}
               />
+              <Field label="FCR VAR" value={fcrVar} onChange={setFcrVar} readOnly={isViewMode} />
+              <Field label="BATCH NUMBER" value={batchNumber} onChange={setBatchNumber} readOnly />
             </div>
-          </div>
-        </Section>
+          </Section>
 
-        {/* Overall Result Display */}
-        {isViewMode && existingInspection?.overall_result && (
-          <div
-            className={`rounded-lg p-4 text-center ${existingInspection.overall_result === "Pass" ? "bg-green-100 border border-green-500" : "bg-red-100 border border-red-500"}`}
-          >
-            <p
-              className={`text-lg font-bold ${existingInspection.overall_result === "Pass" ? "text-green-700" : "text-red-700"}`}
+          {/* Section 2: Operator Details */}
+          <Section number={2} title="OPERATOR DETAILS">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                  NAME OF OPERATOR
+                </Label>
+                <div className="relative mt-1">
+                  <select
+                    value={operatorName}
+                    onChange={(e) => handleOperatorSelect(e.target.value)}
+                    disabled={isViewMode}
+                    className="w-full h-10 px-3 pr-8 rounded-md border border-[#CBD5E1] bg-white text-[#0F172A] text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 appearance-none disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select operator...</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.employee_name}>
+                        {emp.employee_name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] pointer-events-none" />
+                </div>
+              </div>
+              <Field label="OPERATOR ID" value={operatorId} onChange={setOperatorId} readOnly />
+            </div>
+          </Section>
+
+          {/* Section 3: Equipment Details */}
+          <Section number={3} title="EQUIPMENT DETAILS">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                  EQUIPMENT NAME
+                </Label>
+                <div className="relative mt-1">
+                  <select
+                    value={equipmentName}
+                    onChange={(e) => handleEquipmentSelect(e.target.value)}
+                    disabled={isViewMode}
+                    className="w-full h-10 px-3 pr-8 rounded-md border border-[#CBD5E1] bg-white text-[#0F172A] text-sm focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#1E3A8A]/20 appearance-none disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select equipment...</option>
+                    {equipmentList.map((eq) => (
+                      <option key={eq.id} value={eq.name}>
+                        {eq.name} ({eq.equipment_id})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] pointer-events-none" />
+                </div>
+              </div>
+              <Field label="EQUIPMENT ID" value={equipmentId} onChange={setEquipmentId} readOnly />
+              <div className="col-span-2">
+                <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                  IS DEVICE VALIDATED?
+                </Label>
+                <div className="flex gap-2 mt-2">
+                  <ChoiceButton
+                    selected={isDeviceValidated === true}
+                    onClick={() => !isViewMode && setIsDeviceValidated(true)}
+                    label="YES"
+                    variant="success"
+                    disabled={isViewMode}
+                  />
+                  <ChoiceButton
+                    selected={isDeviceValidated === false}
+                    onClick={() => !isViewMode && setIsDeviceValidated(false)}
+                    label="NO"
+                    variant="danger"
+                    disabled={isViewMode}
+                  />
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* Section 4: Part Details */}
+          <Section number={4} title="PART DETAILS">
+            <div className="grid grid-cols-2 gap-4">
+              <Field
+                label="QUANTITY OF DEVICE X (PCS)"
+                type="number"
+                value={quantityOfDeviceX}
+                onChange={setQuantityOfDeviceX}
+                readOnly
+              />
+              <Field label="DEVICE TYPE" value={deviceType} onChange={setDeviceType} readOnly />
+              <div className="col-span-2">
+                <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                  CHECK IF THE DEVICE HAS BEEN PROPERLY LABELLED AT ALL SIDES
+                </Label>
+                <div className="flex gap-2 mt-2">
+                  <ChoiceButton
+                    selected={labelledAtAllSides === true}
+                    onClick={() => !isViewMode && setLabelledAtAllSides(true)}
+                    label="YES"
+                    variant="success"
+                    disabled={isViewMode}
+                  />
+                  <ChoiceButton
+                    selected={labelledAtAllSides === false}
+                    onClick={() => !isViewMode && setLabelledAtAllSides(false)}
+                    label="NO"
+                    variant="danger"
+                    disabled={isViewMode}
+                  />
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* Section 5: Process Details */}
+          <Section number={5} title="PROCESS DETAILS">
+            <div className="grid grid-cols-2 gap-4">
+              <Field
+                label="NUMBER OF CONFORMING DEVICES (PCS)"
+                type="number"
+                value={numberOfConformingDevices}
+                onChange={setNumberOfConformingDevices}
+                readOnly={isViewMode}
+              />
+              <Field
+                label="NUMBER OF NON-CONFORMING DEVICES (PCS)"
+                type="number"
+                value={numberOfNonConformingDevices}
+                onChange={setNumberOfNonConformingDevices}
+                readOnly={isViewMode}
+              />
+              <Field
+                label="PULL TEST (X 20-100 N TENSILE FORCE) (X)"
+                value={pullTest}
+                onChange={setPullTest}
+                readOnly={isViewMode}
+              />
+              <Field
+                label="SHEAR TEST (X 20-10 N SHEAR FORCE) (X)"
+                value={shearTest}
+                onChange={setShearTest}
+                readOnly={isViewMode}
+              />
+              <Field
+                label="WELD SEAM"
+                value={weldSeam}
+                onChange={setWeldSeam}
+                readOnly={isViewMode}
+              />
+              <Field
+                label="DROP TEST (HEIGHT 1.5 M) (X)"
+                value={dropTest}
+                onChange={setDropTest}
+                readOnly={isViewMode}
+              />
+              <Field
+                label="OVERALL USE OF JOB (YES)"
+                value={overallUseOfJob}
+                onChange={setOverallUseOfJob}
+                readOnly={isViewMode}
+              />
+              <Field
+                label="USE OF JOB (YES)"
+                value={useOfJob1}
+                onChange={setUseOfJob1}
+                readOnly={isViewMode}
+              />
+              <Field
+                label="USE OF JOB (YES)"
+                value={useOfJob2}
+                onChange={setUseOfJob2}
+                readOnly={isViewMode}
+              />
+              <div className="col-span-2">
+                <Label className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                  WERE THE EOQ-RBI VERIFICATION AND VALIDATION RECORDS CHECKED?
+                </Label>
+                <div className="flex gap-2 mt-2">
+                  <ChoiceButton
+                    selected={eooRbiVerification === true}
+                    onClick={() => !isViewMode && setEooRbiVerification(true)}
+                    label="YES"
+                    variant="success"
+                    disabled={isViewMode}
+                  />
+                  <ChoiceButton
+                    selected={eooRbiVerification === false}
+                    onClick={() => !isViewMode && setEooRbiVerification(false)}
+                    label="NO"
+                    variant="danger"
+                    disabled={isViewMode}
+                  />
+                </div>
+              </div>
+              <div className="col-span-2">
+                <Field
+                  label="SIGNATURE OF FACTORY DATA MEMBER"
+                  value={performedBy}
+                  onChange={setPerformedBy}
+                  readOnly={isViewMode}
+                />
+              </div>
+            </div>
+          </Section>
+
+          {/* Overall Result Display */}
+          {isViewMode && existingInspection?.overall_result && (
+            <div
+              className={`rounded-lg p-4 text-center ${existingInspection.overall_result === "Pass" ? "bg-green-100 border border-green-500" : "bg-red-100 border border-red-500"}`}
             >
-              Overall Result: {existingInspection.overall_result}
-            </p>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="bg-[#1E3A8A] rounded-lg p-4 grid grid-cols-3 gap-4">
-          <Field
-            label="PERFORMED BY"
-            value={performedBy}
-            onChange={setPerformedBy}
-            readOnly={isViewMode}
-            className="bg-white/10 border-white/20 text-white"
-            labelClassName="text-white/80"
-          />
-          <Field
-            label="SIGNATURES"
-            value=""
-            onChange={() => {}}
-            placeholder="Sign here"
-            readOnly={isViewMode}
-            className="bg-white/10 border-white/20 text-white"
-            labelClassName="text-white/80"
-          />
-          <Field
-            label="DATE"
-            type="date"
-            value={signatureDate}
-            onChange={setSignatureDate}
-            readOnly={isViewMode}
-            className="bg-white/10 border-white/20 text-white"
-            labelClassName="text-white/80"
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-end gap-2 pb-8">
-          <Button variant="outline" onClick={() => navigate({ to: "/production" })}>
-            Cancel
-          </Button>
-          {!isViewMode && (
-            <Button
-              onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending}
-              className="bg-[#1E3A8A] hover:bg-[#1D4ED8] text-white"
-            >
-              {saveMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Submit
-            </Button>
+              <p
+                className={`text-lg font-bold ${existingInspection.overall_result === "Pass" ? "text-green-700" : "text-red-700"}`}
+              >
+                Overall Result: {existingInspection.overall_result}
+              </p>
+            </div>
           )}
+
+          {/* Footer */}
+          <div className="bg-[#1E3A8A] rounded-lg p-4 grid grid-cols-3 gap-4">
+            <Field
+              label="PERFORMED BY"
+              value={performedBy}
+              onChange={setPerformedBy}
+              readOnly={isViewMode}
+              className="bg-white/10 border-white/20 text-white"
+              labelClassName="text-white/80"
+            />
+            <Field
+              label="SIGNATURES"
+              value=""
+              onChange={() => {}}
+              placeholder="Sign here"
+              readOnly={isViewMode}
+              className="bg-white/10 border-white/20 text-white"
+              labelClassName="text-white/80"
+            />
+            <Field
+              label="DATE"
+              type="date"
+              value={signatureDate}
+              onChange={setSignatureDate}
+              readOnly={isViewMode}
+              className="bg-white/10 border-white/20 text-white"
+              labelClassName="text-white/80"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-2 pb-8">
+            <Button variant="outline" onClick={() => navigate({ to: "/production" })}>
+              Cancel
+            </Button>
+            {!isViewMode && (
+              <Button
+                onClick={() => setPassFailDialogOpen(true)}
+                disabled={saveMutation.isPending}
+                className="bg-[#1E3A8A] hover:bg-[#1D4ED8] text-white"
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Submit
+              </Button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      {/* Pass/Fail Confirmation Dialog */}
+      <AlertDialog open={passFailDialogOpen} onOpenChange={(o) => setPassFailDialogOpen(o)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              Inspection Result
+            </AlertDialogTitle>
+            <AlertDialogDescription>Did this inspection pass or fail?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-row gap-3 justify-end">
+            <Button
+              variant="outline"
+              className="border-red-300 text-red-700 hover:bg-red-50"
+              onClick={() => saveMutation.mutate("Fail")}
+            >
+              <XCircle className="h-4 w-4 mr-1" /> Fail
+            </Button>
+            <AlertDialogAction
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => saveMutation.mutate("Pass")}
+            >
+              <CheckCircle className="h-4 w-4 mr-1" /> Pass
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
