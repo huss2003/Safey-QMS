@@ -296,12 +296,16 @@ function InspectionFormPage() {
     }
     setQcRows(rows);
     setFormId(template.record_id);
-
-    // Auto-fill polymer quantity from batch data if not already set
-    if (!existingRecord && batch?.expected_usage_kg) {
-      setPolymerQty(batch.expected_usage_kg.toString());
-    }
   }, [existingRecord, template, batch]);
+
+  // Auto-fill polymer quantity + raw material details from batch on first load
+  useEffect(() => {
+    if (batch && !existingRecord && !polymerQty) {
+      if (batch.expected_usage_kg) {
+        setPolymerQty(batch.expected_usage_kg.toString());
+      }
+    }
+  }, [batch, existingRecord]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── QC row updates with auto-calc ──
   const updateQcRow = useCallback((idx: number, field: keyof QcRow, value: string) => {
