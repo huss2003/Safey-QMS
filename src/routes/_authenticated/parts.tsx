@@ -69,6 +69,8 @@ const schema = z.object({
   part_name: z.string().trim().min(1).max(100),
   part_code: z.string().trim().max(20).optional().or(z.literal("")),
   material_type: z.string().min(1, "Required").max(40),
+  masterbatch_id: z.string().optional().or(z.literal("")),
+  masterbatch_qty_kg: z.coerce.number().min(0).optional(),
   consumption_per_unit_kg: z.coerce.number().positive("Must be > 0"),
   low_stock_threshold: z.coerce.number().min(0),
   notes: z.string().optional().or(z.literal("")),
@@ -469,6 +471,23 @@ function PartForm({
   part: Part | null;
 }) {
   const qc = useQueryClient();
+  const [masterbatchSearch, setMasterbatchSearch] = useState("");
+  const { data: rawMaterials = [] } = useQuery({
+    queryKey: ["raw_materials", "for_masterbatch"],
+    staleTime: 5 * 60_000,
+    queryFn: async () =>
+      ((
+        await supabase
+          .from("raw_materials")
+          .select("id, batch_number, material_type, remaining_quantity_kg")
+          .order("batch_number")
+      ).data as any[]) ?? [],
+  });
+  const filteredMb = rawMaterials.filter(
+    (rm) =>
+      rm.batch_number?.toLowerCase().includes(masterbatchSearch.toLowerCase()) ||
+      rm.material_type?.toLowerCase().includes(masterbatchSearch.toLowerCase()),
+  );
   const { data: allParts } = useQuery({
     queryKey: ["parts", "list"],
     staleTime: 5 * 60_000,
@@ -483,6 +502,8 @@ function PartForm({
       part_name: "",
       part_code: "",
       material_type: "",
+      masterbatch_id: "",
+      masterbatch_qty_kg: 0,
       consumption_per_unit_kg: 0.01,
       low_stock_threshold: 100,
       notes: "",
@@ -492,6 +513,8 @@ function PartForm({
           part_name: part.part_name,
           part_code: part.part_code ?? "",
           material_type: part.material_type,
+          masterbatch_id: (part as any).masterbatch_id ?? "",
+          masterbatch_qty_kg: Number((part as any).masterbatch_qty_kg ?? 0),
           consumption_per_unit_kg: Number(part.consumption_per_unit_kg),
           low_stock_threshold: Number(part.low_stock_threshold),
           notes: part.notes ?? "",
@@ -604,6 +627,56 @@ function PartForm({
                   {form.formState.errors.consumption_per_unit_kg.message}
                 </p>
               )}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="relative">
+              <Label className="label-caps">Masterbatch</Label>
+              <Input
+                placeholder="Search raw material batches..."
+                value={
+                  masterbatchSearch ||
+                  (form.watch("masterbatch_id")
+                    ? (rawMaterials.find((rm) => rm.id === form.watch("masterbatch_id"))
+                        ?.batch_number ?? "")
+                    : "")
+                }
+                onChange={(e) => {
+                  setMasterbatchSearch(e.target.value);
+                  if (!e.target.value) form.setValue("masterbatch_id", "");
+                }}
+                onFocus={() => setMasterbatchSearch("")}
+                className="mt-1"
+              />
+              {masterbatchSearch && filteredMb.length > 0 && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                  {filteredMb.map((rm) => (
+                    <button
+                      key={rm.id}
+                      type="button"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                      onClick={() => {
+                        form.setValue("masterbatch_id", rm.id);
+                        setMasterbatchSearch(rm.batch_number);
+                      }}
+                    >
+                      <span className="font-medium">{rm.batch_number}</span>
+                      <span className="text-muted-foreground ml-2">
+                        ({rm.material_type}) — {rm.remaining_quantity_kg} kg
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <Label className="label-caps">Masterbatch quantity (kg)</Label>
+              <Input
+                type="number"
+                step="0.001"
+                {...form.register("masterbatch_qty_kg")}
+                className="mt-1"
+              />
             </div>
           </div>
           <div>
