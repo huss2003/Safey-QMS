@@ -1,6 +1,7 @@
--- Fix: part batch_number trigger should use part_code (e.g. TPX-001) 
--- instead of part_name (e.g. "Top cover") for the batch prefix.
--- "Top cover" → TOPC-B001 (wrong), "TPX-001" → TPX-B001 (correct)
+-- Fix: part batch_number trigger should use part_code (e.g. TPX-001)
+-- Extract only letters from part_code for the prefix.
+-- "TPX-001" -> "TPX" -> "TPX-B001" (correct)
+-- Previously stripped ALL non-alphanumeric: "TPX-001" -> "TPX001" -> "TPX0-B001" (wrong)
 
 CREATE OR REPLACE FUNCTION public.part_batch_gen_batch_number() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
@@ -17,22 +18,19 @@ BEGIN
   END IF;
 
   -- Prefer part_code over part_name for prefix.
-  SELECT COALESCE(part_code, ''), COALESCE(part_name, '') 
-    INTO v_code, v_name 
+  SELECT COALESCE(part_code, ''), COALESCE(part_name, '')
+    INTO v_code, v_name
     FROM public.parts WHERE id = NEW.part_id;
 
-  -- Strip non-alphanumeric, take first 4 chars.
+  -- From part_code: extract only letters (the prefix before numbers/dashes).
+  -- From part_name: strip non-alphanumeric, take first 4 chars.
   IF v_code IS NOT NULL AND v_code <> '' THEN
-    v_stripped := regexp_replace(v_code, '[^A-Za-z0-9]', '', 'g');
+    v_stripped := upper(regexp_replace(v_code, '[^A-Za-z]', '', 'g'));
   ELSE
-    v_stripped := regexp_replace(v_name, '[^A-Za-z0-9]', '', 'g');
+    v_stripped := upper(substring(regexp_replace(v_name, '[^A-Za-z0-9]', '', 'g'), 1, 4));
   END IF;
-  v_stripped := upper(substring(v_stripped from 1 for 4));
 
-  -- Fallback chain.
-  IF v_stripped IS NULL OR v_stripped = '' THEN
-    v_stripped := upper(substring(replace(NEW.part_id::text, '-', '') from 1 for 4));
-  END IF;
+  -- Fallback.
   IF v_stripped IS NULL OR v_stripped = '' THEN
     v_stripped := 'PART';
   END IF;

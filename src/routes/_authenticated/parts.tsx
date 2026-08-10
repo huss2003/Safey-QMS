@@ -472,9 +472,12 @@ function PartForm({
   part: Part | null;
 }) {
   const qc = useQueryClient();
-  const [masterbatchSearch, setMasterbatchSearch] = useState("");
+  const [rmSearch, setRmSearch] = useState("");
+  const [rmFocused, setRmFocused] = useState(false);
+  const [mbSearch, setMbSearch] = useState("");
+  const [mbFocused, setMbFocused] = useState(false);
   const { data: rawMaterials = [] } = useQuery({
-    queryKey: ["raw_materials", "for_masterbatch"],
+    queryKey: ["raw_materials", "for_parts"],
     staleTime: 5 * 60_000,
     queryFn: async () =>
       ((
@@ -484,11 +487,6 @@ function PartForm({
           .order("batch_number")
       ).data as any[]) ?? [],
   });
-  const filteredMb = rawMaterials.filter(
-    (rm) =>
-      rm.batch_number?.toLowerCase().includes(masterbatchSearch.toLowerCase()) ||
-      rm.material_type?.toLowerCase().includes(masterbatchSearch.toLowerCase()),
-  );
   const { data: allParts } = useQuery({
     queryKey: ["parts", "list"],
     staleTime: 5 * 60_000,
