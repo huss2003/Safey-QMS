@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/inspection-form/$batchId")
   component: InspectionFormPage,
   validateSearch: (search: Record<string, unknown>) => ({
     templateId: (search.templateId as string) || undefined,
+    view: search.view === "1",
   }),
 });
 
@@ -96,7 +97,8 @@ interface MeasuringEquip {
 
 function InspectionFormPage() {
   const { batchId } = Route.useParams();
-  const { templateId } = Route.useSearch();
+  const { templateId, view } = Route.useSearch() as any;
+  const isViewMode = !!view;
   const navigate = useNavigate();
   const qc = useQueryClient();
 
@@ -294,10 +296,16 @@ function InspectionFormPage() {
     }
     setQcRows(rows);
     setFormId(template.record_id);
+
+    // Auto-fill polymer quantity from batch data if not already set
+    if (!existingRecord && batch?.expected_usage_kg) {
+      setPolymerQty(batch.expected_usage_kg.toString());
+    }
   }, [existingRecord, template, batch]);
 
   // ── QC row updates with auto-calc ──
   const updateQcRow = useCallback((idx: number, field: keyof QcRow, value: string) => {
+    if (isViewMode) return;
     setQcRows((prev) => {
       const next = [...prev];
       const row = { ...next[idx] };
@@ -583,11 +591,13 @@ function InspectionFormPage() {
                   className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
                   <option value="">Select equipment…</option>
-                  {equipmentList.map((e) => (
-                    <option key={e.id} value={e.name}>
-                      {e.name}
-                    </option>
-                  ))}
+                  {equipmentList
+                    .filter((e) => e.equipment_type === "process")
+                    .map((e) => (
+                      <option key={e.id} value={e.name}>
+                        {e.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div>
@@ -915,7 +925,7 @@ function InspectionFormPage() {
                         const eq = equipmentList.find((eq) => eq.name === selectedName);
                         const cal = calibrations.find((c) => c.equipment_id === eq?.id);
                         updateMeasuring(idx, "name", selectedName);
-                        updateMeasuring(idx, "id", eq?.id ?? "");
+                        updateMeasuring(idx, "id", eq?.equipment_id ?? "");
                         if (cal) {
                           updateMeasuring(idx, "calDate", cal.calibration_date ?? "");
                           updateMeasuring(idx, "nextCalDate", cal.next_calibration_date ?? "");
@@ -924,11 +934,13 @@ function InspectionFormPage() {
                       className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
                       <option value="">Select equipment…</option>
-                      {equipmentList.map((eq) => (
-                        <option key={eq.id} value={eq.name}>
-                          {eq.name} ({eq.equipment_id})
-                        </option>
-                      ))}
+                      {equipmentList
+                        .filter((eq) => eq.equipment_type === "measuring")
+                        .map((eq) => (
+                          <option key={eq.id} value={eq.name}>
+                            {eq.name} ({eq.equipment_id})
+                          </option>
+                        ))}
                     </select>
                   </div>
                   <div>
@@ -1076,6 +1088,7 @@ function InspectionFormPage() {
                           step="any"
                           value={row.a_measured || ""}
                           onChange={(e) => updateQcRow(idx, "a_measured", e.target.value)}
+                          readOnly={isViewMode}
                           className="h-7 text-[12px] text-center w-full"
                           placeholder="0"
                         />
@@ -1095,6 +1108,7 @@ function InspectionFormPage() {
                           step="any"
                           value={row.b_measured || ""}
                           onChange={(e) => updateQcRow(idx, "b_measured", e.target.value)}
+                          readOnly={isViewMode}
                           className="h-7 text-[12px] text-center w-full"
                           placeholder="0"
                         />
@@ -1114,6 +1128,7 @@ function InspectionFormPage() {
                           step="any"
                           value={row.c_measured || ""}
                           onChange={(e) => updateQcRow(idx, "c_measured", e.target.value)}
+                          readOnly={isViewMode}
                           className="h-7 text-[12px] text-center w-full"
                           placeholder="0"
                         />
@@ -1215,42 +1230,44 @@ function InspectionFormPage() {
         </Card>
 
         {/* ── Save ── */}
-        <div className="space-y-3 pb-8">
-          {!canSave && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-              <p className="text-[12px] font-medium text-amber-800 mb-1">
-                Missing required fields:
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {validationErrors.map((field) => (
-                  <span
-                    key={field}
-                    className="inline-block text-[11px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full"
-                  >
-                    {field}
-                  </span>
-                ))}
+        {!isViewMode && (
+          <div className="space-y-3 pb-8">
+            {!canSave && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="text-[12px] font-medium text-amber-800 mb-1">
+                  Missing required fields:
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {validationErrors.map((field) => (
+                    <span
+                      key={field}
+                      className="inline-block text-[11px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full"
+                    >
+                      {field}
+                    </span>
+                  ))}
+                </div>
               </div>
+            )}
+            <div className="flex justify-end">
+              <Button
+                size="lg"
+                onClick={() => {
+                  if (!canSave) {
+                    toast.error(`Please fill all required fields: ${validationErrors.join(", ")}`);
+                    return;
+                  }
+                  saveMutation.mutate();
+                }}
+                disabled={saveMutation.isPending || !canSave}
+                className="min-w-[160px]"
+              >
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Save Inspection Record
+              </Button>
             </div>
-          )}
-          <div className="flex justify-end">
-            <Button
-              size="lg"
-              onClick={() => {
-                if (!canSave) {
-                  toast.error(`Please fill all required fields: ${validationErrors.join(", ")}`);
-                  return;
-                }
-                saveMutation.mutate();
-              }}
-              disabled={saveMutation.isPending || !canSave}
-              className="min-w-[160px]"
-            >
-              {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Save Inspection Record
-            </Button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

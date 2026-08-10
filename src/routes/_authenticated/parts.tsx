@@ -314,15 +314,24 @@ function InspectionPicker({ batchId, currentResult }: { batchId: string; current
     }
   };
 
-  // If already submitted → show disabled checkmark, no popover
+  // If already submitted → clickable checkmark that opens form in view mode
   if (isSubmitted) {
     return (
-      <span
-        className="inline-flex items-center justify-center h-7 w-7 text-emerald-600 cursor-default"
-        title={`Inspection completed — ${currentResult}`}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-7 w-7 text-emerald-600"
+        title={`Inspection completed — ${currentResult}. Click to view.`}
+        onClick={() =>
+          navigate({
+            to: "/inspection-form/$batchId",
+            params: { batchId },
+            search: { view: "1" } as any,
+          })
+        }
       >
         <ClipboardCheck className="h-3.5 w-3.5" />
-      </span>
+      </Button>
     );
   }
 

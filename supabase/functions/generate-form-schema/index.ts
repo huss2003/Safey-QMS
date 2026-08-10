@@ -12,7 +12,17 @@ interface GenerateRequest {
 interface FormField {
   key: string;
   label: string;
-  type: "text" | "number" | "select" | "yesno" | "date" | "textarea" | "signature" | "section" | "table" | "image";
+  type:
+    | "text"
+    | "number"
+    | "select"
+    | "yesno"
+    | "date"
+    | "textarea"
+    | "signature"
+    | "section"
+    | "table"
+    | "image";
   required: boolean;
   placeholder?: string;
   default_value?: string | number | boolean;
@@ -126,10 +136,13 @@ serve(async (req: Request) => {
     const { docxText, fileName } = body;
 
     if (!docxText || docxText.trim().length < 10) {
-      return new Response(JSON.stringify({ error: "docxText is required and must contain content" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "docxText is required and must contain content" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Truncate extremely long documents (MiMo has 128K context, but keep it reasonable)
@@ -140,13 +153,16 @@ serve(async (req: Request) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: MODEL,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `Parse this inspection form document text and return a structured JSON schema:\n\n${truncated}` },
+          {
+            role: "user",
+            content: `Parse this inspection form document text and return a structured JSON schema:\n\n${truncated}`,
+          },
         ],
         temperature: 0.1,
         max_tokens: 4096,
@@ -156,26 +172,32 @@ serve(async (req: Request) => {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      return new Response(JSON.stringify({
-        error: `MiMo API error: ${response.status}`,
-        details: errorBody,
-      }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: `MiMo API error: ${response.status}`,
+          details: errorBody,
+        }),
+        {
+          status: 502,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     const data = await response.json();
     const content = data?.choices?.[0]?.message?.content;
 
     if (!content) {
-      return new Response(JSON.stringify({
-        error: "No content in AI response",
-        raw_response: data,
-      }), {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "No content in AI response",
+          raw_response: data,
+        }),
+        {
+          status: 502,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Parse the AI response — it should be JSON directly
@@ -184,19 +206,23 @@ serve(async (req: Request) => {
       schema = JSON.parse(content.replace(/```json|```/g, "").trim());
     } catch {
       // If AI returned malformed JSON, return raw text so admin can still work
-      return new Response(JSON.stringify({
-        error: "Failed to parse AI response as JSON",
-        raw_text: truncated,
-        ai_response: content,
-      } as GenerateResponse), {
-        status: 422,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Failed to parse AI response as JSON",
+          raw_text: truncated,
+          ai_response: content,
+        } as GenerateResponse),
+        {
+          status: 422,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     // Ensure minimum structure
     if (!schema.sections) schema.sections = [];
-    if (!schema.form_title) schema.form_title = fileName?.replace(/\.docx$/i, "") ?? "Untitled Form";
+    if (!schema.form_title)
+      schema.form_title = fileName?.replace(/\.docx$/i, "") ?? "Untitled Form";
 
     const result: GenerateResponse = {
       schema,
@@ -212,11 +238,14 @@ serve(async (req: Request) => {
       },
     });
   } catch (err) {
-    return new Response(JSON.stringify({
-      error: err instanceof Error ? err.message : "Unknown error",
-    }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        error: err instanceof Error ? err.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 });
