@@ -20,7 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Part, PartBatch } from "@/integrations/supabase/database.types";
 import { PageHeader } from "@/components/inventory/page-header";
 import { EmptyState } from "@/components/inventory/empty-state";
-import { MaterialBadge } from "@/components/inventory/material-badge";
+
 import { TableSkeleton } from "@/components/inventory/skeletons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -133,8 +133,7 @@ function PartsPage() {
                 <TableRow>
                   <TableHead></TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Material</TableHead>
-                  <TableHead>Consumption/unit</TableHead>
+
                   <TableHead className="w-52">Stock vs Threshold</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -165,10 +164,7 @@ function PartsPage() {
                         )}
                       </TableCell>
                       <TableCell className="font-medium">{p.part_name}</TableCell>
-                      <TableCell>
-                        <MaterialBadge material={p.material_type} />
-                      </TableCell>
-                      <TableCell>{fmtKg(p.consumption_per_unit_kg, 4)}</TableCell>
+
                       <TableCell>
                         <div className="text-xs mb-1">
                           {fmtNum(p.current_stock)} / {fmtNum(p.low_stock_threshold)}
