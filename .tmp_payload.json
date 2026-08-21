@@ -1,1 +1,0 @@
-{"query": "INSERT INTO parts (part_name, material_type, consumption_per_unit_kg, notes) VALUES ('Bagging MRP', 'Packaging', 0.01, 'Purchased - P G Enterprise');"}
