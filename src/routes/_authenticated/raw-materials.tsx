@@ -9,6 +9,7 @@ import {
   Plus,
   Package,
   Eye,
+  Pencil,
   Ban,
   CheckCircle,
   Loader2,
@@ -104,6 +105,7 @@ function RawMaterialsPage() {
   const [showBlocked, setShowBlocked] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [viewing, setViewing] = useState<RawMaterial | null>(null);
+  const [editing, setEditing] = useState<RawMaterial | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -298,6 +300,14 @@ function RawMaterialsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
+                            title="Edit documents"
+                            onClick={() => setEditing(r)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => block.mutate({ id: r.id, is_blocked: !r.is_blocked })}
                           >
                             {r.is_blocked ? (
@@ -322,6 +332,11 @@ function RawMaterialsPage() {
         open={!!viewing}
         onOpenChange={(o) => !o && setViewing(null)}
         material={viewing}
+      />
+      <EditRawMaterialDialog
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        material={editing}
       />
     </div>
   );
@@ -798,6 +813,213 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="label-caps">{label}</div>
       <div className="text-sm font-semibold mt-0.5">{value}</div>
     </div>
+  );
+}
+
+/* ── Edit documents dialog (fill-only, no overwrite) ── */
+function EditRawMaterialDialog({
+  open,
+  onOpenChange,
+  material,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  material: RawMaterial | null;
+}) {
+  const qc = useQueryClient();
+  const [coaNumber, setCoaNumber] = useState("");
+  const [poNumber, setPoNumber] = useState("");
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [coaFiles, setCoaFiles] = useState<DocEntry[]>([]);
+  const [poFiles, setPoFiles] = useState<DocEntry[]>([]);
+  const [invoiceFiles, setInvoiceFiles] = useState<DocEntry[]>([]);
+
+  const readFiles = async (files: FileList | null): Promise<DocEntry[]> => {
+    if (!files?.length) return [];
+    return Promise.all(
+      Array.from(files).map(
+        (f) =>
+          new Promise<DocEntry>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () =>
+              resolve({
+                name: f.name,
+                type: f.type,
+                size: f.size,
+                dataUrl: reader.result as string,
+              });
+            reader.readAsDataURL(f);
+          }),
+      ),
+    );
+  };
+
+  // Reset when opening a new material
+  useEffect(() => {
+    if (!material) return;
+    setCoaNumber(material.coa_number ?? "");
+    setPoNumber(material.po_number ?? "");
+    setInvoiceNumber(material.invoice_number ?? "");
+    setCoaFiles([]);
+    setPoFiles([]);
+    setInvoiceFiles([]);
+  }, [material?.id, open]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!material) throw new Error("No material selected");
+      const coaLocked = !!material.coa_number;
+      const poLocked = !!material.po_number;
+      const invLocked = !!material.invoice_number;
+      const hasDocs = (json: string | null) => {
+        if (!json) return false;
+        try {
+          const parsed = JSON.parse(json);
+          return Array.isArray(parsed) && parsed.length > 0;
+        } catch {
+          return false;
+        }
+      };
+      const coaHasDocs = hasDocs(material.coa_documents);
+      const poHasDocs = hasDocs(material.po_documents);
+      const invHasDocs = hasDocs(material.invoice_documents);
+      const uploadDocs = (docs: DocEntry[]) =>
+        docs.length
+          ? JSON.stringify(docs.map(({ name, type, size, dataUrl }) => ({ name, type, size, dataUrl })))
+          : null;
+      const payload: Record<string, unknown> = {};
+      if (!coaLocked) payload.coa_number = coaNumber.trim() || null;
+      if (!poLocked) payload.po_number = poNumber.trim() || null;
+      if (!invLocked) payload.invoice_number = invoiceNumber.trim() || null;
+      if (!coaHasDocs) payload.coa_documents = uploadDocs(coaFiles);
+      if (!poHasDocs) payload.po_documents = uploadDocs(poFiles);
+      if (!invHasDocs) payload.invoice_documents = uploadDocs(invoiceFiles);
+      if (Object.keys(payload).length === 0) {
+        toast.info("All fields already filled — nothing to update");
+        onOpenChange(false);
+        return;
+      }
+      const { error } = await (supabase.from("raw_materials") as any)
+        .update(payload)
+        .eq("id", material!.id);
+      if (error) throw error;
+      return payload;
+    },
+    onSuccess: () => {
+      toast.success("Documents updated");
+      qc.invalidateQueries({ queryKey: ["raw_materials"] });
+      audit("update", "raw_material", material?.batch_number ?? "");
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error(e.message ?? "Failed"),
+  });
+
+  if (!material) return null;
+
+  // Flags: filled = locked (cannot edit), empty = fillable
+  const coaLocked = !!material.coa_number;
+  const poLocked = !!material.po_number;
+  const invLocked = !!material.invoice_number;
+  const hasDocs = (json: string | null) => {
+    if (!json) return false;
+    try {
+      const parsed = JSON.parse(json);
+      return Array.isArray(parsed) && parsed.length > 0;
+    } catch {
+      return false;
+    }
+  };
+  const coaHasDocs = hasDocs(material.coa_documents);
+  const poHasDocs = hasDocs(material.po_documents);
+  const invHasDocs = hasDocs(material.invoice_documents);
+
+  const uploadDocs = (docs: DocEntry[]) =>
+    docs.length
+      ? JSON.stringify(docs.map(({ name, type, size, dataUrl }) => ({ name, type, size, dataUrl })))
+      : null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {material.batch_number} <MaterialBadge material={material.material_type} />{" "}
+            <span className="text-xs text-muted-foreground font-normal">— Edit Documents</span>
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Header stats (read-only context) */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
+          <Stat label="Initial" value={fmtKg(material.initial_quantity_kg)} />
+          <Stat label="Remaining" value={fmtKg(material.remaining_quantity_kg)} />
+          <Stat
+            label="Utilization"
+            value={`${(100 - (Number(material.remaining_quantity_kg) / Number(material.initial_quantity_kg)) * 100).toFixed(1)}%`}
+          />
+          <Stat label="Rate" value={`${fmtCurrency(material.rate_per_kg)}/kg`} />
+          <Stat
+            label="Value"
+            value={fmtCurrency(Number(material.initial_quantity_kg) * Number(material.rate_per_kg))}
+          />
+        </div>
+
+        {/* Numbers: locked if filled, editable if empty */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          <div>
+            <Label className="label-caps">COA Number {coaLocked && <span className="text-muted-foreground">(locked)</span>}</Label>
+            {coaLocked ? (
+              <div className="mt-1 border rounded-md p-2 text-sm bg-muted/40">{material.coa_number}</div>
+            ) : (
+              <Input value={coaNumber} onChange={(e) => setCoaNumber(e.target.value)} placeholder="COA-001" className="mt-1" />
+            )}
+          </div>
+          <div>
+            <Label className="label-caps">PO Number {poLocked && <span className="text-muted-foreground">(locked)</span>}</Label>
+            {poLocked ? (
+              <div className="mt-1 border rounded-md p-2 text-sm bg-muted/40">{material.po_number}</div>
+            ) : (
+              <Input value={poNumber} onChange={(e) => setPoNumber(e.target.value)} placeholder="PO-001" className="mt-1" />
+            )}
+          </div>
+          <div>
+            <Label className="label-caps">Invoice Number {invLocked && <span className="text-muted-foreground">(locked)</span>}</Label>
+            {invLocked ? (
+              <div className="mt-1 border rounded-md p-2 text-sm bg-muted/40">{material.invoice_number}</div>
+            ) : (
+              <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} placeholder="INV-001" className="mt-1" />
+            )}
+          </div>
+        </div>
+
+        {/* Docs: shown read-only if present, upload if empty */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          {coaHasDocs ? (
+            <DocList label="COA Documents" json={material.coa_documents} />
+          ) : (
+            <DocUpload label="COA Documents" files={coaFiles} setFiles={setCoaFiles} readFiles={readFiles} inputId="edit-coa-upload" />
+          )}
+          {poHasDocs ? (
+            <DocList label="PO Documents" json={material.po_documents} />
+          ) : (
+            <DocUpload label="PO Documents" files={poFiles} setFiles={setPoFiles} readFiles={readFiles} inputId="edit-po-upload" />
+          )}
+          {invHasDocs ? (
+            <DocList label="Invoice Documents" json={material.invoice_documents} />
+          ) : (
+            <DocUpload label="Invoice Documents" files={invoiceFiles} setFiles={setInvoiceFiles} readFiles={readFiles} inputId="edit-inv-upload" />
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => save.mutate()} disabled={save.isPending}>
+            {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
