@@ -280,13 +280,13 @@ function InspectionPicker({ batchId, currentResult }: { batchId: string; current
     // Generate 39 empty QC rows
     const qcRows = Array.from({ length: 39 }, (_, i) => ({
       part_num: i + 1,
-      a_actual: parseFloat(String(template.field_a).replace(/[^0-9.\-]/g, "")) || 0,
+      a_actual: parseFloat(String(template.field_a).replace(/[^0-9.-]/g, "")) || 0,
       a_measured: 0,
       a_difference: 0,
-      b_actual: parseFloat(String(template.field_b).replace(/[^0-9.\-]/g, "")) || 0,
+      b_actual: parseFloat(String(template.field_b).replace(/[^0-9.-]/g, "")) || 0,
       b_measured: 0,
       b_difference: 0,
-      c_actual: parseFloat(String(template.field_c).replace(/[^0-9.\-]/g, "")) || 0,
+      c_actual: parseFloat(String(template.field_c).replace(/[^0-9.-]/g, "")) || 0,
       c_measured: 0,
       c_difference: 0,
       tolerance: template.tolerance,
@@ -520,7 +520,13 @@ function PartForm({
 
   const save = useMutation({
     mutationFn: async (v: FormValues) => {
-      const payload = { ...v, notes: v.notes || null };
+      // Empty UUID strings break Postgres uuid columns — normalize to null
+      const payload = {
+        ...v,
+        material_id: v.material_id || null,
+        masterbatch_id: v.masterbatch_id || null,
+        notes: v.notes || null,
+      };
       if (part) {
         const { error } = await (supabase.from("parts") as any).update(payload).eq("id", part.id);
         if (error) throw error;
@@ -542,7 +548,13 @@ function PartForm({
           const nextNum = (existing.length > 0 ? Math.max(...existing) : 0) + 1;
           finalCode = `${prefix}${String(nextNum).padStart(3, "0")}`;
         }
-        const payload = { ...v, part_code: finalCode, notes: v.notes || null };
+        const payload = {
+          ...v,
+          part_code: finalCode,
+          material_id: v.material_id || null,
+          masterbatch_id: v.masterbatch_id || null,
+          notes: v.notes || null,
+        };
         const { error } = await (supabase.from("parts") as any).insert(payload);
         if (error) {
           if (error.code === "23505")
