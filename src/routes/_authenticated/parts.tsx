@@ -754,7 +754,9 @@ function PartForm({
               )}
             </div>
             <div>
-              <Label className="label-caps">Masterbatch quantity (kg)</Label>
+              <Label className="label-caps text-[10px] whitespace-nowrap">
+                Masterbatch Qty (kg)
+              </Label>
               <Input
                 type="number"
                 step="0.001"
