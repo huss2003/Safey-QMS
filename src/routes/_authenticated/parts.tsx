@@ -615,41 +615,36 @@ function PartForm({
                 onBlur={() => setTimeout(() => setRmFocused(false), 200)}
                 className="mt-1"
               />
-              {rmFocused &&
-                rmSearch &&
-                rawMaterials.filter(
-                  (rm) =>
-                    rm.batch_number?.toLowerCase().includes(rmSearch.toLowerCase()) ||
-                    rm.material_type?.toLowerCase().includes(rmSearch.toLowerCase()),
-                ).length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-auto">
-                    {rawMaterials
-                      .filter(
-                        (rm) =>
-                          rm.batch_number?.toLowerCase().includes(rmSearch.toLowerCase()) ||
-                          rm.material_type?.toLowerCase().includes(rmSearch.toLowerCase()),
-                      )
-                      .map((rm) => (
-                        <button
-                          key={rm.id}
-                          type="button"
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            form.setValue("material_id", rm.id);
-                            form.setValue("material_type", rm.material_type);
-                            setRmSearch(rm.batch_number);
-                            setRmFocused(false);
-                          }}
-                        >
-                          <span className="font-medium">{rm.batch_number}</span>
-                          <span className="text-muted-foreground ml-2">
-                            ({rm.material_type}) — {rm.remaining_quantity_kg} kg
-                          </span>
-                        </button>
-                      ))}
-                  </div>
-                )}
+              {rmFocused && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                  {rawMaterials
+                    .filter(
+                      (rm) =>
+                        !rmSearch ||
+                        rm.batch_number?.toLowerCase().includes(rmSearch.toLowerCase()) ||
+                        rm.material_type?.toLowerCase().includes(rmSearch.toLowerCase()),
+                    )
+                    .map((rm) => (
+                      <button
+                        key={rm.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          form.setValue("material_id", rm.id);
+                          form.setValue("material_type", rm.material_type);
+                          setRmSearch(rm.batch_number);
+                          setRmFocused(false);
+                        }}
+                      >
+                        <span className="font-medium">{rm.batch_number}</span>
+                        <span className="text-muted-foreground ml-2">
+                          ({rm.material_type}) — {rm.remaining_quantity_kg} kg
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              )}
               {form.formState.errors.material_type && (
                 <p className="text-xs text-destructive mt-1">
                   {form.formState.errors.material_type.message}
@@ -693,40 +688,35 @@ function PartForm({
                 onBlur={() => setTimeout(() => setMbFocused(false), 200)}
                 className="mt-1"
               />
-              {mbFocused &&
-                mbSearch &&
-                rawMaterials.filter(
-                  (rm) =>
-                    rm.batch_number?.toLowerCase().includes(mbSearch.toLowerCase()) ||
-                    rm.material_type?.toLowerCase().includes(mbSearch.toLowerCase()),
-                ).length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-auto">
-                    {rawMaterials
-                      .filter(
-                        (rm) =>
-                          rm.batch_number?.toLowerCase().includes(mbSearch.toLowerCase()) ||
-                          rm.material_type?.toLowerCase().includes(mbSearch.toLowerCase()),
-                      )
-                      .map((rm) => (
-                        <button
-                          key={rm.id}
-                          type="button"
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            form.setValue("masterbatch_id", rm.id);
-                            setMbSearch(rm.batch_number);
-                            setMbFocused(false);
-                          }}
-                        >
-                          <span className="font-medium">{rm.batch_number}</span>
-                          <span className="text-muted-foreground ml-2">
-                            ({rm.material_type}) — {rm.remaining_quantity_kg} kg
-                          </span>
-                        </button>
-                      ))}
-                  </div>
-                )}
+              {mbFocused && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                  {rawMaterials
+                    .filter(
+                      (rm) =>
+                        !mbSearch ||
+                        rm.batch_number?.toLowerCase().includes(mbSearch.toLowerCase()) ||
+                        rm.material_type?.toLowerCase().includes(mbSearch.toLowerCase()),
+                    )
+                    .map((rm) => (
+                      <button
+                        key={rm.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          form.setValue("masterbatch_id", rm.id);
+                          setMbSearch(rm.batch_number);
+                          setMbFocused(false);
+                        }}
+                      >
+                        <span className="font-medium">{rm.batch_number}</span>
+                        <span className="text-muted-foreground ml-2">
+                          ({rm.material_type}) — {rm.remaining_quantity_kg} kg
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
             <div>
               <Label className="label-caps">Masterbatch quantity (kg)</Label>
