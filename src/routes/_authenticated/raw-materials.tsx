@@ -74,6 +74,7 @@ const schema = z.object({
   vendor_id: z.string().uuid("Pick a vendor"),
   quantity_unit: z.string().min(1, "Required"),
   initial_quantity_kg: z.coerce.number().positive("Must be > 0"),
+  threshold_quantity: z.coerce.number().min(0, "Must be ≥ 0"),
   rate_per_kg: z.coerce.number().min(0, "Must be ≥ 0"),
   purchase_date: z.string().min(1, "Required"),
   notes: z.string().optional().or(z.literal("")),
@@ -248,16 +249,12 @@ function RawMaterialsPage() {
                     <TableHead>Batch</TableHead>
                     <TableHead>Material</TableHead>
                     <TableHead>Vendor</TableHead>
-                    <TableHead className="w-52">Remaining</TableHead>
+                    <TableHead>Threshold</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.map((r) => {
-                    const pct =
-                      (Number(r.remaining_quantity_kg) / Number(r.initial_quantity_kg)) * 100;
-                    const color =
-                      pct > 50 ? "bg-success" : pct > 20 ? "bg-warning" : "bg-destructive";
                     return (
                       <TableRow key={r.id} className="hover:bg-muted/30">
                         <TableCell className="font-medium">{r.batch_number}</TableCell>
@@ -265,16 +262,8 @@ function RawMaterialsPage() {
                           <MaterialBadge material={r.material_type} />
                         </TableCell>
                         <TableCell>{vendorMap.get(r.vendor_id)}</TableCell>
-                        <TableCell>
-                          <div className="text-xs mb-1">
-                            {fmtNum(r.remaining_quantity_kg)} {r.quantity_unit ?? "kg"}
-                          </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div
-                              className={`h-full ${color}`}
-                              style={{ width: `${Math.max(2, pct)}%` }}
-                            />
-                          </div>
+                        <TableCell className="font-medium">
+                          {fmtNum(r.threshold_quantity ?? 0)} {r.quantity_unit ?? "kg"}
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
                           <Button variant="ghost" size="icon" onClick={() => setViewing(r)}>
@@ -441,6 +430,7 @@ function AddRawMaterialDialog({
       vendor_id: "",
       quantity_unit: "kg",
       initial_quantity_kg: 0,
+      threshold_quantity: 0,
       rate_per_kg: 0,
       purchase_date: new Date().toISOString().slice(0, 10),
       notes: "",
@@ -468,6 +458,7 @@ function AddRawMaterialDialog({
           quantity_unit: v.quantity_unit,
           initial_quantity_kg: v.initial_quantity_kg,
           remaining_quantity_kg: v.initial_quantity_kg,
+          threshold_quantity: v.threshold_quantity,
           rate_per_kg: v.rate_per_kg,
           purchase_date: v.purchase_date,
           notes: v.notes || null,
@@ -583,6 +574,15 @@ function AddRawMaterialDialog({
             <div>
               <Label className="label-caps">Rate (₹/kg) *</Label>
               <Input type="number" step="0.01" {...form.register("rate_per_kg")} className="mt-1" />
+            </div>
+            <div>
+              <Label className="label-caps">Set threshold limit</Label>
+              <Input
+                type="number"
+                step="0.001"
+                {...form.register("threshold_quantity")}
+                className="mt-1"
+              />
             </div>
           </div>
           <div>
