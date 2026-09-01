@@ -276,9 +276,18 @@ export function EmployeeTrainings({ employee }: Props) {
             <TableBody>
               {records.map((r, i) => {
                 const evalData = parseEval(r.evaluation_marks);
-                const resultText =
-                  evalData && evalData.total != null
-                    ? `${evalData.total} (${evalData.finalResult})`
+                const rawMarks = r.evaluation_marks?.trim();
+                const plainMarks =
+                  !!rawMarks &&
+                  rawMarks !== "null" &&
+                  !rawMarks.startsWith("{") &&
+                  !rawMarks.startsWith("[")
+                    ? rawMarks
+                    : null;
+                const resultText = evalData
+                  ? `${evalData.total} (${evalData.finalResult})`
+                  : plainMarks
+                    ? plainMarks
                     : "—";
                 return (
                   <TableRow key={r.id} className="border-b border-border/40">
@@ -293,9 +302,15 @@ export function EmployeeTrainings({ employee }: Props) {
                       {fmtDate(r.performance_date)}
                     </TableCell>
                     <TableCell className="text-[12.5px]">
-                      {evalData ? (
+                      {evalData || plainMarks ? (
                         <Badge
-                          variant={evalData.finalResult === "Pass" ? "default" : "destructive"}
+                          variant={
+                            evalData
+                              ? evalData.finalResult === "Pass"
+                                ? "default"
+                                : "destructive"
+                              : "secondary"
+                          }
                           className="text-[11px]"
                         >
                           {resultText}
@@ -575,7 +590,20 @@ export function EmployeeTrainings({ employee }: Props) {
                 </div>
                 <div>
                   <Label className="label-caps">Evaluation Marks</Label>
-                  <Input value={viewRecord.evaluation_marks ?? "—"} disabled className="mt-1" />
+                  <Input
+                    value={
+                      viewRecord.evaluation_marks
+                        ? (() => {
+                            const d = parseEval(viewRecord.evaluation_marks);
+                            if (d) return `${d.total} / 100`;
+                            const m = viewRecord.evaluation_marks.trim();
+                            return m === "null" ? "—" : m;
+                          })()
+                        : "—"
+                    }
+                    disabled
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <Label className="label-caps">Duration</Label>
