@@ -87,7 +87,7 @@ function UdiDashboard() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold">Dashboard</h1>
+        <h1 className="text-xl font-bold">Scan UDI</h1>
         <div className="flex items-center gap-3">
           <Link to="/enquire-serial">
             <Button variant="outline" size="sm">
