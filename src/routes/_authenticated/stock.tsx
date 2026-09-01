@@ -110,7 +110,7 @@ function StockPage() {
       (
         await supabase
           .from("products")
-          .select("id, product_name, product_code, is_active")
+          .select("id, product_name, product_code, quantity_in_stock, is_active")
           .order("product_name")
       ).data ?? [],
   });
@@ -175,7 +175,7 @@ function StockPage() {
       name: p.product_name,
       sub: p.product_code ?? "",
       material: "—",
-      stock_units: 0,
+      stock_units: Number((p as any).quantity_in_stock ?? 0),
       active: !!p.is_active,
     }));
     const otherRows: StockRow[] = (otherList ?? []).map((o) => ({
