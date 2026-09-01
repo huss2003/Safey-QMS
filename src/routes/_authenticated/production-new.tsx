@@ -56,13 +56,7 @@ import {
 import { fmtKg, fmtNum, fmtDate } from "@/lib/inventory/format";
 import { audit } from "@/lib/inventory/audit";
 import { cn } from "@/lib/utils";
-import {
-  EMPLOYEE_ROLES,
-  EMPLOYEES,
-  employeesByRole,
-  employeeLabel,
-  roleLabel,
-} from "@/lib/inventory/employees";
+import { EMPLOYEE_ROLES, roleLabel } from "@/lib/inventory/employees";
 
 export const Route = createFileRoute("/_authenticated/production-new")({
   component: NewProductionWizard,
@@ -113,11 +107,32 @@ function NewProductionWizard() {
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
 
+  // Real employees from the employees table (not mock data)
+  const { data: employees } = useQuery({
+    queryKey: ["production", "employees"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("employees")
+        .select("id, employee_name, employee_role")
+        .order("employee_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const employeesForRole = selectedRole
+    ? (employees ?? [])
+        .filter((e: any) => e.employee_role === selectedRole)
+        .map((e: any) => ({ value: e.id, label: e.employee_name }))
+    : [];
+
+  const employeeLabel = (id: string | null | undefined) =>
+    (employees ?? []).find((e: any) => e.id === id)?.employee_name ?? id ?? "—";
+
   // Step 3 — equipment
   const [processEquipmentId, setProcessEquipmentId] = useState<string>("");
   const [measuringEquipmentId, setMeasuringEquipmentId] = useState<string>("");
-
-  const employeesForRole = selectedRole ? employeesByRole(selectedRole) : [];
 
   // Auto-select the employee when only one matches the chosen role
   useEffect(() => {
