@@ -572,7 +572,7 @@ function PartForm({
         <form onSubmit={form.handleSubmit((v) => save.mutate(v))} className="space-y-4">
           <div>
             <Label className="label-caps">Part name *</Label>
-            <Input {...form.register("part_name")} className="mt-1" />
+            <Input {...form.register("part_name")} className="mt-1 h-9" />
             {form.formState.errors.part_name && (
               <p className="text-xs text-destructive mt-1">
                 {form.formState.errors.part_name.message}
@@ -584,39 +584,41 @@ function PartForm({
             <Input
               {...form.register("part_code")}
               placeholder="e.g. TPX- (auto-increments to TPX-001, TPX-002...)"
-              className="mt-1"
+              className="mt-1 h-9"
             />
             <p className="text-[11px] text-muted-foreground mt-1">
               Type the prefix only. Numbers are auto-generated (e.g. TPX- → TPX-001).
             </p>
           </div>
           {/* Material (searchable) + Consumption */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-start">
             <div className="relative">
               <Label className="label-caps">Material *</Label>
-              <Input
-                placeholder="Search raw material batches..."
-                value={
-                  rmSearch ||
-                  rawMaterials.find((rm) => rm.id === form.watch("material_id"))?.batch_number ||
-                  ""
-                }
-                onChange={(e) => {
-                  setRmSearch(e.target.value);
-                  if (!e.target.value) {
-                    form.setValue("material_id", "");
-                    form.setValue("material_type", "");
+              <div className="relative mt-1">
+                <Input
+                  placeholder="Search raw material..."
+                  value={
+                    rmSearch ||
+                    rawMaterials.find((rm) => rm.id === form.watch("material_id"))?.batch_number ||
+                    ""
                   }
-                }}
-                onFocus={() => {
-                  setRmFocused(true);
-                  setRmSearch("");
-                }}
-                onBlur={() => setTimeout(() => setRmFocused(false), 200)}
-                className="mt-1"
-              />
+                  onChange={(e) => {
+                    setRmSearch(e.target.value);
+                    if (!e.target.value) {
+                      form.setValue("material_id", "");
+                      form.setValue("material_type", "");
+                    }
+                  }}
+                  onFocus={() => {
+                    setRmFocused(true);
+                  }}
+                  onBlur={() => setTimeout(() => setRmFocused(false), 150)}
+                  className="pr-8 h-9"
+                />
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
               {rmFocused && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-56 overflow-auto">
                   {rawMaterials
                     .filter(
                       (rm) =>
@@ -628,7 +630,7 @@ function PartForm({
                       <button
                         key={rm.id}
                         type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center justify-between gap-2 border-b border-border/50 last:border-0"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           form.setValue("material_id", rm.id);
@@ -637,12 +639,27 @@ function PartForm({
                           setRmFocused(false);
                         }}
                       >
-                        <span className="font-medium">{rm.batch_number}</span>
-                        <span className="text-muted-foreground ml-2">
-                          ({rm.material_type}) — {rm.remaining_quantity_kg} kg
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span className="font-medium truncate">{rm.batch_number}</span>
+                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground whitespace-nowrap">
+                            {rm.material_type}
+                          </span>
+                        </span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {rm.remaining_quantity_kg} kg
                         </span>
                       </button>
                     ))}
+                  {rawMaterials.filter(
+                    (rm) =>
+                      !rmSearch ||
+                      rm.batch_number?.toLowerCase().includes(rmSearch.toLowerCase()) ||
+                      rm.material_type?.toLowerCase().includes(rmSearch.toLowerCase()),
+                  ).length === 0 && (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">
+                      No raw materials found
+                    </p>
+                  )}
                 </div>
               )}
               {form.formState.errors.material_type && (
@@ -657,7 +674,7 @@ function PartForm({
                 type="number"
                 step="0.0001"
                 {...form.register("consumption_per_unit_kg")}
-                className="mt-1"
+                className="mt-1 h-9"
               />
               {form.formState.errors.consumption_per_unit_kg && (
                 <p className="text-xs text-destructive mt-1">
@@ -667,29 +684,32 @@ function PartForm({
             </div>
           </div>
           {/* Masterbatch (searchable) + Quantity */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-start">
             <div className="relative">
               <Label className="label-caps">Masterbatch</Label>
-              <Input
-                placeholder="Search raw material batches..."
-                value={
-                  mbSearch ||
-                  rawMaterials.find((rm) => rm.id === form.watch("masterbatch_id"))?.batch_number ||
-                  ""
-                }
-                onChange={(e) => {
-                  setMbSearch(e.target.value);
-                  if (!e.target.value) form.setValue("masterbatch_id", "");
-                }}
-                onFocus={() => {
-                  setMbFocused(true);
-                  setMbSearch("");
-                }}
-                onBlur={() => setTimeout(() => setMbFocused(false), 200)}
-                className="mt-1"
-              />
+              <div className="relative mt-1">
+                <Input
+                  placeholder="Search raw material..."
+                  value={
+                    mbSearch ||
+                    rawMaterials.find((rm) => rm.id === form.watch("masterbatch_id"))
+                      ?.batch_number ||
+                    ""
+                  }
+                  onChange={(e) => {
+                    setMbSearch(e.target.value);
+                    if (!e.target.value) form.setValue("masterbatch_id", "");
+                  }}
+                  onFocus={() => {
+                    setMbFocused(true);
+                  }}
+                  onBlur={() => setTimeout(() => setMbFocused(false), 150)}
+                  className="pr-8 h-9"
+                />
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
               {mbFocused && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-md shadow-lg max-h-56 overflow-auto">
                   {rawMaterials
                     .filter(
                       (rm) =>
@@ -701,7 +721,7 @@ function PartForm({
                       <button
                         key={rm.id}
                         type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center justify-between gap-2 border-b border-border/50 last:border-0"
                         onMouseDown={(e) => {
                           e.preventDefault();
                           form.setValue("masterbatch_id", rm.id);
@@ -709,12 +729,27 @@ function PartForm({
                           setMbFocused(false);
                         }}
                       >
-                        <span className="font-medium">{rm.batch_number}</span>
-                        <span className="text-muted-foreground ml-2">
-                          ({rm.material_type}) — {rm.remaining_quantity_kg} kg
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span className="font-medium truncate">{rm.batch_number}</span>
+                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground whitespace-nowrap">
+                            {rm.material_type}
+                          </span>
+                        </span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {rm.remaining_quantity_kg} kg
                         </span>
                       </button>
                     ))}
+                  {rawMaterials.filter(
+                    (rm) =>
+                      !mbSearch ||
+                      rm.batch_number?.toLowerCase().includes(mbSearch.toLowerCase()) ||
+                      rm.material_type?.toLowerCase().includes(mbSearch.toLowerCase()),
+                  ).length === 0 && (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">
+                      No raw materials found
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -724,7 +759,7 @@ function PartForm({
                 type="number"
                 step="0.001"
                 {...form.register("masterbatch_qty_kg")}
-                className="mt-1"
+                className="mt-1 h-9"
               />
             </div>
           </div>
@@ -734,7 +769,7 @@ function PartForm({
               type="number"
               step="0.001"
               {...form.register("low_stock_threshold")}
-              className="mt-1"
+              className="mt-1 h-9"
             />
           </div>
           <div>
