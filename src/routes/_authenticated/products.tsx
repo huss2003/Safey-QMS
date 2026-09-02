@@ -35,7 +35,11 @@ const schema = z.object({
   product_name: z.string().trim().min(1),
   product_code: z.string().trim().min(1),
   description: z.string().optional().or(z.literal("")),
-  gtin: z.string().optional().or(z.literal("")),
+  gtin: z
+    .string()
+    .regex(/^\d{8}$/, "GTIN must be exactly 8 digits")
+    .optional()
+    .or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -222,8 +226,19 @@ function ProductForm({
             <Textarea rows={3} {...form.register("description")} className="mt-1" />
           </div>
           <div>
-            <Label className="label-caps">GTIN</Label>
-            <Input {...form.register("gtin")} className="mt-1" />
+            <Label className="label-caps">GTIN (8 digits)</Label>
+            <Input
+              type="number"
+              inputMode="numeric"
+              maxLength={8}
+              placeholder="e.g. 89080142"
+              {...form.register("gtin")}
+              onInput={(e) => {
+                const el = e.currentTarget;
+                if (el.value.length > 8) el.value = el.value.slice(0, 8);
+              }}
+              className="mt-1"
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
