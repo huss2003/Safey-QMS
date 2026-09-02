@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -67,6 +67,9 @@ import { audit } from "@/lib/inventory/audit";
 export const Route = createFileRoute("/_authenticated/raw-materials")({
   ssr: false,
   component: RawMaterialsPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    view: typeof search.view === "string" ? search.view : undefined,
+  }),
 });
 
 const schema = z.object({
@@ -161,6 +164,15 @@ function RawMaterialsPage() {
   });
 
   const vendorMap = new Map((vendors ?? []).map((v) => [v.id, v.name]));
+
+  // Auto-open the raw-material view dialog when navigated with ?view=<batch_number>
+  const { view } = useSearch({ from: Route.id });
+  useEffect(() => {
+    if (view && materials) {
+      const match = materials.find((m) => m.batch_number === view);
+      if (match) setViewing(match);
+    }
+  }, [view, materials]);
 
   const filtered = (materials ?? []).filter((r) => {
     if (filterType !== "all" && r.material_type !== filterType) return false;

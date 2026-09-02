@@ -1,4 +1,4 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import {
@@ -28,6 +28,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
   Table,
   TableBody,
   TableCell,
@@ -36,6 +44,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { fmtDate, fmtKg, fmtNum } from "@/lib/inventory/format";
+import { downloadRawMaterialPdf, downloadPartPdf } from "@/lib/trace-pdfs";
+import {
+  RawMaterialDetailDialog,
+  PartBatchViewDialog,
+  VendorViewDialog,
+  downloadPartBatchPdf,
+  downloadRawMaterialPdfNow,
+} from "./traceability-dialogs";
 
 export const Route = createFileRoute("/_authenticated/traceability")({
   component: Traceability,
@@ -271,6 +287,10 @@ function TraceTree({
 
 function BackwardTree({ payload }: { payload: TraceBackwardResponse }) {
   const prod = payload?.production;
+  const navigate = useNavigate();
+  const [rawView, setRawView] = useState<string | null>(null);
+  const [partView, setPartView] = useState<string | null>(null);
+  const [vendorView, setVendorView] = useState<string | null>(null);
   const { data: emps } = useQuery({
     queryKey: ["trace-employees"],
     staleTime: 5 * 60_000,
@@ -284,45 +304,109 @@ function BackwardTree({ payload }: { payload: TraceBackwardResponse }) {
     emps?.find((e) => e.id === id)?.employee_name ?? id ?? "";
   if (!prod) return null;
   return (
-    <TreeNode
-      icon={FactoryIcon}
-      title={`Production ${prod.batch_number}`}
-      subtitle={`${prod.product_name} × ${fmtNum(prod.quantity_produced)} · ${fmtDate(prod.production_date)}`}
-      status={prod.status}
-    >
-      {prod.assigned_employee && (
-        <TreeNode icon={UsersIcon} title={`Employee: ${empName(prod.assigned_employee)}`} />
-      )}
-      {prod.process_equipment_name && (
-        <TreeNode icon={Wrench} title={`Process: ${prod.process_equipment_name}`} />
-      )}
-      {prod.measuring_equipment_name && (
-        <TreeNode icon={Wrench} title={`Measuring: ${prod.measuring_equipment_name}`} />
-      )}
-      {(payload.parts ?? []).map((p) => (
-        <TreeNode
-          key={p.part_batch?.id}
-          icon={Puzzle}
-          title={`Part ${p.part_batch?.batch_number}`}
-          subtitle={p.part_batch?.part_name}
-        >
+    <>
+      <TreeNode
+        icon={FactoryIcon}
+        title={`Production ${prod.batch_number}`}
+        subtitle={`${prod.product_name} × ${fmtNum(prod.quantity_produced)} · ${fmtDate(prod.production_date)}`}
+        status={prod.status}
+      >
+        {prod.assigned_employee && (
           <TreeNode
-            icon={Package}
-            title={`Raw ${p.part_batch?.raw_material?.batch_number}`}
-            subtitle={
-              p.part_batch?.raw_material?.material_type ? (
-                <MaterialBadge material={p.part_batch.raw_material.material_type} />
-              ) : undefined
+            icon={UsersIcon}
+            title={`Employee: ${empName(prod.assigned_employee)}`}
+            onTitleClick={() =>
+              navigate({ to: "/roles/employees/$id", params: { id: prod.assigned_employee! } })
             }
-          >
+          />
+        )}
+        {prod.process_equipment_name && (
+          <TreeNode icon={Wrench} title={`Process: ${prod.process_equipment_name}`} />
+        )}
+        {prod.measuring_equipment_name && (
+          <TreeNode icon={Wrench} title={`Measuring: ${prod.measuring_equipment_name}`} />
+        )}
+        {(payload.parts ?? []).map((p) => {
+          const rm = p.part_batch?.raw_material;
+          return (
             <TreeNode
-              icon={UsersIcon}
-              title={`Vendor ${p.part_batch?.raw_material?.vendor?.name}`}
-            />
-          </TreeNode>
-        </TreeNode>
-      ))}
-    </TreeNode>
+              key={p.part_batch?.id}
+              icon={Puzzle}
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  Part {p.part_batch?.batch_number}
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    title={`Download ${p.part_batch?.batch_number} PDF`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      downloadPartBatchPdf(p.part_batch?.id ?? null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.stopPropagation();
+                        downloadPartBatchPdf(p.part_batch?.id ?? null);
+                      }
+                    }}
+                    className="text-muted-foreground hover:text-primary cursor-pointer inline-flex"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </span>
+                </span>
+              }
+              subtitle={p.part_batch?.part_name}
+              onTitleClick={() => setPartView(p.part_batch?.id ?? null)}
+            >
+              <TreeNode
+                icon={Package}
+                title={
+                  <span className="inline-flex items-center gap-1.5">
+                    Raw {rm?.batch_number}
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      title={`Download ${rm?.batch_number} details + documents`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadRawMaterialPdfNow(rm?.batch_number ?? null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.stopPropagation();
+                          downloadRawMaterialPdfNow(rm?.batch_number ?? null);
+                        }
+                      }}
+                      className="text-muted-foreground hover:text-primary cursor-pointer inline-flex"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </span>
+                  </span>
+                }
+                subtitle={
+                  rm?.material_type ? <MaterialBadge material={rm.material_type} /> : undefined
+                }
+                onTitleClick={() => setRawView(rm?.batch_number ?? null)}
+              >
+                <TreeNode
+                  icon={UsersIcon}
+                  title={`Vendor ${rm?.vendor?.name}`}
+                  onTitleClick={() => setVendorView(rm?.vendor?.name ?? null)}
+                />
+              </TreeNode>
+            </TreeNode>
+          );
+        })}
+      </TreeNode>
+
+      <RawMaterialDetailDialog
+        batchNumber={rawView}
+        onOpenChange={(o) => !o && setRawView(null)}
+        navigate={navigate}
+      />
+      <PartBatchViewDialog batchId={partView} onOpenChange={(o) => !o && setPartView(null)} />
+      <VendorViewDialog vendorName={vendorView} onOpenChange={(o) => !o && setVendorView(null)} />
+    </>
   );
 }
 
@@ -381,18 +465,30 @@ function TreeNode({
   subtitle,
   children,
   status,
+  onTitleClick,
 }: {
   icon: any;
-  title: string;
+  title: React.ReactNode;
   subtitle?: React.ReactNode;
   children?: React.ReactNode;
   status?: string;
+  onTitleClick?: (e: React.MouseEvent) => void;
 }) {
   return (
     <div className="border-l-2 border-border pl-4 ml-2 pt-2">
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-primary" />
-        <span className="font-medium text-sm">{title}</span>
+        {onTitleClick ? (
+          <button
+            type="button"
+            onClick={onTitleClick}
+            className="font-medium text-sm text-primary hover:underline underline-offset-2 text-left"
+          >
+            {title}
+          </button>
+        ) : (
+          <span className="font-medium text-sm">{title}</span>
+        )}
         {status && (
           <Badge
             variant={status === "recalled" ? "destructive" : "secondary"}
