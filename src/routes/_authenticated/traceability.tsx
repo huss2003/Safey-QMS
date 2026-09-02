@@ -36,7 +36,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { fmtDate, fmtKg, fmtNum } from "@/lib/inventory/format";
-import { EMPLOYEES, roleLabel } from "@/lib/inventory/employees";
 
 export const Route = createFileRoute("/_authenticated/traceability")({
   component: Traceability,
@@ -119,13 +118,6 @@ type TraceForwardResponse = {
   } | null;
   part_batches?: TraceForwardPartBatch[];
 };
-
-function empLabel(val: string | null | undefined): string {
-  if (!val) return "—";
-  const emp = EMPLOYEES.find((e) => e.value === val);
-  if (!emp) return val;
-  return `${emp.label} (${roleLabel(emp.role)})`;
-}
 
 function Traceability() {
   const { q: initialQ } = useSearch({ from: Route.id });
@@ -279,6 +271,17 @@ function TraceTree({
 
 function BackwardTree({ payload }: { payload: TraceBackwardResponse }) {
   const prod = payload?.production;
+  const { data: emps } = useQuery({
+    queryKey: ["trace-employees"],
+    staleTime: 5 * 60_000,
+    queryFn: async () =>
+      ((await (supabase as any).from("employees").select("id, employee_name")).data ?? []) as {
+        id: string;
+        employee_name: string;
+      }[],
+  });
+  const empName = (id: string | null | undefined) =>
+    emps?.find((e) => e.id === id)?.employee_name ?? id ?? "";
   if (!prod) return null;
   return (
     <TreeNode
@@ -288,7 +291,7 @@ function BackwardTree({ payload }: { payload: TraceBackwardResponse }) {
       status={prod.status}
     >
       {prod.assigned_employee && (
-        <TreeNode icon={UsersIcon} title={`Employee: ${empLabel(prod.assigned_employee)}`} />
+        <TreeNode icon={UsersIcon} title={`Employee: ${empName(prod.assigned_employee)}`} />
       )}
       {prod.process_equipment_name && (
         <TreeNode icon={Wrench} title={`Process: ${prod.process_equipment_name}`} />
@@ -301,24 +304,20 @@ function BackwardTree({ payload }: { payload: TraceBackwardResponse }) {
           key={p.part_batch?.id}
           icon={Puzzle}
           title={`Part ${p.part_batch?.batch_number}`}
-          subtitle={`${p.part_batch?.part_name} — ${fmtNum(p.part_batch?.quantity_used ?? 0)} used`}
+          subtitle={p.part_batch?.part_name}
         >
           <TreeNode
             icon={Package}
             title={`Raw ${p.part_batch?.raw_material?.batch_number}`}
             subtitle={
-              <>
-                {p.part_batch?.raw_material?.material_type ? (
-                  <MaterialBadge material={p.part_batch.raw_material.material_type} />
-                ) : null}{" "}
-                · {fmtKg(p.part_batch?.raw_material?.remaining_quantity_kg ?? 0)} remaining
-              </>
+              p.part_batch?.raw_material?.material_type ? (
+                <MaterialBadge material={p.part_batch.raw_material.material_type} />
+              ) : undefined
             }
           >
             <TreeNode
               icon={UsersIcon}
               title={`Vendor ${p.part_batch?.raw_material?.vendor?.name}`}
-              subtitle={p.part_batch?.raw_material?.vendor?.phone ?? undefined}
             />
           </TreeNode>
         </TreeNode>
@@ -329,29 +328,27 @@ function BackwardTree({ payload }: { payload: TraceBackwardResponse }) {
 
 function ForwardTree({ payload }: { payload: TraceForwardResponse }) {
   const rm = payload?.raw_material;
+  const { data: emps } = useQuery({
+    queryKey: ["trace-employees"],
+    staleTime: 5 * 60_000,
+    queryFn: async () =>
+      ((await (supabase as any).from("employees").select("id, employee_name")).data ?? []) as {
+        id: string;
+        employee_name: string;
+      }[],
+  });
+  const empName = (id: string | null | undefined) =>
+    emps?.find((e) => e.id === id)?.employee_name ?? id ?? "";
   if (!rm) return null;
   return (
-    <TreeNode
-      icon={Package}
-      title={`Raw ${rm.batch_number}`}
-      subtitle={
-        <>
-          {<MaterialBadge material={rm.material_type} />} · {fmtKg(rm.remaining_quantity_kg)}{" "}
-          remaining
-        </>
-      }
-    >
-      <TreeNode
-        icon={UsersIcon}
-        title={`Vendor ${rm.vendor?.name}`}
-        subtitle={rm.vendor?.phone ?? undefined}
-      />
+    <TreeNode icon={Package} title={`Raw ${rm.batch_number}`}>
+      <TreeNode icon={UsersIcon} title={`Vendor ${rm.vendor?.name}`} />
       {(payload.part_batches ?? []).map((pb) => (
         <TreeNode
           key={pb.id}
           icon={Puzzle}
           title={`Part ${pb.batch_number}`}
-          subtitle={`${pb.part_name} · ${fmtNum(pb.quantity)} units`}
+          subtitle={pb.part_name}
         >
           {(pb.productions ?? []).map((p) => (
             <TreeNode
@@ -362,7 +359,7 @@ function ForwardTree({ payload }: { payload: TraceForwardResponse }) {
               status={p.status}
             >
               {p.assigned_employee && (
-                <TreeNode icon={UsersIcon} title={`Employee: ${empLabel(p.assigned_employee)}`} />
+                <TreeNode icon={UsersIcon} title={`Employee: ${empName(p.assigned_employee)}`} />
               )}
               {p.process_equipment_name && (
                 <TreeNode icon={Wrench} title={`Process: ${p.process_equipment_name}`} />
