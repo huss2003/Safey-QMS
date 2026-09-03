@@ -25,6 +25,7 @@ import {
   Warehouse,
   Archive,
   Wrench,
+  PackageX,
   UserRound,
   GraduationCap,
   ClipboardCheck,
@@ -117,6 +118,7 @@ const NAV: NavItem[] = [
   },
   { to: "/equipment", label: "Equipment", icon: Wrench, group: "ops" },
   { to: "/other-items", label: "Other items", icon: Archive, group: "ops" },
+  { to: "/wastage", label: "Wastage", icon: PackageX, group: "ops" },
   {
     to: "/production-planning",
     label: "Production planning",

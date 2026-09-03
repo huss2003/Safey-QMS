@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedWastageRouteImport } from './routes/_authenticated/wastage'
 import { Route as AuthenticatedVendorsRouteImport } from './routes/_authenticated/vendors'
 import { Route as AuthenticatedUdiRegistrationRouteImport } from './routes/_authenticated/udi-registration'
 import { Route as AuthenticatedTraceabilityRouteImport } from './routes/_authenticated/traceability'
@@ -64,6 +65,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWastageRoute = AuthenticatedWastageRouteImport.update({
+  id: '/wastage',
+  path: '/wastage',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedVendorsRoute = AuthenticatedVendorsRouteImport.update({
   id: '/vendors',
@@ -307,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/traceability': typeof AuthenticatedTraceabilityRoute
   '/udi-registration': typeof AuthenticatedUdiRegistrationRoute
   '/vendors': typeof AuthenticatedVendorsRoute
+  '/wastage': typeof AuthenticatedWastageRoute
   '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/inspection-form/$batchId': typeof AuthenticatedInspectionFormBatchIdRoute
@@ -349,6 +356,7 @@ export interface FileRoutesByTo {
   '/traceability': typeof AuthenticatedTraceabilityRoute
   '/udi-registration': typeof AuthenticatedUdiRegistrationRoute
   '/vendors': typeof AuthenticatedVendorsRoute
+  '/wastage': typeof AuthenticatedWastageRoute
   '/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/inspection-form/$batchId': typeof AuthenticatedInspectionFormBatchIdRoute
@@ -393,6 +401,7 @@ export interface FileRoutesById {
   '/_authenticated/traceability': typeof AuthenticatedTraceabilityRoute
   '/_authenticated/udi-registration': typeof AuthenticatedUdiRegistrationRoute
   '/_authenticated/vendors': typeof AuthenticatedVendorsRoute
+  '/_authenticated/wastage': typeof AuthenticatedWastageRoute
   '/_authenticated/equipment-detail/$id': typeof AuthenticatedEquipmentDetailIdRoute
   '/_authenticated/equipment-edit/$id': typeof AuthenticatedEquipmentEditIdRoute
   '/_authenticated/inspection-form/$batchId': typeof AuthenticatedInspectionFormBatchIdRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/traceability'
     | '/udi-registration'
     | '/vendors'
+    | '/wastage'
     | '/equipment-detail/$id'
     | '/equipment-edit/$id'
     | '/inspection-form/$batchId'
@@ -479,6 +489,7 @@ export interface FileRouteTypes {
     | '/traceability'
     | '/udi-registration'
     | '/vendors'
+    | '/wastage'
     | '/equipment-detail/$id'
     | '/equipment-edit/$id'
     | '/inspection-form/$batchId'
@@ -522,6 +533,7 @@ export interface FileRouteTypes {
     | '/_authenticated/traceability'
     | '/_authenticated/udi-registration'
     | '/_authenticated/vendors'
+    | '/_authenticated/wastage'
     | '/_authenticated/equipment-detail/$id'
     | '/_authenticated/equipment-edit/$id'
     | '/_authenticated/inspection-form/$batchId'
@@ -568,6 +580,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/wastage': {
+      id: '/_authenticated/wastage'
+      path: '/wastage'
+      fullPath: '/wastage'
+      preLoaderRoute: typeof AuthenticatedWastageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/vendors': {
       id: '/_authenticated/vendors'
@@ -945,6 +964,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTraceabilityRoute: typeof AuthenticatedTraceabilityRoute
   AuthenticatedUdiRegistrationRoute: typeof AuthenticatedUdiRegistrationRoute
   AuthenticatedVendorsRoute: typeof AuthenticatedVendorsRoute
+  AuthenticatedWastageRoute: typeof AuthenticatedWastageRoute
   AuthenticatedEquipmentDetailIdRoute: typeof AuthenticatedEquipmentDetailIdRoute
   AuthenticatedEquipmentEditIdRoute: typeof AuthenticatedEquipmentEditIdRoute
   AuthenticatedInspectionFormBatchIdRoute: typeof AuthenticatedInspectionFormBatchIdRoute
@@ -977,6 +997,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTraceabilityRoute: AuthenticatedTraceabilityRoute,
   AuthenticatedUdiRegistrationRoute: AuthenticatedUdiRegistrationRoute,
   AuthenticatedVendorsRoute: AuthenticatedVendorsRoute,
+  AuthenticatedWastageRoute: AuthenticatedWastageRoute,
   AuthenticatedEquipmentDetailIdRoute: AuthenticatedEquipmentDetailIdRoute,
   AuthenticatedEquipmentEditIdRoute: AuthenticatedEquipmentEditIdRoute,
   AuthenticatedInspectionFormBatchIdRoute:

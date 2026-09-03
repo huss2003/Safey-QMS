@@ -79,7 +79,8 @@ function RawHistory({ id }: { id: string }) {
         supabase
           .from("wastage_logs")
           .select("id, level, level_name, wastage_kg, actual_kg, reason, notes, created_at")
-          .eq("level", "part")
+          .eq("reference_id", id)
+          .eq("level", "raw")
           .order("created_at", { ascending: false }),
       ]);
       return { rm: rm.data, partBatches: partBatches.data ?? [], wastages: wastages.data ?? [] };
@@ -104,10 +105,16 @@ function RawHistory({ id }: { id: string }) {
   const m = data.rm;
   const pct = (Number(m.remaining_quantity_kg) / Number(m.initial_quantity_kg)) * 100;
   const ageDays = Math.floor((Date.now() - new Date(m.purchase_date).getTime()) / 86_400_000);
-  const totalWastage = data.partBatches.reduce(
+  const batchWastage = data.partBatches.reduce(
     (s: number, pb: any) => s + Number(pb.wastage_kg ?? 0),
     0,
   );
+  const manualWastage = data.wastages.reduce(
+    (s: number, w: any) => s + Number(w.wastage_kg ?? 0),
+    0,
+  );
+  const totalWastage = batchWastage + manualWastage;
+  const partWastages = data.partBatches.filter((pb: any) => Number(pb.wastage_kg ?? 0) > 0);
 
   return (
     <div>
@@ -140,8 +147,36 @@ function RawHistory({ id }: { id: string }) {
         </CardContent>
       </Card>
 
+      {/* IN history — this batch's purchase receipt */}
       <div className="text-[13px] font-semibold mb-2 flex items-center gap-2">
-        <Package className="h-4 w-4" /> Part batches produced ({data.partBatches.length})
+        <ArrowLeft className="h-4 w-4" /> IN history (1)
+      </div>
+      <Card className="mb-6">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead>Batch</TableHead>
+                <TableHead className="text-right">Initial (kg)</TableHead>
+                <TableHead>Purchased</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="font-medium">{m.batch_number}</TableCell>
+                <TableCell className="text-right num">{fmtKg(m.initial_quantity_kg)}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {fmtDate(m.purchase_date)}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* OUT history — part batches consuming this RM */}
+      <div className="text-[13px] font-semibold mb-2 flex items-center gap-2">
+        <Package className="h-4 w-4" /> OUT history ({data.partBatches.length})
       </div>
       <Card className="mb-6">
         <CardContent className="p-0">
@@ -156,9 +191,7 @@ function RawHistory({ id }: { id: string }) {
                   <TableHead>Batch</TableHead>
                   <TableHead>Part</TableHead>
                   <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Usage</TableHead>
-                  <TableHead className="text-right">Wastage</TableHead>
-                  <TableHead>Reason</TableHead>
+                  <TableHead className="text-right">Usage (kg)</TableHead>
                   <TableHead>Created</TableHead>
                 </TableRow>
               </TableHeader>
@@ -169,12 +202,77 @@ function RawHistory({ id }: { id: string }) {
                     <TableCell>{pb.parts?.part_name ?? "—"}</TableCell>
                     <TableCell className="text-right num">{fmtNum(pb.quantity)}</TableCell>
                     <TableCell className="text-right num">{fmtKg(pb.actual_usage_kg)}</TableCell>
-                    <TableCell className="text-right num">{fmtKg(pb.wastage_kg)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {fmtDateTime(pb.created_at)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Wastage history — manual entries + part-batch wastage */}
+      <div className="text-[13px] font-semibold mb-2 flex items-center gap-2">
+        <AlertTriangle className="h-4 w-4" /> Wastage history (
+        {data.wastages.length + partWastages.length})
+      </div>
+      <Card>
+        <CardContent className="p-0">
+          {data.wastages.length === 0 && partWastages.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              No wastage entries yet.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead className="text-right">Wastage (kg)</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.wastages.map((w: any) => (
+                  <TableRow key={w.id}>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {fmtDateTime(w.created_at)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[11px]">
+                        Manual entry
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right num font-medium">
+                      {fmtKg(w.wastage_kg)}
+                    </TableCell>
+                    <TableCell className="text-xs">{wastageReasonLabel(w.reason)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                      {w.notes ?? "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {partWastages.map((pb: any) => (
+                  <TableRow key={pb.id}>
+                    <TableCell className="text-xs whitespace-nowrap">
+                      {fmtDateTime(pb.created_at)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[11px]">
+                        {pb.batch_number}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right num font-medium">
+                      {fmtKg(pb.wastage_kg)}
+                    </TableCell>
                     <TableCell className="text-xs">
                       {wastageReasonLabel(pb.wastage_reason)}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {fmtDateTime(pb.created_at)}
+                    <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                      {pb.parts?.part_name ?? "—"}
                     </TableCell>
                   </TableRow>
                 ))}
