@@ -1,6 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Package, Puzzle, Boxes, AlertTriangle } from "lucide-react";
+import {
+  ArrowLeft,
+  Package,
+  Puzzle,
+  Boxes,
+  AlertTriangle,
+  ArrowUpRight,
+  Clock,
+  Truck,
+} from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/inventory/page-header";
@@ -48,11 +57,31 @@ function StockHistoryPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  icon,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+  tone?: "default" | "blue" | "amber" | "green" | "red";
+}) {
+  const tones: Record<string, string> = {
+    default: "text-muted-foreground",
+    blue: "text-blue-600",
+    amber: "text-amber-600",
+    green: "text-emerald-600",
+    red: "text-red-600",
+  };
   return (
-    <div className="border rounded-md p-3">
-      <div className="label-caps">{label}</div>
-      <div className="text-base font-semibold mt-0.5 num">{value}</div>
+    <div className="rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex items-center gap-2">
+        {icon && <span className={tones[tone]}>{icon}</span>}
+        <div className="label-caps">{label}</div>
+      </div>
+      <div className={`text-xl font-bold mt-1.5 num ${tones[tone]}`}>{value}</div>
     </div>
   );
 }
@@ -125,22 +154,57 @@ function RawHistory({ id }: { id: string }) {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        <Stat label="Initial" value={fmtKg(m.initial_quantity_kg)} />
-        <Stat label="Remaining" value={fmtKg(m.remaining_quantity_kg)} />
-        <Stat label="Utilization" value={`${(100 - pct).toFixed(1)}%`} />
-        <Stat label="Wastage" value={fmtKg(totalWastage)} />
-        <Stat label="Age" value={`${ageDays}d`} />
+        <Stat
+          label="Initial"
+          value={fmtKg(m.initial_quantity_kg)}
+          icon={<ArrowLeft className="h-3.5 w-3.5" />}
+          tone="blue"
+        />
+        <Stat
+          label="Remaining"
+          value={fmtKg(m.remaining_quantity_kg)}
+          icon={<Package className="h-3.5 w-3.5" />}
+          tone="green"
+        />
+        <Stat
+          label="Utilization"
+          value={`${(100 - pct).toFixed(1)}%`}
+          icon={<ArrowUpRight className="h-3.5 w-3.5" />}
+          tone="blue"
+        />
+        <Stat
+          label="Wastage"
+          value={fmtKg(totalWastage)}
+          icon={<AlertTriangle className="h-3.5 w-3.5" />}
+          tone="amber"
+        />
+        <Stat
+          label="Age"
+          value={`${ageDays}d`}
+          icon={<Clock className="h-3.5 w-3.5" />}
+          tone="default"
+        />
       </div>
 
       <Card className="mb-4">
-        <CardContent className="p-4">
-          <div className="text-[12px] text-muted-foreground">Vendor</div>
-          <div className="font-medium">{"—"}</div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Purchased {fmtDate(m.purchase_date)}
+        <CardContent className="p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center">
+              <Truck className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div>
+              <div className="text-[12px] text-muted-foreground">Vendor</div>
+              <div className="font-medium">{"—"}</div>
+            </div>
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            <div>Purchased {fmtDate(m.purchase_date)}</div>
+            {m.rate_per_kg ? (
+              <div className="mt-0.5">₹{Number(m.rate_per_kg).toFixed(2)}/kg</div>
+            ) : null}
           </div>
           {m.is_blocked && (
-            <Badge variant="destructive" className="mt-2">
+            <Badge variant="destructive" className="ml-2">
               Blocked
             </Badge>
           )}
@@ -148,8 +212,14 @@ function RawHistory({ id }: { id: string }) {
       </Card>
 
       {/* IN history — this batch's purchase receipt */}
-      <div className="text-[13px] font-semibold mb-2 flex items-center gap-2">
-        <ArrowLeft className="h-4 w-4" /> IN history (1)
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-7 w-7 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
+          <ArrowLeft className="h-4 w-4" />
+        </div>
+        <span className="text-[13px] font-semibold">IN history</span>
+        <Badge variant="secondary" className="text-[11px]">
+          1
+        </Badge>
       </div>
       <Card className="mb-6">
         <CardContent className="p-0">
@@ -175,8 +245,14 @@ function RawHistory({ id }: { id: string }) {
       </Card>
 
       {/* OUT history — part batches consuming this RM */}
-      <div className="text-[13px] font-semibold mb-2 flex items-center gap-2">
-        <Package className="h-4 w-4" /> OUT history ({data.partBatches.length})
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-7 w-7 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <Package className="h-4 w-4" />
+        </div>
+        <span className="text-[13px] font-semibold">OUT history</span>
+        <Badge variant="secondary" className="text-[11px]">
+          {data.partBatches.length}
+        </Badge>
       </div>
       <Card className="mb-6">
         <CardContent className="p-0">
@@ -199,7 +275,19 @@ function RawHistory({ id }: { id: string }) {
                 {data.partBatches.map((pb: any) => (
                   <TableRow key={pb.id}>
                     <TableCell className="font-medium">{pb.batch_number}</TableCell>
-                    <TableCell>{pb.parts?.part_name ?? "—"}</TableCell>
+                    <TableCell>
+                      {pb.part_id ? (
+                        <Link
+                          to="/stock-history/part/$id"
+                          params={{ id: pb.part_id }}
+                          className="font-medium text-primary hover:underline"
+                        >
+                          {pb.parts?.part_name ?? "—"}
+                        </Link>
+                      ) : (
+                        (pb.parts?.part_name ?? "—")
+                      )}
+                    </TableCell>
                     <TableCell className="text-right num">{fmtNum(pb.quantity)}</TableCell>
                     <TableCell className="text-right num">{fmtKg(pb.actual_usage_kg)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -214,9 +302,14 @@ function RawHistory({ id }: { id: string }) {
       </Card>
 
       {/* Wastage history — manual entries + part-batch wastage */}
-      <div className="text-[13px] font-semibold mb-2 flex items-center gap-2">
-        <AlertTriangle className="h-4 w-4" /> Wastage history (
-        {data.wastages.length + partWastages.length})
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-7 w-7 rounded-md bg-amber-50 text-amber-600 flex items-center justify-center">
+          <AlertTriangle className="h-4 w-4" />
+        </div>
+        <span className="text-[13px] font-semibold">Wastage history</span>
+        <Badge variant="secondary" className="text-[11px]">
+          {data.wastages.length + partWastages.length}
+        </Badge>
       </div>
       <Card>
         <CardContent className="p-0">
@@ -307,20 +400,14 @@ function PartHistory({ id }: { id: string }) {
         supabase
           .from("production_batch_parts")
           .select(
-            "id, quantity_used, created_at, production_batches(id, batch_number, status, production_date, quantity_produced, products(product_name))",
+            "id, part_batch_id, quantity_used, created_at, production_batches(id, batch_number, status, production_date, quantity_produced, products(product_name))",
           )
           .order("created_at", { ascending: false })
           .limit(500),
       ]);
       // Filter production_batch_parts down to those referencing one of this part's batches
       const batchIds = new Set((batches.data ?? []).map((b: any) => b.id));
-      const usedIn = (productions.data ?? [])
-        .filter((pbp: any) => batchIds.has(pbp.production_batches?.id ? "" : "") || true)
-        .filter((pbp: any) => {
-          // We can't filter server-side via cross-table; rely on client-side join via production_batch_parts.part_batch_id if exposed.
-          // Supabase returns related production_batches but not part_batch_id — best effort, show all productions.
-          return true;
-        });
+      const usedIn = (productions.data ?? []).filter((pbp: any) => batchIds.has(pbp.part_batch_id));
       return { part: part.data, batches: batches.data ?? [], productions: usedIn };
     },
   });
@@ -358,11 +445,36 @@ function PartHistory({ id }: { id: string }) {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        <Stat label="Current stock" value={`${fmtNum(p.current_stock)} units`} />
-        <Stat label="Threshold" value={fmtNum(p.low_stock_threshold)} />
-        <Stat label="Stock level" value={`${pct.toFixed(0)}%`} />
-        <Stat label="Total produced" value={fmtNum(totalProduced)} />
-        <Stat label="Total wastage" value={fmtKg(totalWastage)} />
+        <Stat
+          label="Current stock"
+          value={`${fmtNum(p.current_stock)} units`}
+          icon={<Package className="h-3.5 w-3.5" />}
+          tone="green"
+        />
+        <Stat
+          label="Threshold"
+          value={fmtNum(p.low_stock_threshold)}
+          icon={<Puzzle className="h-3.5 w-3.5" />}
+          tone="blue"
+        />
+        <Stat
+          label="Stock level"
+          value={`${pct.toFixed(0)}%`}
+          icon={<ArrowUpRight className="h-3.5 w-3.5" />}
+          tone={low ? "red" : "default"}
+        />
+        <Stat
+          label="Total produced"
+          value={fmtNum(totalProduced)}
+          icon={<Boxes className="h-3.5 w-3.5" />}
+          tone="blue"
+        />
+        <Stat
+          label="Total wastage"
+          value={fmtKg(totalWastage)}
+          icon={<AlertTriangle className="h-3.5 w-3.5" />}
+          tone="amber"
+        />
       </div>
 
       {low && (
@@ -418,6 +530,60 @@ function PartHistory({ id }: { id: string }) {
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Used in production — production runs that consumed this part's batches */}
+      <div className="text-[13px] font-semibold mb-2 flex items-center gap-2">
+        <Boxes className="h-4 w-4" /> Used in production ({data.productions.length})
+      </div>
+      <Card>
+        <CardContent className="p-0">
+          {data.productions.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              This part's batches are not used in any production run yet — all in stock.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-right">Used</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.productions.map((u: any) => {
+                  const pb = u.production_batches;
+                  return (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">{pb?.batch_number ?? "—"}</TableCell>
+                      <TableCell>{pb?.products?.product_name ?? "—"}</TableCell>
+                      <TableCell className="text-right num">{fmtNum(u.quantity_used)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {fmtDate(pb?.production_date ?? u.created_at)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            pb?.status === "recalled"
+                              ? "destructive"
+                              : pb?.status === "completed"
+                                ? "secondary"
+                                : "default"
+                          }
+                        >
+                          {pb?.status ?? "—"}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
