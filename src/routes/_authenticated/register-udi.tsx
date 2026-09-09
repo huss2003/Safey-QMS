@@ -132,18 +132,9 @@ function RegisterUdiPage() {
   // Fetch manufactured products
   useEffect(() => {
     (async () => {
-      const { data: batches } = await supabase
-        .from("production_batches" as any)
-        .select("product_id")
-        .not("product_id", "is", null);
-      const productIds = [
-        ...new Set((batches ?? []).map((b: any) => b.product_id).filter(Boolean)),
-      ];
-      if (productIds.length === 0) return;
       const { data: prods } = await supabase
         .from("products")
         .select("id, product_name, gtin")
-        .in("id", productIds)
         .order("product_name");
       setProductOptions((prods ?? []) as ProductOption[]);
     })();
