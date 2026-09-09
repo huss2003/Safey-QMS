@@ -243,8 +243,8 @@ function ProductForm({
             <Input
               type="number"
               inputMode="numeric"
-              maxLength={8}
-              placeholder="e.g. 89080142"
+              maxLength={13}
+              placeholder="e.g. 8908014292003"
               {...form.register("gtin")}
               onInput={(e) => {
                 const el = e.currentTarget;
