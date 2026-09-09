@@ -107,7 +107,7 @@ function PlanningPage() {
       if (!bom || bom.length === 0) throw new Error("Product has no BOM");
 
       // 2. Per-batch rollup via RPC (single round trip, real per-batch remaining).
-      const partIds = bom.map((b: any) => b.part_id);
+      const partIds = bom.filter((b: any) => b.part_id).map((b: any) => b.part_id);
       const { data: availRows, error: availErr } = await supabase.rpc("get_part_availability", {
         p_part_ids: partIds,
       });

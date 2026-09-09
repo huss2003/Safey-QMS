@@ -44,7 +44,13 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 type ProductJoined = Product & {
-  product_bom?: (ProductBom & { parts?: { part_name: string } | null })[] | null;
+  product_bom?:
+    | (ProductBom & {
+        parts?: { part_name: string } | null;
+        other_item_id?: string | null;
+        other_items?: { name: string } | null;
+      })[]
+    | null;
 };
 
 function ProductsPage() {
@@ -58,7 +64,9 @@ function ProductsPage() {
       ((
         await supabase
           .from("products")
-          .select("*, product_bom(quantity_required, parts(part_name))")
+          .select(
+            "*, product_bom(quantity_required, parts(part_name), other_item_id, other_items(name))",
+          )
           .order("product_name")
       ).data as unknown as ProductJoined[]) ?? [],
   });
@@ -112,6 +120,8 @@ function ProductsPage() {
               (s, b) => s + Number(b.quantity_required),
               0,
             );
+            const partsCount = (p.product_bom ?? []).filter((b) => b.parts).length;
+            const otherCount = (p.product_bom ?? []).filter((b) => b.other_item_id).length;
             return (
               <Card key={p.id}>
                 <CardContent className="pt-6">
@@ -131,7 +141,10 @@ function ProductsPage() {
                     </p>
                   )}
                   <div className="mt-3 text-xs text-muted-foreground">
-                    {(p.product_bom ?? []).length} parts · {totalParts} pieces per unit
+                    {partsCount > 0 && <span>{partsCount} parts</span>}
+                    {partsCount > 0 && otherCount > 0 && <span> · </span>}
+                    {otherCount > 0 && <span>{otherCount} other items</span>}
+                    <span> · {totalParts} pieces per unit</span>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button asChild size="sm">

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtKg } from "@/lib/inventory/format";
 import { audit } from "@/lib/inventory/audit";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/products-bom/$id")({
   component: BomEditor,
@@ -38,7 +39,7 @@ function BomEditor() {
         await supabase
           .from("products")
           .select(
-            "*, product_bom(part_id, quantity_required, parts(part_name, material_type, consumption_per_unit_kg))",
+            "*, product_bom(part_id, other_item_id, quantity_required, parts(part_name, material_type, consumption_per_unit_kg))",
           )
           .eq("id", id)
           .single()
@@ -47,6 +48,17 @@ function BomEditor() {
   const { data: parts } = useQuery({
     queryKey: ["parts"],
     queryFn: async () => (await supabase.from("parts").select("*").order("part_name")).data ?? [],
+  });
+  const { data: otherItems } = useQuery({
+    queryKey: ["other_items"],
+    staleTime: 5 * 60_000,
+    queryFn: async () =>
+      (
+        await supabase
+          .from("other_items")
+          .select("id, name, category, unit, current_stock")
+          .order("name")
+      ).data ?? [],
   });
 
   // Fetch AI-generated inspection form templates
@@ -85,19 +97,26 @@ function BomEditor() {
     }
   }, [productInspectionForms, initialized]);
 
-  const [bom, setBom] = useState<Array<{ part_id: string; quantity_required: number }>>([]);
+  const [bom, setBom] = useState<
+    Array<{ part_id: string | null; other_item_id: string | null; quantity_required: number }>
+  >([]);
   useEffect(() => {
     if (product?.product_bom)
       setBom(
         product.product_bom.map((b: any) => ({
-          part_id: b.part_id,
+          part_id: b.part_id ?? null,
+          other_item_id: (b as any).other_item_id ?? null,
           quantity_required: Number(b.quantity_required),
         })),
       );
   }, [product?.id, product?.product_bom]);
 
   const partById = new Map((parts ?? []).map((p: any) => [p.id, p]));
-  const available = (parts ?? []).filter((p: any) => !bom.some((b) => b.part_id === p.id));
+  const otherById = new Map((otherItems ?? []).map((o: any) => [o.id, o]));
+  const availableParts = (parts ?? []).filter((p: any) => !bom.some((b) => b.part_id === p.id));
+  const availableOther = (otherItems ?? []).filter(
+    (o: any) => !bom.some((b) => b.other_item_id === o.id),
+  );
 
   const save = useMutation({
     mutationFn: async () => {
@@ -185,12 +204,12 @@ function BomEditor() {
       <div className="grid md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="label-caps mb-3">Available parts</div>
-            {available.length === 0 ? (
-              <p className="text-sm text-muted-foreground">All parts already in BOM.</p>
+            <div className="label-caps mb-3">Available items</div>
+            {availableParts.length === 0 && availableOther.length === 0 ? (
+              <p className="text-sm text-muted-foreground">All items already in BOM.</p>
             ) : (
               <ul className="space-y-1">
-                {available.map((p: any) => (
+                {availableParts.map((p: any) => (
                   <li
                     key={p.id}
                     className="flex items-center justify-between border rounded-md p-2 hover:bg-accent"
@@ -205,7 +224,40 @@ function BomEditor() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setBom((b) => [...b, { part_id: p.id, quantity_required: 1 }])}
+                      onClick={() =>
+                        setBom((b) => [
+                          ...b,
+                          { part_id: p.id, other_item_id: null, quantity_required: 1 },
+                        ])
+                      }
+                    >
+                      <Plus className="h-3 w-3" /> Add
+                    </Button>
+                  </li>
+                ))}
+                {availableOther.map((o: any) => (
+                  <li
+                    key={o.id}
+                    className="flex items-center justify-between border rounded-md p-2 hover:bg-accent"
+                  >
+                    <div>
+                      <div className="text-sm font-medium">{o.name}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <Badge variant="outline" className="text-[11px]">
+                          {o.category}
+                        </Badge>
+                        {o.current_stock} {o.unit} in stock
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setBom((b) => [
+                          ...b,
+                          { part_id: null, other_item_id: o.id, quantity_required: 1 },
+                        ])
+                      }
                     >
                       <Plus className="h-3 w-3" /> Add
                     </Button>
@@ -224,13 +276,20 @@ function BomEditor() {
             ) : (
               <ul className="space-y-2">
                 {bom.map((row, idx) => {
-                  const p: any = partById.get(row.part_id);
+                  const p: any = partById.get(row.part_id) ?? otherById.get(row.other_item_id);
                   return (
-                    <li key={row.part_id} className="flex items-center gap-2 border rounded-md p-2">
+                    <li key={idx} className="flex items-center gap-2 border rounded-md p-2">
                       <div className="flex-1">
-                        <div className="text-sm font-medium">{p?.part_name}</div>
+                        <div className="text-sm font-medium">{p?.part_name ?? p?.name ?? "—"}</div>
                         <div className="text-xs text-muted-foreground flex items-center gap-2">
-                          <MaterialBadge material={p?.material_type ?? ""} />
+                          {row.part_id ? (
+                            <MaterialBadge material={p?.material_type ?? ""} />
+                          ) : (
+                            <Badge variant="outline" className="text-[11px]">
+                              Other
+                            </Badge>
+                          )}
+                          {row.other_item_id && <span>{(p as any)?.category}</span>}
                         </div>
                       </div>
                       <Input

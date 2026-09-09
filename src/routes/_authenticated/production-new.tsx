@@ -217,7 +217,8 @@ function NewProductionWizard() {
       if (bomErr) throw bomErr;
       if (!bom || bom.length === 0) throw new Error("This product has no BOM. Edit it first.");
 
-      const partIds = bom.map((b: any) => b.part_id);
+      const partIds = bom.filter((b: any) => b.part_id).map((b: any) => b.part_id);
+      const partBom = bom.filter((b: any) => b.part_id);
       const { data: availRows, error: availErr } = await supabase.rpc("get_part_availability", {
         p_part_ids: partIds,
       });
@@ -225,7 +226,7 @@ function NewProductionWizard() {
       const avail = (availRows ?? []) as PartAvail[];
       setPartAvail(avail);
 
-      return bom.map((row: any): PartPlan => {
+      return partBom.map((row: any): PartPlan => {
         const a = avail.find((x) => x.part_id === row.part_id);
         const required = qty * Number(row.quantity_required);
         const available = Number(a?.available ?? 0);

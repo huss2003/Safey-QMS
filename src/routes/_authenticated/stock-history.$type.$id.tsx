@@ -601,7 +601,7 @@ function ProductHistory({ id }: { id: string }) {
         supabase
           .from("products")
           .select(
-            "id, product_name, product_code, description, is_active, product_bom(quantity_required, parts(part_name))",
+            "id, product_name, product_code, description, is_active, product_bom(quantity_required, parts(part_name), other_item_id, other_items(name))",
           )
           .eq("id", id)
           .maybeSingle(),
@@ -679,14 +679,28 @@ function ProductHistory({ id }: { id: string }) {
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow>
-                  <TableHead>Part</TableHead>
+                  <TableHead>Item</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead className="text-right">Quantity / unit</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {p.product_bom.map((b: any, i: number) => (
                   <TableRow key={i}>
-                    <TableCell className="font-medium">{b.parts?.part_name ?? "—"}</TableCell>
+                    <TableCell className="font-medium">
+                      {b.parts?.part_name ?? b.other_items?.name ?? "—"}
+                    </TableCell>
+                    <TableCell>
+                      {b.other_item_id ? (
+                        <Badge variant="outline" className="text-[11px]">
+                          Other
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-[11px]">
+                          Part
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right num">{fmtNum(b.quantity_required)}</TableCell>
                   </TableRow>
                 ))}
