@@ -37,7 +37,7 @@ const schema = z.object({
   description: z.string().optional().or(z.literal("")),
   gtin: z
     .string()
-    .regex(/^\d{8}$/, "GTIN must be exactly 8 digits")
+    .regex(/^\d{13}$/, "GTIN must be exactly 13 digits")
     .optional()
     .or(z.literal("")),
 });
@@ -239,7 +239,7 @@ function ProductForm({
             <Textarea rows={3} {...form.register("description")} className="mt-1" />
           </div>
           <div>
-            <Label className="label-caps">GTIN (8 digits)</Label>
+            <Label className="label-caps">GTIN (13 digits)</Label>
             <Input
               type="number"
               inputMode="numeric"
