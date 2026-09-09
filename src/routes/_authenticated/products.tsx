@@ -248,7 +248,7 @@ function ProductForm({
               {...form.register("gtin")}
               onInput={(e) => {
                 const el = e.currentTarget;
-                if (el.value.length > 8) el.value = el.value.slice(0, 8);
+                if (el.value.length > 13) el.value = el.value.slice(0, 13);
               }}
               className="mt-1"
             />
