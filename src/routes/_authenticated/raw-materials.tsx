@@ -261,7 +261,7 @@ function RawMaterialsPage() {
                     <TableHead>Batch</TableHead>
                     <TableHead>Material</TableHead>
                     <TableHead>Vendor</TableHead>
-                    <TableHead>Threshold</TableHead>
+                    <TableHead>Current Stock</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -275,7 +275,7 @@ function RawMaterialsPage() {
                         </TableCell>
                         <TableCell>{vendorMap.get(r.vendor_id)}</TableCell>
                         <TableCell className="font-medium">
-                          {fmtNum(r.threshold_quantity ?? 0)} {r.quantity_unit ?? "kg"}
+                          {fmtNum(r.remaining_quantity_kg ?? 0)} {r.quantity_unit ?? "kg"}
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
                           <Button variant="ghost" size="icon" onClick={() => setViewing(r)}>

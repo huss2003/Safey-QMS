@@ -49,6 +49,13 @@ type PartReq = {
   available: number;
   shortage: number;
 };
+type OtherItemReq = {
+  other_item_id: string;
+  other_item_name: string;
+  required: number;
+  available: number;
+  shortage: number;
+};
 type RmReq = {
   material_type: string;
   required_kg: number;
@@ -62,7 +69,7 @@ function PlanningPage() {
   const [productId, setProductId] = useState("");
   const [qty, setQty] = useState(100);
   const [date, setDate] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
-  const [plan, setPlan] = useState<{ parts: PartReq[]; rm: RmReq[] } | null>(null);
+  const [plan, setPlan] = useState<{ parts: PartReq[]; otherItems: OtherItemReq[]; rm: RmReq[] } | null>(null);
 
   const { data: products } = useQuery({
     queryKey: ["products", "active"],
@@ -96,11 +103,11 @@ function PlanningPage() {
     mutationFn: async () => {
       if (!productId) throw new Error("Pick a product");
 
-      // 1. BOM rows
+      // 1. BOM rows (parts + other items)
       const { data: bom, error: bomErr } = await supabase
         .from("product_bom")
         .select(
-          "part_id, quantity_required, parts(id, part_name, material_type, consumption_per_unit_kg)",
+          "part_id, other_item_id, quantity_required, parts(id, part_name, material_type, consumption_per_unit_kg), other_items(id, name, current_stock)",
         )
         .eq("product_id", productId);
       if (bomErr) throw bomErr;
@@ -115,18 +122,35 @@ function PlanningPage() {
       const availById = new Map(((availRows ?? []) as any[]).map((a) => [a.part_id, a]));
 
       // 3. Part requirements
-      const partReqs: PartReq[] = bom.map((row: any) => {
-        const a = availById.get(row.part_id);
-        const required = qty * Number(row.quantity_required);
-        const available = Number(a?.available ?? 0);
-        return {
-          part_id: row.part_id,
-          part_name: row.parts?.part_name ?? a?.part_name ?? "—",
-          required,
-          available,
-          shortage: Math.max(0, required - available),
-        };
-      });
+      const partReqs: PartReq[] = bom
+        .filter((b: any) => b.part_id)
+        .map((row: any) => {
+          const a = availById.get(row.part_id);
+          const required = qty * Number(row.quantity_required);
+          const available = Number(a?.available ?? 0);
+          return {
+            part_id: row.part_id,
+            part_name: row.parts?.part_name ?? a?.part_name ?? "—",
+            required,
+            available,
+            shortage: Math.max(0, required - available),
+          };
+        });
+
+      // 3b. Other items requirements
+      const otherReqs: OtherItemReq[] = bom
+        .filter((b: any) => b.other_item_id)
+        .map((row: any) => {
+          const required = qty * Number(row.quantity_required);
+          const available = Number(row.other_items?.current_stock ?? 0);
+          return {
+            other_item_id: row.other_item_id,
+            other_item_name: row.other_items?.name ?? "—",
+            required,
+            available,
+            shortage: Math.max(0, required - available),
+          };
+        });
 
       // 4. Raw material rollup — only for parts with shortage.
       const rmNeeded = new Map<string, number>();
@@ -160,7 +184,7 @@ function PlanningPage() {
         }))
         .filter((r) => r.required_kg > 0);
 
-      return { parts: partReqs, rm: rmReqs };
+      return { parts: partReqs, otherItems: otherReqs, rm: rmReqs };
     },
     onSuccess: (data) => setPlan(data),
     onError: (e: any) => toast.error(e.message),
@@ -189,8 +213,9 @@ function PlanningPage() {
   });
 
   const ready =
-    plan && plan.parts.every((p) => p.shortage === 0) && plan.rm.every((r) => r.shortage_kg === 0);
+    plan && plan.parts.every((p) => p.shortage === 0) && plan.otherItems.every((o) => o.shortage === 0) && plan.rm.every((r) => r.shortage_kg === 0);
   const shortedParts = plan?.parts.filter((p) => p.shortage > 0) ?? [];
+  const shortedOther = plan?.otherItems.filter((o) => o.shortage > 0) ?? [];
   const shortedRm = plan?.rm.filter((r) => r.shortage_kg > 0) ?? [];
 
   return (
@@ -277,6 +302,23 @@ function PlanningPage() {
                     </Button>
                   </div>
                 )}
+                {shortedOther.length > 0 && (
+                  <div>
+                    <div className="font-medium mt-1">Procure these other items:</div>
+                    <ul className="list-disc pl-6 text-xs mt-1">
+                      {shortedOther.map((o) => (
+                        <li key={o.other_item_id}>
+                          {o.other_item_name}: {fmtNum(o.shortage)} short
+                        </li>
+                      ))}
+                    </ul>
+                    <Button asChild size="sm" variant="outline" className="mt-2">
+                      <Link to="/other-items">
+                        <PackagePlus className="h-3 w-3" /> Open Other items
+                      </Link>
+                    </Button>
+                  </div>
+                )}
                 {shortedRm.length > 0 && (
                   <div>
                     <div className="font-medium mt-1">Procure these raw materials:</div>
@@ -298,7 +340,7 @@ function PlanningPage() {
             </Alert>
           )}
 
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
+          <div className="grid md:grid-cols-3 gap-4 mb-6">
             <Card>
               <CardHeader>
                 <CardTitle>Parts requirements</CardTitle>
@@ -337,6 +379,46 @@ function PlanningPage() {
                 </Table>
               </CardContent>
             </Card>
+            {plan.otherItems.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Other items requirements</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Item</TableHead>
+                        <TableHead className="text-right">Required</TableHead>
+                        <TableHead className="text-right">Available</TableHead>
+                        <TableHead className="text-right">Shortage</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {plan.otherItems.map((o) => (
+                        <TableRow
+                          key={o.other_item_id}
+                          className={o.shortage > 0 ? "bg-destructive/10" : ""}
+                        >
+                          <TableCell className="font-medium">{o.other_item_name}</TableCell>
+                          <TableCell className="text-right num">{fmtNum(o.required)}</TableCell>
+                          <TableCell className="text-right num">{fmtNum(o.available)}</TableCell>
+                          <TableCell
+                            className={
+                              o.shortage > 0
+                                ? "text-right num text-destructive font-semibold"
+                                : "text-right num text-muted-foreground"
+                            }
+                          >
+                            {o.shortage > 0 ? fmtNum(o.shortage) : "—"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
                 <CardTitle>Raw material requirements</CardTitle>

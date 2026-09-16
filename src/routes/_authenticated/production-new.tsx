@@ -76,6 +76,12 @@ type BatchAvail = {
 };
 type PartAvail = { part_id: string; part_name: string; available: number; batches: BatchAvail[] };
 type Allocation = { part_batch_id: string; batch_number: string; quantity: number };
+type OtherItemPlan = {
+  other_item_id: string;
+  other_item_name: string;
+  required: number;
+  available: number;
+};
 type PartPlan = {
   part_id: string;
   part_name: string;
@@ -98,6 +104,7 @@ function NewProductionWizard() {
   const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
   const [plan, setPlan] = useState<PartPlan[]>([]);
+  const [otherPlan, setOtherPlan] = useState<OtherItemPlan[]>([]);
   const [partAvail, setPartAvail] = useState<PartAvail[]>([]);
   const [producePart, setProducePart] = useState<any | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -212,7 +219,7 @@ function NewProductionWizard() {
       if (!productId) throw new Error("Pick a product");
       const { data: bom, error: bomErr } = await supabase
         .from("product_bom")
-        .select("part_id, quantity_required, parts(id, part_name, consumption_per_unit_kg)")
+        .select("part_id, other_item_id, quantity_required, parts(id, part_name, consumption_per_unit_kg), other_items(id, name, current_stock)")
         .eq("product_id", productId);
       if (bomErr) throw bomErr;
       if (!bom || bom.length === 0) throw new Error("This product has no BOM. Edit it first.");
@@ -226,7 +233,7 @@ function NewProductionWizard() {
       const avail = (availRows ?? []) as PartAvail[];
       setPartAvail(avail);
 
-      return partBom.map((row: any): PartPlan => {
+      return { parts: partBom.map((row: any): PartPlan => {
         const a = avail.find((x) => x.part_id === row.part_id);
         const required = qty * Number(row.quantity_required);
         const available = Number(a?.available ?? 0);
@@ -238,10 +245,16 @@ function NewProductionWizard() {
           allocations: [],
           consumption_per_unit_kg: Number(row.parts?.consumption_per_unit_kg ?? 0),
         };
-      });
+      }), otherItems: bom.filter((b: any) => b.other_item_id).map((row: any) => ({
+        other_item_id: row.other_item_id,
+        other_item_name: row.other_items?.name ?? "—",
+        required: qty * Number(row.quantity_required),
+        available: Number(row.other_items?.current_stock ?? 0),
+      })) };
     },
     onSuccess: (data) => {
-      setPlan(data);
+      setPlan(data.parts);
+      setOtherPlan(data.otherItems);
       setStep(2);
     },
     onError: (e: any) => toast.error(e.message ?? "Calculation failed"),
@@ -328,7 +341,7 @@ function NewProductionWizard() {
     },
   });
 
-  const hasShortage = plan.some((p) => p.required > p.available);
+  const hasShortage = plan.some((p) => p.required > p.available) || otherPlan.some((o) => o.required > o.available);
 
   return (
     <div>
@@ -572,6 +585,36 @@ function NewProductionWizard() {
                 })}
               </TableBody>
             </Table>
+            {otherPlan.length > 0 && (
+              <>
+                <div className="text-[13px] font-semibold mt-4 mb-2">Other items</div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead className="text-right">Required</TableHead>
+                      <TableHead className="text-right">Available</TableHead>
+                      <TableHead className="text-right">Shortage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {otherPlan.map((o) => {
+                      const shortage = Math.max(0, o.required - o.available);
+                      return (
+                        <TableRow key={o.other_item_id} className={shortage > 0 ? "bg-destructive/10" : ""}>
+                          <TableCell className="font-medium">{o.other_item_name}</TableCell>
+                          <TableCell className="text-right num">{fmtNum(o.required)}</TableCell>
+                          <TableCell className="text-right num">{fmtNum(o.available)}</TableCell>
+                          <TableCell className={cn("text-right num", shortage > 0 && "text-destructive font-semibold")}>
+                            {shortage > 0 ? <><AlertTriangle className="h-4 w-4 inline" /> {fmtNum(shortage)}</> : "—"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </>
+            )}
             <div className="text-sm">
               Total expected raw material: <strong>{fmtKg(expectedRawTotal)}</strong>
             </div>
