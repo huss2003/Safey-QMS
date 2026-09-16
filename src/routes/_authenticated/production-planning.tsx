@@ -200,6 +200,7 @@ function PlanningPage() {
         planned_date: date,
         required_parts: plan.parts as any,
         required_raw_materials: plan.rm as any,
+        required_other_items: plan.otherItems as any,
         status: "planned",
       });
       if (error) throw error;
