@@ -1,6 +1,12 @@
 [build]
-  command = "bun run build"
+  command = "npm run build"
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
+  SUPABASE_PROJECT_ID = "utsfiztqmfskumxacvnn"
+  SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dl4l1Koj9Nm3Nbs8sHqvIw_QOymr_NG"
+  SUPABASE_URL = "https://utsfiztqmfskumxacvnn.supabase.co"
+  VITE_SUPABASE_PROJECT_ID = "utsfiztqmfskumxacvnn"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dl4l1Koj9Nm3Nbs8sHqvIw_QOymr_NG"
+  VITE_SUPABASE_URL = "https://utsfiztqmfskumxacvnn.supabase.co"

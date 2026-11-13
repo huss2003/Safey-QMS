@@ -9,175 +9,66 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedWastageRouteImport } from './routes/_authenticated/wastage'
-import { Route as AuthenticatedVendorsRouteImport } from './routes/_authenticated/vendors'
-import { Route as AuthenticatedUdiRegistrationRouteImport } from './routes/_authenticated/udi-registration'
-import { Route as AuthenticatedTraceabilityRouteImport } from './routes/_authenticated/traceability'
-import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/stock'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
-import { Route as AuthenticatedRegisterUdiRouteImport } from './routes/_authenticated/register-udi'
-import { Route as AuthenticatedRawMaterialsRouteImport } from './routes/_authenticated/raw-materials'
-import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
-import { Route as AuthenticatedProductionPlanningRouteImport } from './routes/_authenticated/production-planning'
-import { Route as AuthenticatedProductionNewRouteImport } from './routes/_authenticated/production-new'
-import { Route as AuthenticatedProductionRouteImport } from './routes/_authenticated/production'
-import { Route as AuthenticatedPartsRouteImport } from './routes/_authenticated/parts'
-import { Route as AuthenticatedOtherItemsRouteImport } from './routes/_authenticated/other-items'
-import { Route as AuthenticatedInspectionFormTemplateRouteImport } from './routes/_authenticated/inspection-form-template'
-import { Route as AuthenticatedEquipmentNewRouteImport } from './routes/_authenticated/equipment-new'
-import { Route as AuthenticatedEquipmentRouteImport } from './routes/_authenticated/equipment'
-import { Route as AuthenticatedEnquireSerialRouteImport } from './routes/_authenticated/enquire-serial'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedBatchRecallRouteImport } from './routes/_authenticated/batch-recall'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
-import { Route as AuthenticatedRolesTrainingRouteImport } from './routes/_authenticated/roles.training'
-import { Route as AuthenticatedRolesEmployeesRouteImport } from './routes/_authenticated/roles.employees'
-import { Route as AuthenticatedProductsBomIdRouteImport } from './routes/_authenticated/products-bom.$id'
-import { Route as AuthenticatedProductInspectionProductIdRouteImport } from './routes/_authenticated/product-inspection.$productId'
-import { Route as AuthenticatedInspectionFormBatchIdRouteImport } from './routes/_authenticated/inspection-form.$batchId'
-import { Route as AuthenticatedEquipmentEditIdRouteImport } from './routes/_authenticated/equipment-edit.$id'
+import { Route as AuthenticatedBatchRecallRouteImport } from './routes/_authenticated/batch-recall'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEnquireSerialRouteImport } from './routes/_authenticated/enquire-serial'
+import { Route as AuthenticatedEquipmentRouteImport } from './routes/_authenticated/equipment'
+import { Route as AuthenticatedEquipmentNewRouteImport } from './routes/_authenticated/equipment-new'
+import { Route as AuthenticatedInspectionFormTemplateRouteImport } from './routes/_authenticated/inspection-form-template'
+import { Route as AuthenticatedOtherItemsRouteImport } from './routes/_authenticated/other-items'
+import { Route as AuthenticatedPartsRouteImport } from './routes/_authenticated/parts'
+import { Route as AuthenticatedProductionRouteImport } from './routes/_authenticated/production'
+import { Route as AuthenticatedProductionNewRouteImport } from './routes/_authenticated/production-new'
+import { Route as AuthenticatedProductionPlanningRouteImport } from './routes/_authenticated/production-planning'
+import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedRawMaterialsRouteImport } from './routes/_authenticated/raw-materials'
+import { Route as AuthenticatedRegisterUdiRouteImport } from './routes/_authenticated/register-udi'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedRolesRouteImport } from './routes/_authenticated/roles'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedStockRouteImport } from './routes/_authenticated/stock'
+import { Route as AuthenticatedTraceabilityRouteImport } from './routes/_authenticated/traceability'
+import { Route as AuthenticatedUdiRegistrationRouteImport } from './routes/_authenticated/udi-registration'
+import { Route as AuthenticatedVendorsRouteImport } from './routes/_authenticated/vendors'
+import { Route as AuthenticatedWastageRouteImport } from './routes/_authenticated/wastage'
 import { Route as AuthenticatedEquipmentDetailIdRouteImport } from './routes/_authenticated/equipment-detail.$id'
-import { Route as AuthenticatedStockHistoryTypeIdRouteImport } from './routes/_authenticated/stock-history.$type.$id'
-import { Route as AuthenticatedRolesTrainingNewRouteImport } from './routes/_authenticated/roles.training.new'
-import { Route as AuthenticatedRolesTrainingIdRouteImport } from './routes/_authenticated/roles.training.$id'
-import { Route as AuthenticatedRolesEmployeesNewRouteImport } from './routes/_authenticated/roles.employees.new'
+import { Route as AuthenticatedEquipmentEditIdRouteImport } from './routes/_authenticated/equipment-edit.$id'
+import { Route as AuthenticatedInspectionFormBatchIdRouteImport } from './routes/_authenticated/inspection-form.$batchId'
+import { Route as AuthenticatedProductInspectionProductIdRouteImport } from './routes/_authenticated/product-inspection.$productId'
+import { Route as AuthenticatedProductsBomIdRouteImport } from './routes/_authenticated/products-bom.$id'
+import { Route as AuthenticatedRolesEmployeesRouteImport } from './routes/_authenticated/roles.employees'
+import { Route as AuthenticatedRolesTrainingRouteImport } from './routes/_authenticated/roles.training'
 import { Route as AuthenticatedRolesEmployeesIdRouteImport } from './routes/_authenticated/roles.employees.$id'
-import { Route as AuthenticatedRolesTrainingPerformanceRecordIdRouteImport } from './routes/_authenticated/roles.training.performance.$recordId'
-import { Route as AuthenticatedRolesTrainingIdPerformanceRouteImport } from './routes/_authenticated/roles.training.$id.performance'
-import { Route as AuthenticatedRolesTrainingIdEditRouteImport } from './routes/_authenticated/roles.training.$id.edit'
+import { Route as AuthenticatedRolesEmployeesNewRouteImport } from './routes/_authenticated/roles.employees.new'
+import { Route as AuthenticatedRolesTrainingIdRouteImport } from './routes/_authenticated/roles.training.$id'
+import { Route as AuthenticatedRolesTrainingNewRouteImport } from './routes/_authenticated/roles.training.new'
+import { Route as AuthenticatedStockHistoryTypeIdRouteImport } from './routes/_authenticated/stock-history.$type.$id'
 import { Route as AuthenticatedRolesEmployeesIdEditRouteImport } from './routes/_authenticated/roles.employees.$id.edit'
+import { Route as AuthenticatedRolesTrainingIdEditRouteImport } from './routes/_authenticated/roles.training.$id.edit'
+import { Route as AuthenticatedRolesTrainingIdPerformanceRouteImport } from './routes/_authenticated/roles.training.$id.performance'
+import { Route as AuthenticatedRolesTrainingPerformanceRecordIdRouteImport } from './routes/_authenticated/roles.training.performance.$recordId'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedWastageRoute = AuthenticatedWastageRouteImport.update({
-  id: '/wastage',
-  path: '/wastage',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedVendorsRoute = AuthenticatedVendorsRouteImport.update({
-  id: '/vendors',
-  path: '/vendors',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedUdiRegistrationRoute =
-  AuthenticatedUdiRegistrationRouteImport.update({
-    id: '/udi-registration',
-    path: '/udi-registration',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedTraceabilityRoute =
-  AuthenticatedTraceabilityRouteImport.update({
-    id: '/traceability',
-    path: '/traceability',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedStockRoute = AuthenticatedStockRouteImport.update({
-  id: '/stock',
-  path: '/stock',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRolesRoute = AuthenticatedRolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRegisterUdiRoute =
-  AuthenticatedRegisterUdiRouteImport.update({
-    id: '/register-udi',
-    path: '/register-udi',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRawMaterialsRoute =
-  AuthenticatedRawMaterialsRouteImport.update({
-    id: '/raw-materials',
-    path: '/raw-materials',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
-  id: '/products',
-  path: '/products',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProductionPlanningRoute =
-  AuthenticatedProductionPlanningRouteImport.update({
-    id: '/production-planning',
-    path: '/production-planning',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProductionNewRoute =
-  AuthenticatedProductionNewRouteImport.update({
-    id: '/production-new',
-    path: '/production-new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedProductionRoute = AuthenticatedProductionRouteImport.update({
-  id: '/production',
-  path: '/production',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPartsRoute = AuthenticatedPartsRouteImport.update({
-  id: '/parts',
-  path: '/parts',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOtherItemsRoute = AuthenticatedOtherItemsRouteImport.update({
-  id: '/other-items',
-  path: '/other-items',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedInspectionFormTemplateRoute =
-  AuthenticatedInspectionFormTemplateRouteImport.update({
-    id: '/inspection-form-template',
-    path: '/inspection-form-template',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedEquipmentNewRoute =
-  AuthenticatedEquipmentNewRouteImport.update({
-    id: '/equipment-new',
-    path: '/equipment-new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedEquipmentRoute = AuthenticatedEquipmentRouteImport.update({
-  id: '/equipment',
-  path: '/equipment',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEnquireSerialRoute =
-  AuthenticatedEnquireSerialRouteImport.update({
-    id: '/enquire-serial',
-    path: '/enquire-serial',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedBatchRecallRoute =
@@ -186,39 +77,124 @@ const AuthenticatedBatchRecallRoute =
     path: '/batch-recall',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAlertsRoute = AuthenticatedAlertsRouteImport.update({
-  id: '/alerts',
-  path: '/alerts',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedRolesTrainingRoute =
-  AuthenticatedRolesTrainingRouteImport.update({
-    id: '/training',
-    path: '/training',
-    getParentRoute: () => AuthenticatedRolesRoute,
-  } as any)
-const AuthenticatedRolesEmployeesRoute =
-  AuthenticatedRolesEmployeesRouteImport.update({
-    id: '/employees',
-    path: '/employees',
-    getParentRoute: () => AuthenticatedRolesRoute,
-  } as any)
-const AuthenticatedProductsBomIdRoute =
-  AuthenticatedProductsBomIdRouteImport.update({
-    id: '/products-bom/$id',
-    path: '/products-bom/$id',
+const AuthenticatedEnquireSerialRoute =
+  AuthenticatedEnquireSerialRouteImport.update({
+    id: '/enquire-serial',
+    path: '/enquire-serial',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedProductInspectionProductIdRoute =
-  AuthenticatedProductInspectionProductIdRouteImport.update({
-    id: '/product-inspection/$productId',
-    path: '/product-inspection/$productId',
+const AuthenticatedEquipmentRoute = AuthenticatedEquipmentRouteImport.update({
+  id: '/equipment',
+  path: '/equipment',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEquipmentNewRoute =
+  AuthenticatedEquipmentNewRouteImport.update({
+    id: '/equipment-new',
+    path: '/equipment-new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedInspectionFormBatchIdRoute =
-  AuthenticatedInspectionFormBatchIdRouteImport.update({
-    id: '/inspection-form/$batchId',
-    path: '/inspection-form/$batchId',
+const AuthenticatedInspectionFormTemplateRoute =
+  AuthenticatedInspectionFormTemplateRouteImport.update({
+    id: '/inspection-form-template',
+    path: '/inspection-form-template',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOtherItemsRoute = AuthenticatedOtherItemsRouteImport.update({
+  id: '/other-items',
+  path: '/other-items',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPartsRoute = AuthenticatedPartsRouteImport.update({
+  id: '/parts',
+  path: '/parts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProductionRoute = AuthenticatedProductionRouteImport.update({
+  id: '/production',
+  path: '/production',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProductionNewRoute =
+  AuthenticatedProductionNewRouteImport.update({
+    id: '/production-new',
+    path: '/production-new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProductionPlanningRoute =
+  AuthenticatedProductionPlanningRouteImport.update({
+    id: '/production-planning',
+    path: '/production-planning',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRawMaterialsRoute =
+  AuthenticatedRawMaterialsRouteImport.update({
+    id: '/raw-materials',
+    path: '/raw-materials',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRegisterUdiRoute =
+  AuthenticatedRegisterUdiRouteImport.update({
+    id: '/register-udi',
+    path: '/register-udi',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRolesRoute = AuthenticatedRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStockRoute = AuthenticatedStockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTraceabilityRoute =
+  AuthenticatedTraceabilityRouteImport.update({
+    id: '/traceability',
+    path: '/traceability',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedUdiRegistrationRoute =
+  AuthenticatedUdiRegistrationRouteImport.update({
+    id: '/udi-registration',
+    path: '/udi-registration',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedVendorsRoute = AuthenticatedVendorsRouteImport.update({
+  id: '/vendors',
+  path: '/vendors',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWastageRoute = AuthenticatedWastageRouteImport.update({
+  id: '/wastage',
+  path: '/wastage',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEquipmentDetailIdRoute =
+  AuthenticatedEquipmentDetailIdRouteImport.update({
+    id: '/equipment-detail/$id',
+    path: '/equipment-detail/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEquipmentEditIdRoute =
@@ -227,35 +203,35 @@ const AuthenticatedEquipmentEditIdRoute =
     path: '/equipment-edit/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedEquipmentDetailIdRoute =
-  AuthenticatedEquipmentDetailIdRouteImport.update({
-    id: '/equipment-detail/$id',
-    path: '/equipment-detail/$id',
+const AuthenticatedInspectionFormBatchIdRoute =
+  AuthenticatedInspectionFormBatchIdRouteImport.update({
+    id: '/inspection-form/$batchId',
+    path: '/inspection-form/$batchId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedStockHistoryTypeIdRoute =
-  AuthenticatedStockHistoryTypeIdRouteImport.update({
-    id: '/stock-history/$type/$id',
-    path: '/stock-history/$type/$id',
+const AuthenticatedProductInspectionProductIdRoute =
+  AuthenticatedProductInspectionProductIdRouteImport.update({
+    id: '/product-inspection/$productId',
+    path: '/product-inspection/$productId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedRolesTrainingNewRoute =
-  AuthenticatedRolesTrainingNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedRolesTrainingRoute,
+const AuthenticatedProductsBomIdRoute =
+  AuthenticatedProductsBomIdRouteImport.update({
+    id: '/products-bom/$id',
+    path: '/products-bom/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedRolesTrainingIdRoute =
-  AuthenticatedRolesTrainingIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedRolesTrainingRoute,
+const AuthenticatedRolesEmployeesRoute =
+  AuthenticatedRolesEmployeesRouteImport.update({
+    id: '/employees',
+    path: '/employees',
+    getParentRoute: () => AuthenticatedRolesRoute,
   } as any)
-const AuthenticatedRolesEmployeesNewRoute =
-  AuthenticatedRolesEmployeesNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedRolesEmployeesRoute,
+const AuthenticatedRolesTrainingRoute =
+  AuthenticatedRolesTrainingRouteImport.update({
+    id: '/training',
+    path: '/training',
+    getParentRoute: () => AuthenticatedRolesRoute,
   } as any)
 const AuthenticatedRolesEmployeesIdRoute =
   AuthenticatedRolesEmployeesIdRouteImport.update({
@@ -263,17 +239,35 @@ const AuthenticatedRolesEmployeesIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedRolesEmployeesRoute,
   } as any)
-const AuthenticatedRolesTrainingPerformanceRecordIdRoute =
-  AuthenticatedRolesTrainingPerformanceRecordIdRouteImport.update({
-    id: '/performance/$recordId',
-    path: '/performance/$recordId',
+const AuthenticatedRolesEmployeesNewRoute =
+  AuthenticatedRolesEmployeesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedRolesEmployeesRoute,
+  } as any)
+const AuthenticatedRolesTrainingIdRoute =
+  AuthenticatedRolesTrainingIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
     getParentRoute: () => AuthenticatedRolesTrainingRoute,
   } as any)
-const AuthenticatedRolesTrainingIdPerformanceRoute =
-  AuthenticatedRolesTrainingIdPerformanceRouteImport.update({
-    id: '/performance',
-    path: '/performance',
-    getParentRoute: () => AuthenticatedRolesTrainingIdRoute,
+const AuthenticatedRolesTrainingNewRoute =
+  AuthenticatedRolesTrainingNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedRolesTrainingRoute,
+  } as any)
+const AuthenticatedStockHistoryTypeIdRoute =
+  AuthenticatedStockHistoryTypeIdRouteImport.update({
+    id: '/stock-history/$type/$id',
+    path: '/stock-history/$type/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRolesEmployeesIdEditRoute =
+  AuthenticatedRolesEmployeesIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedRolesEmployeesIdRoute,
   } as any)
 const AuthenticatedRolesTrainingIdEditRoute =
   AuthenticatedRolesTrainingIdEditRouteImport.update({
@@ -281,11 +275,17 @@ const AuthenticatedRolesTrainingIdEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedRolesTrainingIdRoute,
   } as any)
-const AuthenticatedRolesEmployeesIdEditRoute =
-  AuthenticatedRolesEmployeesIdEditRouteImport.update({
-    id: '/edit',
-    path: '/edit',
-    getParentRoute: () => AuthenticatedRolesEmployeesIdRoute,
+const AuthenticatedRolesTrainingIdPerformanceRoute =
+  AuthenticatedRolesTrainingIdPerformanceRouteImport.update({
+    id: '/performance',
+    path: '/performance',
+    getParentRoute: () => AuthenticatedRolesTrainingIdRoute,
+  } as any)
+const AuthenticatedRolesTrainingPerformanceRecordIdRoute =
+  AuthenticatedRolesTrainingPerformanceRecordIdRouteImport.update({
+    id: '/performance/$recordId',
+    path: '/performance/$recordId',
+    getParentRoute: () => AuthenticatedRolesTrainingRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -560,11 +560,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -574,158 +574,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wastage': {
-      id: '/_authenticated/wastage'
-      path: '/wastage'
-      fullPath: '/wastage'
-      preLoaderRoute: typeof AuthenticatedWastageRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/vendors': {
-      id: '/_authenticated/vendors'
-      path: '/vendors'
-      fullPath: '/vendors'
-      preLoaderRoute: typeof AuthenticatedVendorsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/udi-registration': {
-      id: '/_authenticated/udi-registration'
-      path: '/udi-registration'
-      fullPath: '/udi-registration'
-      preLoaderRoute: typeof AuthenticatedUdiRegistrationRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/traceability': {
-      id: '/_authenticated/traceability'
-      path: '/traceability'
-      fullPath: '/traceability'
-      preLoaderRoute: typeof AuthenticatedTraceabilityRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/stock': {
-      id: '/_authenticated/stock'
-      path: '/stock'
-      fullPath: '/stock'
-      preLoaderRoute: typeof AuthenticatedStockRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/roles': {
-      id: '/_authenticated/roles'
-      path: '/roles'
-      fullPath: '/roles'
-      preLoaderRoute: typeof AuthenticatedRolesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/register-udi': {
-      id: '/_authenticated/register-udi'
-      path: '/register-udi'
-      fullPath: '/register-udi'
-      preLoaderRoute: typeof AuthenticatedRegisterUdiRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/raw-materials': {
-      id: '/_authenticated/raw-materials'
-      path: '/raw-materials'
-      fullPath: '/raw-materials'
-      preLoaderRoute: typeof AuthenticatedRawMaterialsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/products': {
-      id: '/_authenticated/products'
-      path: '/products'
-      fullPath: '/products'
-      preLoaderRoute: typeof AuthenticatedProductsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/production-planning': {
-      id: '/_authenticated/production-planning'
-      path: '/production-planning'
-      fullPath: '/production-planning'
-      preLoaderRoute: typeof AuthenticatedProductionPlanningRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/production-new': {
-      id: '/_authenticated/production-new'
-      path: '/production-new'
-      fullPath: '/production-new'
-      preLoaderRoute: typeof AuthenticatedProductionNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/production': {
-      id: '/_authenticated/production'
-      path: '/production'
-      fullPath: '/production'
-      preLoaderRoute: typeof AuthenticatedProductionRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/parts': {
-      id: '/_authenticated/parts'
-      path: '/parts'
-      fullPath: '/parts'
-      preLoaderRoute: typeof AuthenticatedPartsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/other-items': {
-      id: '/_authenticated/other-items'
-      path: '/other-items'
-      fullPath: '/other-items'
-      preLoaderRoute: typeof AuthenticatedOtherItemsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/inspection-form-template': {
-      id: '/_authenticated/inspection-form-template'
-      path: '/inspection-form-template'
-      fullPath: '/inspection-form-template'
-      preLoaderRoute: typeof AuthenticatedInspectionFormTemplateRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/equipment-new': {
-      id: '/_authenticated/equipment-new'
-      path: '/equipment-new'
-      fullPath: '/equipment-new'
-      preLoaderRoute: typeof AuthenticatedEquipmentNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/equipment': {
-      id: '/_authenticated/equipment'
-      path: '/equipment'
-      fullPath: '/equipment'
-      preLoaderRoute: typeof AuthenticatedEquipmentRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/enquire-serial': {
-      id: '/_authenticated/enquire-serial'
-      path: '/enquire-serial'
-      fullPath: '/enquire-serial'
-      preLoaderRoute: typeof AuthenticatedEnquireSerialRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+    '/_authenticated/alerts': {
+      id: '/_authenticated/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/batch-recall': {
@@ -735,53 +595,151 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBatchRecallRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/alerts': {
-      id: '/_authenticated/alerts'
-      path: '/alerts'
-      fullPath: '/alerts'
-      preLoaderRoute: typeof AuthenticatedAlertsRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/roles/training': {
-      id: '/_authenticated/roles/training'
-      path: '/training'
-      fullPath: '/roles/training'
-      preLoaderRoute: typeof AuthenticatedRolesTrainingRouteImport
-      parentRoute: typeof AuthenticatedRolesRoute
-    }
-    '/_authenticated/roles/employees': {
-      id: '/_authenticated/roles/employees'
-      path: '/employees'
-      fullPath: '/roles/employees'
-      preLoaderRoute: typeof AuthenticatedRolesEmployeesRouteImport
-      parentRoute: typeof AuthenticatedRolesRoute
-    }
-    '/_authenticated/products-bom/$id': {
-      id: '/_authenticated/products-bom/$id'
-      path: '/products-bom/$id'
-      fullPath: '/products-bom/$id'
-      preLoaderRoute: typeof AuthenticatedProductsBomIdRouteImport
+    '/_authenticated/enquire-serial': {
+      id: '/_authenticated/enquire-serial'
+      path: '/enquire-serial'
+      fullPath: '/enquire-serial'
+      preLoaderRoute: typeof AuthenticatedEnquireSerialRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/product-inspection/$productId': {
-      id: '/_authenticated/product-inspection/$productId'
-      path: '/product-inspection/$productId'
-      fullPath: '/product-inspection/$productId'
-      preLoaderRoute: typeof AuthenticatedProductInspectionProductIdRouteImport
+    '/_authenticated/equipment': {
+      id: '/_authenticated/equipment'
+      path: '/equipment'
+      fullPath: '/equipment'
+      preLoaderRoute: typeof AuthenticatedEquipmentRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/inspection-form/$batchId': {
-      id: '/_authenticated/inspection-form/$batchId'
-      path: '/inspection-form/$batchId'
-      fullPath: '/inspection-form/$batchId'
-      preLoaderRoute: typeof AuthenticatedInspectionFormBatchIdRouteImport
+    '/_authenticated/equipment-new': {
+      id: '/_authenticated/equipment-new'
+      path: '/equipment-new'
+      fullPath: '/equipment-new'
+      preLoaderRoute: typeof AuthenticatedEquipmentNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/equipment-edit/$id': {
-      id: '/_authenticated/equipment-edit/$id'
-      path: '/equipment-edit/$id'
-      fullPath: '/equipment-edit/$id'
-      preLoaderRoute: typeof AuthenticatedEquipmentEditIdRouteImport
+    '/_authenticated/inspection-form-template': {
+      id: '/_authenticated/inspection-form-template'
+      path: '/inspection-form-template'
+      fullPath: '/inspection-form-template'
+      preLoaderRoute: typeof AuthenticatedInspectionFormTemplateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/other-items': {
+      id: '/_authenticated/other-items'
+      path: '/other-items'
+      fullPath: '/other-items'
+      preLoaderRoute: typeof AuthenticatedOtherItemsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/parts': {
+      id: '/_authenticated/parts'
+      path: '/parts'
+      fullPath: '/parts'
+      preLoaderRoute: typeof AuthenticatedPartsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/production': {
+      id: '/_authenticated/production'
+      path: '/production'
+      fullPath: '/production'
+      preLoaderRoute: typeof AuthenticatedProductionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/production-new': {
+      id: '/_authenticated/production-new'
+      path: '/production-new'
+      fullPath: '/production-new'
+      preLoaderRoute: typeof AuthenticatedProductionNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/production-planning': {
+      id: '/_authenticated/production-planning'
+      path: '/production-planning'
+      fullPath: '/production-planning'
+      preLoaderRoute: typeof AuthenticatedProductionPlanningRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/products': {
+      id: '/_authenticated/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthenticatedProductsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/raw-materials': {
+      id: '/_authenticated/raw-materials'
+      path: '/raw-materials'
+      fullPath: '/raw-materials'
+      preLoaderRoute: typeof AuthenticatedRawMaterialsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/register-udi': {
+      id: '/_authenticated/register-udi'
+      path: '/register-udi'
+      fullPath: '/register-udi'
+      preLoaderRoute: typeof AuthenticatedRegisterUdiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/roles': {
+      id: '/_authenticated/roles'
+      path: '/roles'
+      fullPath: '/roles'
+      preLoaderRoute: typeof AuthenticatedRolesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stock': {
+      id: '/_authenticated/stock'
+      path: '/stock'
+      fullPath: '/stock'
+      preLoaderRoute: typeof AuthenticatedStockRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/traceability': {
+      id: '/_authenticated/traceability'
+      path: '/traceability'
+      fullPath: '/traceability'
+      preLoaderRoute: typeof AuthenticatedTraceabilityRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/udi-registration': {
+      id: '/_authenticated/udi-registration'
+      path: '/udi-registration'
+      fullPath: '/udi-registration'
+      preLoaderRoute: typeof AuthenticatedUdiRegistrationRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vendors': {
+      id: '/_authenticated/vendors'
+      path: '/vendors'
+      fullPath: '/vendors'
+      preLoaderRoute: typeof AuthenticatedVendorsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wastage': {
+      id: '/_authenticated/wastage'
+      path: '/wastage'
+      fullPath: '/wastage'
+      preLoaderRoute: typeof AuthenticatedWastageRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/equipment-detail/$id': {
@@ -791,33 +749,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEquipmentDetailIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/stock-history/$type/$id': {
-      id: '/_authenticated/stock-history/$type/$id'
-      path: '/stock-history/$type/$id'
-      fullPath: '/stock-history/$type/$id'
-      preLoaderRoute: typeof AuthenticatedStockHistoryTypeIdRouteImport
+    '/_authenticated/equipment-edit/$id': {
+      id: '/_authenticated/equipment-edit/$id'
+      path: '/equipment-edit/$id'
+      fullPath: '/equipment-edit/$id'
+      preLoaderRoute: typeof AuthenticatedEquipmentEditIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/roles/training/new': {
-      id: '/_authenticated/roles/training/new'
-      path: '/new'
-      fullPath: '/roles/training/new'
-      preLoaderRoute: typeof AuthenticatedRolesTrainingNewRouteImport
-      parentRoute: typeof AuthenticatedRolesTrainingRoute
+    '/_authenticated/inspection-form/$batchId': {
+      id: '/_authenticated/inspection-form/$batchId'
+      path: '/inspection-form/$batchId'
+      fullPath: '/inspection-form/$batchId'
+      preLoaderRoute: typeof AuthenticatedInspectionFormBatchIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/roles/training/$id': {
-      id: '/_authenticated/roles/training/$id'
-      path: '/$id'
-      fullPath: '/roles/training/$id'
-      preLoaderRoute: typeof AuthenticatedRolesTrainingIdRouteImport
-      parentRoute: typeof AuthenticatedRolesTrainingRoute
+    '/_authenticated/product-inspection/$productId': {
+      id: '/_authenticated/product-inspection/$productId'
+      path: '/product-inspection/$productId'
+      fullPath: '/product-inspection/$productId'
+      preLoaderRoute: typeof AuthenticatedProductInspectionProductIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/roles/employees/new': {
-      id: '/_authenticated/roles/employees/new'
-      path: '/new'
-      fullPath: '/roles/employees/new'
-      preLoaderRoute: typeof AuthenticatedRolesEmployeesNewRouteImport
-      parentRoute: typeof AuthenticatedRolesEmployeesRoute
+    '/_authenticated/products-bom/$id': {
+      id: '/_authenticated/products-bom/$id'
+      path: '/products-bom/$id'
+      fullPath: '/products-bom/$id'
+      preLoaderRoute: typeof AuthenticatedProductsBomIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/roles/employees': {
+      id: '/_authenticated/roles/employees'
+      path: '/employees'
+      fullPath: '/roles/employees'
+      preLoaderRoute: typeof AuthenticatedRolesEmployeesRouteImport
+      parentRoute: typeof AuthenticatedRolesRoute
+    }
+    '/_authenticated/roles/training': {
+      id: '/_authenticated/roles/training'
+      path: '/training'
+      fullPath: '/roles/training'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingRouteImport
+      parentRoute: typeof AuthenticatedRolesRoute
     }
     '/_authenticated/roles/employees/$id': {
       id: '/_authenticated/roles/employees/$id'
@@ -826,19 +798,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRolesEmployeesIdRouteImport
       parentRoute: typeof AuthenticatedRolesEmployeesRoute
     }
-    '/_authenticated/roles/training/performance/$recordId': {
-      id: '/_authenticated/roles/training/performance/$recordId'
-      path: '/performance/$recordId'
-      fullPath: '/roles/training/performance/$recordId'
-      preLoaderRoute: typeof AuthenticatedRolesTrainingPerformanceRecordIdRouteImport
+    '/_authenticated/roles/employees/new': {
+      id: '/_authenticated/roles/employees/new'
+      path: '/new'
+      fullPath: '/roles/employees/new'
+      preLoaderRoute: typeof AuthenticatedRolesEmployeesNewRouteImport
+      parentRoute: typeof AuthenticatedRolesEmployeesRoute
+    }
+    '/_authenticated/roles/training/$id': {
+      id: '/_authenticated/roles/training/$id'
+      path: '/$id'
+      fullPath: '/roles/training/$id'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingIdRouteImport
       parentRoute: typeof AuthenticatedRolesTrainingRoute
     }
-    '/_authenticated/roles/training/$id/performance': {
-      id: '/_authenticated/roles/training/$id/performance'
-      path: '/performance'
-      fullPath: '/roles/training/$id/performance'
-      preLoaderRoute: typeof AuthenticatedRolesTrainingIdPerformanceRouteImport
-      parentRoute: typeof AuthenticatedRolesTrainingIdRoute
+    '/_authenticated/roles/training/new': {
+      id: '/_authenticated/roles/training/new'
+      path: '/new'
+      fullPath: '/roles/training/new'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingNewRouteImport
+      parentRoute: typeof AuthenticatedRolesTrainingRoute
+    }
+    '/_authenticated/stock-history/$type/$id': {
+      id: '/_authenticated/stock-history/$type/$id'
+      path: '/stock-history/$type/$id'
+      fullPath: '/stock-history/$type/$id'
+      preLoaderRoute: typeof AuthenticatedStockHistoryTypeIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/roles/employees/$id/edit': {
+      id: '/_authenticated/roles/employees/$id/edit'
+      path: '/edit'
+      fullPath: '/roles/employees/$id/edit'
+      preLoaderRoute: typeof AuthenticatedRolesEmployeesIdEditRouteImport
+      parentRoute: typeof AuthenticatedRolesEmployeesIdRoute
     }
     '/_authenticated/roles/training/$id/edit': {
       id: '/_authenticated/roles/training/$id/edit'
@@ -847,12 +840,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRolesTrainingIdEditRouteImport
       parentRoute: typeof AuthenticatedRolesTrainingIdRoute
     }
-    '/_authenticated/roles/employees/$id/edit': {
-      id: '/_authenticated/roles/employees/$id/edit'
-      path: '/edit'
-      fullPath: '/roles/employees/$id/edit'
-      preLoaderRoute: typeof AuthenticatedRolesEmployeesIdEditRouteImport
-      parentRoute: typeof AuthenticatedRolesEmployeesIdRoute
+    '/_authenticated/roles/training/$id/performance': {
+      id: '/_authenticated/roles/training/$id/performance'
+      path: '/performance'
+      fullPath: '/roles/training/$id/performance'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingIdPerformanceRouteImport
+      parentRoute: typeof AuthenticatedRolesTrainingIdRoute
+    }
+    '/_authenticated/roles/training/performance/$recordId': {
+      id: '/_authenticated/roles/training/performance/$recordId'
+      path: '/performance/$recordId'
+      fullPath: '/roles/training/performance/$recordId'
+      preLoaderRoute: typeof AuthenticatedRolesTrainingPerformanceRecordIdRouteImport
+      parentRoute: typeof AuthenticatedRolesTrainingRoute
     }
   }
 }
