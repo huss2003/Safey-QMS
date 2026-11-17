@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PackageCheck, Clock, CheckCircle2, Plus, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/db";
 import { PageHeader } from "@/components/inventory/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,7 @@ const FILTERS: { key: FilterKey; label: string; stage: number; icon: LucideIcon 
 ];
 
 function DeliveryDashboard() {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<FilterKey>("parcels");
 
   const { data: rows = [], isLoading } = useQuery({
@@ -146,7 +147,11 @@ function DeliveryDashboard() {
               </TableHeader>
               <TableBody>
                 {listRows.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow
+                    key={r.id}
+                    className="cursor-pointer"
+                    onClick={() => navigate({ to: "/shipment/$id", params: { id: r.id } })}
+                  >
                     <TableCell className="font-mono">{r.invoice_number}</TableCell>
                     <TableCell>{r.customer_name}</TableCell>
                     <TableCell>{r.invoice_date ?? "—"}</TableCell>

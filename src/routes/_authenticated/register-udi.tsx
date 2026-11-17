@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/db";
 import { PageHeader } from "@/components/inventory/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -177,11 +177,11 @@ function RegisterUdiPage() {
     if (!searchId || fetchedIdRef.current === searchId) return;
     fetchedIdRef.current = searchId;
     (async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from("udi_registrations" as any)
         .select("*")
         .eq("id", searchId)
-        .single();
+        .single() as any);
       if (error || !data) {
         toast.error("Failed to load registration");
         return;

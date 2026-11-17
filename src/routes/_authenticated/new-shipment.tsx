@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Search, ArrowLeft, Upload, FileText, CheckCircle2, ScanLine } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { db as supabase } from "@/lib/db";
 import { PageHeader } from "@/components/inventory/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -409,7 +409,7 @@ function UploadInvoiceStep({ draftId }: { draftId: string }) {
       toast.success(`Invoice ${data?.invoice_number ?? ""} created`);
       queryClient.invalidateQueries({ queryKey: ["delivery-dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["shipment-drafts"] });
-      navigate({ to: "/delivery" });
+      navigate({ to: "/shipment/$id", params: { id: draftId } });
     } catch (e: any) {
       toast.error(e.message ?? "Could not complete");
     } finally {
