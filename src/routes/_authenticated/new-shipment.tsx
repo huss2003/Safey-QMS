@@ -55,20 +55,6 @@ function StartShipment() {
   const [query, setQuery] = useState("");
   const [customer, setCustomer] = useState<string | null>(null);
 
-  if (customer) {
-    return (
-      <AddressStep
-        customerName={customer}
-        onBack={() => setCustomer(null)}
-        onDraftSaved={() => {
-          queryClient.invalidateQueries({ queryKey: ["shipment-drafts"] });
-          toast.success("Draft saved");
-          setCustomer(null);
-        }}
-      />
-    );
-  }
-
   const { data: matches = [] } = useQuery({
     queryKey: ["customer-search", query],
     queryFn: async (): Promise<AddressRow[]> => {
@@ -96,6 +82,21 @@ function StartShipment() {
       return (data ?? []) as DraftRow[];
     },
   });
+
+  // Hooks above must run on every render; the address step is chosen after them.
+  if (customer) {
+    return (
+      <AddressStep
+        customerName={customer}
+        onBack={() => setCustomer(null)}
+        onDraftSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ["shipment-drafts"] });
+          toast.success("Draft saved");
+          setCustomer(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
