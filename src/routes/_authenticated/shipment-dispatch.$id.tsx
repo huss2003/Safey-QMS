@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ShippingLabel } from "@/components/shipping-label";
 
 export const Route = createFileRoute("/_authenticated/shipment-dispatch/$id")({
   component: DispatchPage,
@@ -19,6 +21,8 @@ type DispatchRow = {
   id: string;
   invoice_number: string | null;
   customer_name: string;
+  customer_address: string | null;
+  ship_to_address: string | null;
   delivery_service_provider: string | null;
   delivery_tracking_code: string | null;
 };
@@ -31,7 +35,7 @@ function DispatchPage() {
     queryKey: ["dispatch-detail", id],
     queryFn: async (): Promise<DispatchRow> => {
       const { data, error } = await (supabase.from("udi_registrations" as any) as any)
-        .select("id, invoice_number, customer_name, delivery_service_provider, delivery_tracking_code")
+        .select("id, invoice_number, customer_name, customer_address, ship_to_address, delivery_service_provider, delivery_tracking_code")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -61,6 +65,8 @@ function DispatchForm({ row }: { row: DispatchRow }) {
   const [tracking, setTracking] = useState(row.delivery_tracking_code ?? "");
   const [saving, setSaving] = useState(false);
   const saved = Boolean(row.delivery_tracking_code && row.delivery_service_provider);
+  const [labelOpen, setLabelOpen] = useState(false);
+  const shipTo = row.ship_to_address || row.customer_address;
 
   const submit = async () => {
     if (!provider.trim() || !tracking.trim()) {
@@ -149,7 +155,7 @@ function DispatchForm({ row }: { row: DispatchRow }) {
             badgeOk={saved}
             title="Shipping Label"
             action={
-              <Button className="w-full" disabled={!saved} onClick={() => window.print()}>
+              <Button className="w-full" onClick={() => setLabelOpen(true)}>
                 <Printer className="mr-1 h-4 w-4" /> Print Label
               </Button>
             }
@@ -178,6 +184,23 @@ function DispatchForm({ row }: { row: DispatchRow }) {
           />
         </div>
       </section>
+
+      <Dialog open={labelOpen} onOpenChange={setLabelOpen}>
+        <DialogContent className="max-w-[640px]">
+          <DialogHeader>
+            <DialogTitle>Shipping label</DialogTitle>
+          </DialogHeader>
+          <div className="print-label-area flex justify-center overflow-auto py-2">
+            <ShippingLabel shipTo={shipTo} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLabelOpen(false)}>Close</Button>
+            <Button onClick={() => window.print()}>
+              <Printer className="mr-1 h-4 w-4" /> Print
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex justify-end">
         <Button variant="outline" onClick={() => navigate({ to: "/delivery" })}>Back to Delivery</Button>

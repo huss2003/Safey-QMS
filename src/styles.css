@@ -530,6 +530,23 @@
    Print-friendly styles
    ============================================================ */
 @media print {
+  /* Print only the shipping label when it is open in the dialog. */
+  body:has(.print-label-area) * {
+    visibility: hidden;
+  }
+  body:has(.print-label-area) .print-label-area,
+  body:has(.print-label-area) .print-label-area * {
+    visibility: visible;
+  }
+  body:has(.print-label-area) .print-label-area {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 !important;
+    margin: 0;
+    overflow: visible !important;
+  }
   body {
     background: white !important;
     color: black !important;
