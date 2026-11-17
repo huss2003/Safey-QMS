@@ -16,10 +16,10 @@ const LABEL_W_PX = 397; // 105 mm at 96 dpi
 const LABEL_H_PX = 189; // 50 mm at 96 dpi
 const PAD_PX = 16;
 const LEFT_COL_FRACTION = 0.62;
-const MAX_FONT_PX = 15;
+const MAX_FONT_PX = 11; // reference label body text is about 11px at 105 mm width
 const MIN_FONT_PX = 6;
 const FROM_PX = 11; // sender block is a fixed size, so the To text never shrinks for it
-const LOGO_PX = 30;
+const LOGO_PX = 24; // reference "safey" wordmark is about 24px at this scale
 const LINE_HEIGHT = 1.28;
 
 function splitAddress(raw: string): string[] {
