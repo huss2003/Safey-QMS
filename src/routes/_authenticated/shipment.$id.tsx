@@ -148,6 +148,7 @@ function ShipmentDetailPage() {
     return <p className="p-6 text-sm text-muted-foreground">Loading…</p>;
   }
 
+  const finalWrapDone = (photos.final_wrap ?? []).length > 0;
   const total = STAGES.length * PHOTOS_PER_STAGE;
   const done = STAGES.reduce((n, s) => n + Math.min((photos[s.key] ?? []).length, PHOTOS_PER_STAGE), 0);
   const complete = done === total;
@@ -215,10 +216,21 @@ function ShipmentDetailPage() {
         </div>
       </section>
 
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={() => navigate({ to: "/delivery" })}>
-          Back to Delivery
-        </Button>
+      <div className="flex flex-col items-end gap-2">
+        {!finalWrapDone && (
+          <p className="text-sm text-muted-foreground">Upload at least one Final Wrap photo to continue.</p>
+        )}
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => navigate({ to: "/delivery" })}>
+            Back to Delivery
+          </Button>
+          <Button
+            disabled={!finalWrapDone}
+            onClick={() => navigate({ to: "/shipment-dispatch/$id", params: { id } })}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );

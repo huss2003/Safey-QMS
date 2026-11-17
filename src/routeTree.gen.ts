@@ -45,6 +45,7 @@ import { Route as AuthenticatedProductInspectionProductIdRouteImport } from './r
 import { Route as AuthenticatedProductsBomIdRouteImport } from './routes/_authenticated/products-bom.$id'
 import { Route as AuthenticatedRolesEmployeesRouteImport } from './routes/_authenticated/roles.employees'
 import { Route as AuthenticatedRolesTrainingRouteImport } from './routes/_authenticated/roles.training'
+import { Route as AuthenticatedShipmentDispatchIdRouteImport } from './routes/_authenticated/shipment-dispatch.$id'
 import { Route as AuthenticatedShipmentIdRouteImport } from './routes/_authenticated/shipment.$id'
 import { Route as AuthenticatedRolesEmployeesIdRouteImport } from './routes/_authenticated/roles.employees.$id'
 import { Route as AuthenticatedRolesEmployeesNewRouteImport } from './routes/_authenticated/roles.employees.new'
@@ -253,6 +254,12 @@ const AuthenticatedRolesTrainingRoute =
     path: '/training',
     getParentRoute: () => AuthenticatedRolesRoute,
   } as any)
+const AuthenticatedShipmentDispatchIdRoute =
+  AuthenticatedShipmentDispatchIdRouteImport.update({
+    id: '/shipment-dispatch/$id',
+    path: '/shipment-dispatch/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedShipmentIdRoute = AuthenticatedShipmentIdRouteImport.update({
   id: '/shipment/$id',
   path: '/shipment/$id',
@@ -349,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/shipment-dispatch/$id': typeof AuthenticatedShipmentDispatchIdRoute
   '/shipment/$id': typeof AuthenticatedShipmentIdRoute
   '/roles/employees/$id': typeof AuthenticatedRolesEmployeesIdRouteWithChildren
   '/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
@@ -396,6 +404,7 @@ export interface FileRoutesByTo {
   '/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/shipment-dispatch/$id': typeof AuthenticatedShipmentDispatchIdRoute
   '/shipment/$id': typeof AuthenticatedShipmentIdRoute
   '/roles/employees/$id': typeof AuthenticatedRolesEmployeesIdRouteWithChildren
   '/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
@@ -445,6 +454,7 @@ export interface FileRoutesById {
   '/_authenticated/products-bom/$id': typeof AuthenticatedProductsBomIdRoute
   '/_authenticated/roles/employees': typeof AuthenticatedRolesEmployeesRouteWithChildren
   '/_authenticated/roles/training': typeof AuthenticatedRolesTrainingRouteWithChildren
+  '/_authenticated/shipment-dispatch/$id': typeof AuthenticatedShipmentDispatchIdRoute
   '/_authenticated/shipment/$id': typeof AuthenticatedShipmentIdRoute
   '/_authenticated/roles/employees/$id': typeof AuthenticatedRolesEmployeesIdRouteWithChildren
   '/_authenticated/roles/employees/new': typeof AuthenticatedRolesEmployeesNewRoute
@@ -494,6 +504,7 @@ export interface FileRouteTypes {
     | '/products-bom/$id'
     | '/roles/employees'
     | '/roles/training'
+    | '/shipment-dispatch/$id'
     | '/shipment/$id'
     | '/roles/employees/$id'
     | '/roles/employees/new'
@@ -541,6 +552,7 @@ export interface FileRouteTypes {
     | '/products-bom/$id'
     | '/roles/employees'
     | '/roles/training'
+    | '/shipment-dispatch/$id'
     | '/shipment/$id'
     | '/roles/employees/$id'
     | '/roles/employees/new'
@@ -589,6 +601,7 @@ export interface FileRouteTypes {
     | '/_authenticated/products-bom/$id'
     | '/_authenticated/roles/employees'
     | '/_authenticated/roles/training'
+    | '/_authenticated/shipment-dispatch/$id'
     | '/_authenticated/shipment/$id'
     | '/_authenticated/roles/employees/$id'
     | '/_authenticated/roles/employees/new'
@@ -861,6 +874,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRolesTrainingRouteImport
       parentRoute: typeof AuthenticatedRolesRoute
     }
+    '/_authenticated/shipment-dispatch/$id': {
+      id: '/_authenticated/shipment-dispatch/$id'
+      path: '/shipment-dispatch/$id'
+      fullPath: '/shipment-dispatch/$id'
+      preLoaderRoute: typeof AuthenticatedShipmentDispatchIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/shipment/$id': {
       id: '/_authenticated/shipment/$id'
       path: '/shipment/$id'
@@ -1050,6 +1070,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInspectionFormBatchIdRoute: typeof AuthenticatedInspectionFormBatchIdRoute
   AuthenticatedProductInspectionProductIdRoute: typeof AuthenticatedProductInspectionProductIdRoute
   AuthenticatedProductsBomIdRoute: typeof AuthenticatedProductsBomIdRoute
+  AuthenticatedShipmentDispatchIdRoute: typeof AuthenticatedShipmentDispatchIdRoute
   AuthenticatedShipmentIdRoute: typeof AuthenticatedShipmentIdRoute
   AuthenticatedStockHistoryTypeIdRoute: typeof AuthenticatedStockHistoryTypeIdRoute
 }
@@ -1089,6 +1110,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProductInspectionProductIdRoute:
     AuthenticatedProductInspectionProductIdRoute,
   AuthenticatedProductsBomIdRoute: AuthenticatedProductsBomIdRoute,
+  AuthenticatedShipmentDispatchIdRoute: AuthenticatedShipmentDispatchIdRoute,
   AuthenticatedShipmentIdRoute: AuthenticatedShipmentIdRoute,
   AuthenticatedStockHistoryTypeIdRoute: AuthenticatedStockHistoryTypeIdRoute,
 }
