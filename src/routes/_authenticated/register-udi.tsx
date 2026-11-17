@@ -161,7 +161,9 @@ function RegisterUdiPage() {
       setCustomerAddress(data.customer_address ?? "");
       setWarrantyTerm(data.warranty_term ?? "");
       try {
-        const parsed = JSON.parse(data.products ?? "[]");
+        const parsed = Array.isArray(data.products)
+          ? data.products
+          : JSON.parse(data.products ?? "[]");
         setProducts(parsed.map((p: any) => ({ ...p, isNew: false })));
       } catch {
         /* empty */
@@ -429,7 +431,7 @@ function RegisterUdiPage() {
         invoice_date: invoiceDate || null,
         customer_address: customerAddress || null,
         warranty_term: warrantyTerm || null,
-        products: JSON.stringify(products.map((p) => ({ ...p, isNew: undefined }))),
+        products: products.map((p) => ({ ...p, isNew: undefined })),
       };
       if (searchId) {
         const { error } = await supabase

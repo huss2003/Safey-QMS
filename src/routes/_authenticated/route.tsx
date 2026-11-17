@@ -34,6 +34,7 @@ import {
   ChevronDown,
   Home,
   ScanLine,
+  Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -128,6 +129,7 @@ const NAV: NavItem[] = [
   { to: "/stock", label: "Stock", icon: Warehouse, group: "insight" },
   { to: "/traceability", label: "Traceability", icon: GitBranch, group: "insight" },
   { to: "/udi-registration", label: "Scan UDI", icon: ScanLine, group: "insight" },
+  { to: "/delivery", label: "Delivery", icon: Truck, group: "insight" },
   { to: "/reports", label: "Reports", icon: BarChart3, group: "insight" },
   { to: "/alerts", label: "Alerts", icon: Bell, group: "insight" },
   { to: "/roles/employees", label: "Employees", icon: UserRound, group: "hr" },

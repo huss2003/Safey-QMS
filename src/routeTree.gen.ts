@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedBatchRecallRouteImport } from './routes/_authenticated/batch-recall'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDeliveryRouteImport } from './routes/_authenticated/delivery'
 import { Route as AuthenticatedEnquireSerialRouteImport } from './routes/_authenticated/enquire-serial'
 import { Route as AuthenticatedEquipmentRouteImport } from './routes/_authenticated/equipment'
 import { Route as AuthenticatedEquipmentNewRouteImport } from './routes/_authenticated/equipment-new'
@@ -80,6 +81,11 @@ const AuthenticatedBatchRecallRoute =
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDeliveryRoute = AuthenticatedDeliveryRouteImport.update({
+  id: '/delivery',
+  path: '/delivery',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEnquireSerialRoute =
@@ -294,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/delivery': typeof AuthenticatedDeliveryRoute
   '/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/equipment': typeof AuthenticatedEquipmentRoute
   '/equipment-new': typeof AuthenticatedEquipmentNewRoute
@@ -337,6 +344,7 @@ export interface FileRoutesByTo {
   '/alerts': typeof AuthenticatedAlertsRoute
   '/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/delivery': typeof AuthenticatedDeliveryRoute
   '/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/equipment': typeof AuthenticatedEquipmentRoute
   '/equipment-new': typeof AuthenticatedEquipmentNewRoute
@@ -382,6 +390,7 @@ export interface FileRoutesById {
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/batch-recall': typeof AuthenticatedBatchRecallRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/delivery': typeof AuthenticatedDeliveryRoute
   '/_authenticated/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/_authenticated/equipment': typeof AuthenticatedEquipmentRoute
   '/_authenticated/equipment-new': typeof AuthenticatedEquipmentNewRoute
@@ -427,6 +436,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/batch-recall'
     | '/dashboard'
+    | '/delivery'
     | '/enquire-serial'
     | '/equipment'
     | '/equipment-new'
@@ -470,6 +480,7 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/batch-recall'
     | '/dashboard'
+    | '/delivery'
     | '/enquire-serial'
     | '/equipment'
     | '/equipment-new'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/_authenticated/alerts'
     | '/_authenticated/batch-recall'
     | '/_authenticated/dashboard'
+    | '/_authenticated/delivery'
     | '/_authenticated/enquire-serial'
     | '/_authenticated/equipment'
     | '/_authenticated/equipment-new'
@@ -600,6 +612,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/delivery': {
+      id: '/_authenticated/delivery'
+      path: '/delivery'
+      fullPath: '/delivery'
+      preLoaderRoute: typeof AuthenticatedDeliveryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/enquire-serial': {
@@ -945,6 +964,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedBatchRecallRoute: typeof AuthenticatedBatchRecallRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDeliveryRoute: typeof AuthenticatedDeliveryRoute
   AuthenticatedEnquireSerialRoute: typeof AuthenticatedEnquireSerialRoute
   AuthenticatedEquipmentRoute: typeof AuthenticatedEquipmentRoute
   AuthenticatedEquipmentNewRoute: typeof AuthenticatedEquipmentNewRoute
@@ -977,6 +997,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedBatchRecallRoute: AuthenticatedBatchRecallRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDeliveryRoute: AuthenticatedDeliveryRoute,
   AuthenticatedEnquireSerialRoute: AuthenticatedEnquireSerialRoute,
   AuthenticatedEquipmentRoute: AuthenticatedEquipmentRoute,
   AuthenticatedEquipmentNewRoute: AuthenticatedEquipmentNewRoute,

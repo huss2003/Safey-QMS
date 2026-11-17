@@ -91,7 +91,9 @@ function EnquireSerialPage() {
 
       for (const reg of registrations ?? []) {
         try {
-          const prods = JSON.parse(reg.products ?? "[]");
+          const prods = Array.isArray(reg.products)
+            ? reg.products
+            : JSON.parse(reg.products ?? "[]");
           for (const p of prods) {
             for (const r of p.scannedRows ?? []) {
               if (udiPattern.test(r.udi)) {
