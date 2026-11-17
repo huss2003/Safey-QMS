@@ -130,6 +130,7 @@ const NAV: NavItem[] = [
   { to: "/traceability", label: "Traceability", icon: GitBranch, group: "insight" },
   { to: "/udi-registration", label: "Scan UDI", icon: ScanLine, group: "insight" },
   { to: "/delivery", label: "Delivery", icon: Truck, group: "insight" },
+  { to: "/customers", label: "Customers", icon: Users, group: "insight" },
   { to: "/reports", label: "Reports", icon: BarChart3, group: "insight" },
   { to: "/alerts", label: "Alerts", icon: Bell, group: "insight" },
   { to: "/roles/employees", label: "Employees", icon: UserRound, group: "hr" },

@@ -14,12 +14,14 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAlertsRouteImport } from './routes/_authenticated/alerts'
 import { Route as AuthenticatedBatchRecallRouteImport } from './routes/_authenticated/batch-recall'
+import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDeliveryRouteImport } from './routes/_authenticated/delivery'
 import { Route as AuthenticatedEnquireSerialRouteImport } from './routes/_authenticated/enquire-serial'
 import { Route as AuthenticatedEquipmentRouteImport } from './routes/_authenticated/equipment'
 import { Route as AuthenticatedEquipmentNewRouteImport } from './routes/_authenticated/equipment-new'
 import { Route as AuthenticatedInspectionFormTemplateRouteImport } from './routes/_authenticated/inspection-form-template'
+import { Route as AuthenticatedNewShipmentRouteImport } from './routes/_authenticated/new-shipment'
 import { Route as AuthenticatedOtherItemsRouteImport } from './routes/_authenticated/other-items'
 import { Route as AuthenticatedPartsRouteImport } from './routes/_authenticated/parts'
 import { Route as AuthenticatedProductionRouteImport } from './routes/_authenticated/production'
@@ -78,6 +80,11 @@ const AuthenticatedBatchRecallRoute =
     path: '/batch-recall',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -109,6 +116,12 @@ const AuthenticatedInspectionFormTemplateRoute =
   AuthenticatedInspectionFormTemplateRouteImport.update({
     id: '/inspection-form-template',
     path: '/inspection-form-template',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNewShipmentRoute =
+  AuthenticatedNewShipmentRouteImport.update({
+    id: '/new-shipment',
+    path: '/new-shipment',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOtherItemsRoute = AuthenticatedOtherItemsRouteImport.update({
@@ -299,12 +312,14 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/batch-recall': typeof AuthenticatedBatchRecallRoute
+  '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/delivery': typeof AuthenticatedDeliveryRoute
   '/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/equipment': typeof AuthenticatedEquipmentRoute
   '/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
+  '/new-shipment': typeof AuthenticatedNewShipmentRoute
   '/other-items': typeof AuthenticatedOtherItemsRoute
   '/parts': typeof AuthenticatedPartsRoute
   '/production': typeof AuthenticatedProductionRoute
@@ -343,12 +358,14 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/alerts': typeof AuthenticatedAlertsRoute
   '/batch-recall': typeof AuthenticatedBatchRecallRoute
+  '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/delivery': typeof AuthenticatedDeliveryRoute
   '/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/equipment': typeof AuthenticatedEquipmentRoute
   '/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
+  '/new-shipment': typeof AuthenticatedNewShipmentRoute
   '/other-items': typeof AuthenticatedOtherItemsRoute
   '/parts': typeof AuthenticatedPartsRoute
   '/production': typeof AuthenticatedProductionRoute
@@ -389,12 +406,14 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/alerts': typeof AuthenticatedAlertsRoute
   '/_authenticated/batch-recall': typeof AuthenticatedBatchRecallRoute
+  '/_authenticated/customers': typeof AuthenticatedCustomersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/delivery': typeof AuthenticatedDeliveryRoute
   '/_authenticated/enquire-serial': typeof AuthenticatedEnquireSerialRoute
   '/_authenticated/equipment': typeof AuthenticatedEquipmentRoute
   '/_authenticated/equipment-new': typeof AuthenticatedEquipmentNewRoute
   '/_authenticated/inspection-form-template': typeof AuthenticatedInspectionFormTemplateRoute
+  '/_authenticated/new-shipment': typeof AuthenticatedNewShipmentRoute
   '/_authenticated/other-items': typeof AuthenticatedOtherItemsRoute
   '/_authenticated/parts': typeof AuthenticatedPartsRoute
   '/_authenticated/production': typeof AuthenticatedProductionRoute
@@ -435,12 +454,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/alerts'
     | '/batch-recall'
+    | '/customers'
     | '/dashboard'
     | '/delivery'
     | '/enquire-serial'
     | '/equipment'
     | '/equipment-new'
     | '/inspection-form-template'
+    | '/new-shipment'
     | '/other-items'
     | '/parts'
     | '/production'
@@ -479,12 +500,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/alerts'
     | '/batch-recall'
+    | '/customers'
     | '/dashboard'
     | '/delivery'
     | '/enquire-serial'
     | '/equipment'
     | '/equipment-new'
     | '/inspection-form-template'
+    | '/new-shipment'
     | '/other-items'
     | '/parts'
     | '/production'
@@ -524,12 +547,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/alerts'
     | '/_authenticated/batch-recall'
+    | '/_authenticated/customers'
     | '/_authenticated/dashboard'
     | '/_authenticated/delivery'
     | '/_authenticated/enquire-serial'
     | '/_authenticated/equipment'
     | '/_authenticated/equipment-new'
     | '/_authenticated/inspection-form-template'
+    | '/_authenticated/new-shipment'
     | '/_authenticated/other-items'
     | '/_authenticated/parts'
     | '/_authenticated/production'
@@ -607,6 +632,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBatchRecallRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/customers': {
+      id: '/_authenticated/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof AuthenticatedCustomersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -647,6 +679,13 @@ declare module '@tanstack/react-router' {
       path: '/inspection-form-template'
       fullPath: '/inspection-form-template'
       preLoaderRoute: typeof AuthenticatedInspectionFormTemplateRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/new-shipment': {
+      id: '/_authenticated/new-shipment'
+      path: '/new-shipment'
+      fullPath: '/new-shipment'
+      preLoaderRoute: typeof AuthenticatedNewShipmentRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/other-items': {
@@ -963,12 +1002,14 @@ const AuthenticatedRolesRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAlertsRoute: typeof AuthenticatedAlertsRoute
   AuthenticatedBatchRecallRoute: typeof AuthenticatedBatchRecallRoute
+  AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDeliveryRoute: typeof AuthenticatedDeliveryRoute
   AuthenticatedEnquireSerialRoute: typeof AuthenticatedEnquireSerialRoute
   AuthenticatedEquipmentRoute: typeof AuthenticatedEquipmentRoute
   AuthenticatedEquipmentNewRoute: typeof AuthenticatedEquipmentNewRoute
   AuthenticatedInspectionFormTemplateRoute: typeof AuthenticatedInspectionFormTemplateRoute
+  AuthenticatedNewShipmentRoute: typeof AuthenticatedNewShipmentRoute
   AuthenticatedOtherItemsRoute: typeof AuthenticatedOtherItemsRoute
   AuthenticatedPartsRoute: typeof AuthenticatedPartsRoute
   AuthenticatedProductionRoute: typeof AuthenticatedProductionRoute
@@ -996,6 +1037,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAlertsRoute: AuthenticatedAlertsRoute,
   AuthenticatedBatchRecallRoute: AuthenticatedBatchRecallRoute,
+  AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDeliveryRoute: AuthenticatedDeliveryRoute,
   AuthenticatedEnquireSerialRoute: AuthenticatedEnquireSerialRoute,
@@ -1003,6 +1045,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEquipmentNewRoute: AuthenticatedEquipmentNewRoute,
   AuthenticatedInspectionFormTemplateRoute:
     AuthenticatedInspectionFormTemplateRoute,
+  AuthenticatedNewShipmentRoute: AuthenticatedNewShipmentRoute,
   AuthenticatedOtherItemsRoute: AuthenticatedOtherItemsRoute,
   AuthenticatedPartsRoute: AuthenticatedPartsRoute,
   AuthenticatedProductionRoute: AuthenticatedProductionRoute,

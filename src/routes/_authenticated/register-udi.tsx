@@ -47,8 +47,9 @@ import { toast } from "sonner";
 import { generateAllCOAs, type COAProduct } from "@/lib/generateCOA";
 
 export const Route = createFileRoute("/_authenticated/register-udi")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    id: search.id as string | undefined,
+  validateSearch: (search: Record<string, unknown>): { id?: string; draft?: string } => ({
+    id: typeof search.id === "string" ? search.id : undefined,
+    draft: typeof search.draft === "string" ? search.draft : undefined,
   }),
   component: RegisterUdiPage,
 });
@@ -78,7 +79,8 @@ type ScanRow = {
 
 function RegisterUdiPage() {
   const navigate = useNavigate();
-  const { id: searchId } = Route.useSearch();
+  const { id: searchId, draft: draftId } = Route.useSearch();
+  const [shipToAddress, setShipToAddress] = useState("");
   const fetchedIdRef = useRef<string | null>(null);
 
   // Invoice fields
@@ -139,6 +141,36 @@ function RegisterUdiPage() {
       setProductOptions((prods ?? []) as ProductOption[]);
     })();
   }, []);
+
+  // Prefill from a shipment draft created on the New Shipment screen
+  useEffect(() => {
+    if (!draftId) return;
+    (async () => {
+      const { data, error } = await (supabase
+        .from("udi_registrations" as any)
+        .select("*")
+        .eq("id", draftId)
+        .single() as any);
+      if (error || !data) {
+        toast.error("Failed to load shipment draft");
+        return;
+      }
+      setCustomerName(data.customer_name ?? "");
+      setCustomerAddress(data.customer_address ?? "");
+      setShipToAddress(data.ship_to_address ?? "");
+      setInvoiceNumber(data.invoice_number ?? "");
+      setInvoiceDate(data.invoice_date ?? "");
+      setWarrantyTerm(data.warranty_term ?? "");
+      try {
+        const parsed = Array.isArray(data.products)
+          ? data.products
+          : JSON.parse(data.products ?? "[]");
+        setProducts(parsed.map((p: any) => ({ ...p, isNew: false })));
+      } catch {
+        /* empty */
+      }
+    })();
+  }, [draftId]);
 
   // Load existing record for edit mode
   useEffect(() => {
@@ -433,15 +465,29 @@ function RegisterUdiPage() {
         warranty_term: warrantyTerm || null,
         products: products.map((p) => ({ ...p, isNew: undefined })),
       };
-      if (searchId) {
-        const { error } = await supabase
-          .from("udi_registrations" as any)
-          .update(payload)
-          .eq("id", searchId);
-        if (error) throw error;
+      const targetId = searchId ?? draftId;
+      if (targetId) {
+        const { error } = await (supabase.from("udi_registrations" as any) as any)
+          .update(
+            draftId ? { ...payload, ship_to_address: shipToAddress || null } : payload,
+          )
+          .eq("id", targetId);
+        if (error) {
+          if (error.code === "23505") {
+            toast.error(`Invoice number ${invoiceNumber.trim()} already exists`);
+            return;
+          }
+          throw error;
+        }
       } else {
-        const { error } = await supabase.from("udi_registrations" as any).insert(payload);
-        if (error) throw error;
+        const { error } = await (supabase.from("udi_registrations" as any) as any).insert(payload);
+        if (error) {
+          if (error.code === "23505") {
+            toast.error(`Invoice number ${invoiceNumber.trim()} already exists`);
+            return;
+          }
+          throw error;
+        }
       }
       // ── Update traceability localStorage: "In stock" → "Out Stock" ──
       for (const p of products) {
@@ -464,6 +510,11 @@ function RegisterUdiPage() {
             /* empty */
           }
         }
+      }
+      if (draftId) {
+        toast.success("Saved. Now upload the invoice.");
+        navigate({ to: "/new-shipment", search: { draft: draftId, step: "upload" } });
+        return;
       }
       toast.success("UDI registration saved");
       if (searchId) {

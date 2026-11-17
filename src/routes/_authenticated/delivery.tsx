@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { PackageCheck, Clock, CheckCircle2, type LucideIcon } from "lucide-react";
+import { PackageCheck, Clock, CheckCircle2, Plus, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/inventory/page-header";
@@ -89,7 +90,14 @@ function DeliveryDashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader subtitle="Delivery" title="Delivery Dashboard" />
+      <div className="flex items-start justify-between gap-3">
+        <PageHeader subtitle="Delivery" title="Delivery Dashboard" />
+        <Link to="/new-shipment">
+          <Button>
+            <Plus className="h-4 w-4 mr-1" /> New Shipment
+          </Button>
+        </Link>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {FILTERS.map((f) => {
