@@ -543,14 +543,24 @@
   body:has(.print-doc-area) .print-doc-area * {
     visibility: visible;
   }
+  /* Keep the challan to exactly one A4 sheet: no second page from document height. */
+  html:has(.print-doc-area),
+  body:has(.print-doc-area) {
+    height: 297mm !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   body:has(.print-doc-area) .print-doc-area {
     display: block !important;
     position: absolute;
     left: 0;
     top: 0;
-    width: 100%;
+    width: 210mm;
+    height: 297mm;
     margin: 0;
     padding: 0;
+    overflow: hidden;
   }
   @page {
     size: A4;

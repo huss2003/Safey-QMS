@@ -235,7 +235,7 @@ function DispatchForm({ row }: { row: DispatchRow }) {
             <DialogTitle>Shipping label</DialogTitle>
           </DialogHeader>
           <div className="print-label-area flex justify-center overflow-auto py-2">
-            <ShippingLabel shipTo={shipTo} />
+            <ShippingLabel shipTo={shipTo} customerName={row.customer_name} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setLabelOpen(false)}>Close</Button>

@@ -46,10 +46,12 @@ function today(): string {
 export function DeliveryChallan({ row }: { row: ChallanRow }) {
   const products = (row.products ?? []).filter((p) => p.productName);
   const totalQty = products.reduce((n, p) => n + (parseInt(p.quantity, 10) || 0), 0);
-  const billLines = lines(row.customer_address);
-  // Ship-to: the full address on one line, then the address as typed (matches the reference challan).
-  const shipAsTyped = lines(row.ship_to_address || row.customer_address);
-  const shipLines = shipAsTyped.length > 1 ? [shipAsTyped.join(", "), ...shipAsTyped] : shipAsTyped;
+  // The customer name is printed once as the block heading; drop it from the address lines
+  // when the saved address repeats it at the top.
+  const withoutName = (addr: string[]) =>
+    addr.length && addr[0].toLowerCase() === row.customer_name.trim().toLowerCase() ? addr.slice(1) : addr;
+  const billLines = withoutName(lines(row.customer_address));
+  const shipLines = withoutName(lines(row.ship_to_address || row.customer_address));
 
   return (
     <div className="print-doc-area" data-testid="delivery-challan" style={sheet}>
@@ -137,7 +139,8 @@ function Block({ title, name, lines: addr }: { title: string; name: string; line
 
 const sheet: CSSProperties = {
   width: "210mm",
-  minHeight: "297mm",
+  height: "297mm",
+  overflow: "hidden",
   boxSizing: "border-box",
   padding: "14mm 14mm",
   background: "#fff",
