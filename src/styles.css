@@ -529,7 +529,34 @@
 /* ============================================================
    Print-friendly styles
    ============================================================ */
+/* Delivery challan is mounted only during its print pass; hide it on screen. */
+.print-doc-area {
+  display: none;
+}
+
 @media print {
+  /* Print only the delivery challan on its own A4 page. */
+  body:has(.print-doc-area) * {
+    visibility: hidden;
+  }
+  body:has(.print-doc-area) .print-doc-area,
+  body:has(.print-doc-area) .print-doc-area * {
+    visibility: visible;
+  }
+  body:has(.print-doc-area) .print-doc-area {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
   /* Print only the shipping label when it is open in the dialog. */
   body:has(.print-label-area) * {
     visibility: hidden;

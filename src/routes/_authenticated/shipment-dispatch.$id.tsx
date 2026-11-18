@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, Printer, Receipt, RotateCcw, FileText } from "lucide-react";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ShippingLabel } from "@/components/shipping-label";
+import { DeliveryChallan, type ChallanProduct } from "@/components/delivery-challan";
 
 export const Route = createFileRoute("/_authenticated/shipment-dispatch/$id")({
   component: DispatchPage,
@@ -25,6 +26,9 @@ type DispatchRow = {
   ship_to_address: string | null;
   delivery_service_provider: string | null;
   delivery_tracking_code: string | null;
+  dc_no: string | null;
+  products: ChallanProduct[] | null;
+  stage: number;
 };
 
 function DispatchPage() {
@@ -35,7 +39,7 @@ function DispatchPage() {
     queryKey: ["dispatch-detail", id],
     queryFn: async (): Promise<DispatchRow> => {
       const { data, error } = await (supabase.from("udi_registrations" as any) as any)
-        .select("id, invoice_number, customer_name, customer_address, ship_to_address, delivery_service_provider, delivery_tracking_code")
+        .select("id, invoice_number, customer_name, customer_address, ship_to_address, delivery_service_provider, delivery_tracking_code, dc_no, products, stage")
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -66,7 +70,35 @@ function DispatchForm({ row }: { row: DispatchRow }) {
   const [saving, setSaving] = useState(false);
   const saved = Boolean(row.delivery_tracking_code && row.delivery_service_provider);
   const [labelOpen, setLabelOpen] = useState(false);
+  const [challanPrinting, setChallanPrinting] = useState(false);
+
+  // Print the challan directly: mount it for the print pass, open the print dialog, then unmount.
+  useEffect(() => {
+    if (!challanPrinting) return;
+    const frame = requestAnimationFrame(() => {
+      window.print();
+      setChallanPrinting(false);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [challanPrinting]);
   const shipTo = row.ship_to_address || row.customer_address;
+
+  const markDelivered = async () => {
+    setSaving(true);
+    try {
+      const { error } = await (supabase.from("udi_registrations" as any) as any)
+        .update({ stage: 2, stage_updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Marked as delivered");
+      queryClient.invalidateQueries({ queryKey: ["dispatch-detail", id] });
+      queryClient.invalidateQueries({ queryKey: ["delivery-dashboard"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Could not update");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const submit = async () => {
     if (!provider.trim() || !tracking.trim()) {
@@ -76,10 +108,15 @@ function DispatchForm({ row }: { row: DispatchRow }) {
     setSaving(true);
     try {
       const { error } = await (supabase.from("udi_registrations" as any) as any)
-        .update({ delivery_service_provider: provider.trim(), delivery_tracking_code: tracking.trim() })
+        .update({
+          delivery_service_provider: provider.trim(),
+          delivery_tracking_code: tracking.trim(),
+          // Saving courier + tracking marks the parcel as shipped (moves it to Pending Follow-ups).
+          ...(row.stage === 0 ? { stage: 1, stage_updated_at: new Date().toISOString() } : {}),
+        })
         .eq("id", id);
       if (error) throw error;
-      toast.success("Tracking details saved");
+      toast.success(row.stage === 0 ? "Marked as shipped" : "Tracking details saved");
       queryClient.invalidateQueries({ queryKey: ["dispatch-detail", id] });
       queryClient.invalidateQueries({ queryKey: ["delivery-dashboard"] });
     } catch (e: any) {
@@ -138,6 +175,11 @@ function DispatchForm({ row }: { row: DispatchRow }) {
           <Button variant="outline" onClick={reset} disabled={saving}>
             <RotateCcw className="mr-1 h-4 w-4" /> Reset
           </Button>
+          {row.stage === 1 && (
+            <Button variant="outline" onClick={markDelivered} disabled={saving}>
+              <CheckCircle2 className="mr-1 h-4 w-4" /> Mark as delivered
+            </Button>
+          )}
           <Button onClick={submit} disabled={saving}>
             <CheckCircle2 className="mr-1 h-4 w-4" /> {saving ? "Saving…" : "Submit"}
           </Button>
@@ -166,7 +208,7 @@ function DispatchForm({ row }: { row: DispatchRow }) {
             badgeOk
             title="Delivery Challan"
             action={
-              <Button className="w-full" onClick={() => window.print()}>
+              <Button className="w-full" onClick={() => setChallanPrinting(true)}>
                 <Printer className="mr-1 h-4 w-4" /> Print Delivery challan
               </Button>
             }
@@ -184,6 +226,8 @@ function DispatchForm({ row }: { row: DispatchRow }) {
           />
         </div>
       </section>
+
+      {challanPrinting && <DeliveryChallan row={row} />}
 
       <Dialog open={labelOpen} onOpenChange={setLabelOpen}>
         <DialogContent className="max-w-[640px]">

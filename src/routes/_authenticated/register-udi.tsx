@@ -534,7 +534,8 @@ function RegisterUdiPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/udi-registration">
+        {/* A draft opened from a shipment returns to the shipment list, not the UDI register. */}
+        <Link to={(draftId ? "/new-shipment" : "/udi-registration") as any}>
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <ArrowLeft className="h-4 w-4" />
           </Button>

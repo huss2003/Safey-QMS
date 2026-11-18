@@ -330,7 +330,7 @@ function AddressStep({
 
 function ReopenDraft({ draftId }: { draftId: string }) {
   const navigate = useNavigate();
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: ["shipment-draft", draftId],
     queryFn: async (): Promise<DraftRow> => {
       const { data, error } = await (supabase.from("udi_registrations" as any) as any)
@@ -351,7 +351,19 @@ function ReopenDraft({ draftId }: { draftId: string }) {
     }
   }, [data]);
 
+  if (isError) return <DraftNotFound />;
+
   return <p className="p-6 text-sm text-muted-foreground">Opening draft…</p>;
+}
+
+function DraftNotFound() {
+  const navigate = useNavigate();
+  return (
+    <div className="space-y-3 p-6">
+      <p className="text-sm text-muted-foreground">This draft could not be found. It may have been deleted.</p>
+      <Button variant="outline" onClick={() => navigate({ to: "/new-shipment" })}>Back to new shipment</Button>
+    </div>
+  );
 }
 
 // ── Step 4: invoice upload (after Scan UDI save) ───────────────────
@@ -362,7 +374,7 @@ function UploadInvoiceStep({ draftId }: { draftId: string }) {
   const [uploading, setUploading] = useState(false);
   const [completing, setCompleting] = useState(false);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["shipment-draft", draftId],
     queryFn: async (): Promise<DraftRow> => {
       const { data, error } = await (supabase.from("udi_registrations" as any) as any)
@@ -428,7 +440,9 @@ function UploadInvoiceStep({ draftId }: { draftId: string }) {
 
       <Card>
         <CardContent className="p-6 space-y-5">
-          {isLoading || !data ? (
+          {isError ? (
+            <DraftNotFound />
+          ) : isLoading || !data ? (
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : (
             <>
